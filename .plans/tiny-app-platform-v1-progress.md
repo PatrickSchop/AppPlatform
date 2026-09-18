@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Execution Progress
 
-Last updated: 2026-09-18 (Step 10 complete)
+Last updated: 2026-09-18 (Step 11 complete)
 
 ## Completed Steps
 
@@ -74,11 +74,20 @@ Last updated: 2026-09-18 (Step 10 complete)
   - PlatformMiddlewareChain: chains CORS → Authorization
   - AuthServiceBuilder.AddPlatformAuth() registers all platform auth services
   - 12 new auth tests (76 total tests passing)
+- ✅ **Step 11**: Generic LLM text parsing with retry and error recovery
+  - ILlmTextParseClient interface for LLM completion requests
+  - LlmTextParseClient: Azure OpenAI implementation with JSON format
+  - LlmTextParserBase<T>: generic base with automatic retry (configurable attempts)
+  - Parse error fed back into next attempt prompt for recovery
+  - Fenced code block stripping (```json ... ```)
+  - HtmlToXhtmlConverter: HTML5→XHTML utility (domain-free)
+  - LlmServiceBuilder: optional module, only registers when azureOpenAI config exists
+  - Logs warning for apiKey auth (prefers managed identity)
+  - 10 new LLM tests (86 total tests passing)
 
 ## Pending Steps
 
 ### Phase 1 — Core Engine (continued)
-- ⏳ **Step 11**: `LlmTextParserBase<T>`, `ILlmTextParseClient`
 - ⏳ **Step 12**: Endpoint logic as plain injectable services
 
 ### Phase 2 — Functions Surface and First Proof
@@ -106,9 +115,9 @@ Last updated: 2026-09-18 (Step 10 complete)
 - ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
 
 ## Test Status
-- Total tests: 76 passing
+- Total tests: 86 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 10 (Steps 01-10)
+- Git commits: 11 (Steps 01-11)
 
 ## Next Action
-Continue with Step 11 — LlmTextParserBase<T>, ILlmTextParseClient
+Continue with Step 12 — Endpoint logic as plain injectable services
