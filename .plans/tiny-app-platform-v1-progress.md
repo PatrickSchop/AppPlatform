@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Execution Progress
 
-Last updated: 2026-09-18 (Step 11 complete)
+Last updated: 2026-09-18 (Step 12 complete)
 
 ## Completed Steps
 
@@ -75,6 +75,7 @@ Last updated: 2026-09-18 (Step 11 complete)
   - AuthServiceBuilder.AddPlatformAuth() registers all platform auth services
   - 12 new auth tests (76 total tests passing)
 - ✅ **Step 11**: Generic LLM text parsing with retry and error recovery
+- ✅ **Step 12**: Platform endpoints as plain injectable services
   - ILlmTextParseClient interface for LLM completion requests
   - LlmTextParseClient: Azure OpenAI implementation with JSON format
   - LlmTextParserBase<T>: generic base with automatic retry (configurable attempts)
@@ -115,9 +116,9 @@ Last updated: 2026-09-18 (Step 11 complete)
 - ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
 
 ## Test Status
-- Total tests: 86 passing
+- Total tests: 96 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 11 (Steps 01-11)
+- Git commits: 12 (Steps 01-12)
 
 ## Next Action
-Continue with Step 12 — Endpoint logic as plain injectable services
+Continue with Step 13 — Shim `.cs` files + auto-imported `.targets` + timer trigger
