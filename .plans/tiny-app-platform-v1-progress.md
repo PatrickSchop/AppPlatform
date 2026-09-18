@@ -19,11 +19,17 @@ Last updated: 2026-09-18
   - AzureSqlTokenInterceptor for managed identity SQL auth
   - BackgroundTask stub with required properties
   - 14 passing tests (3 new data layer tests)
+- ✅ **Step 05**: Script-tracked migrations
+  - Embedded core scripts (000_CreateSchemaVersions.sql, 010_CreateBackgroundTasks.sql)
+  - MigrationScript record, IMigrationScriptProvider interface
+  - EmbeddedMigrationScriptProvider and DirectoryMigrationScriptProvider implementations
+  - DatabaseMigrator<TContext> with version tracking, batch splitting, checksum calculation
+  - MigrationEntryPoint for --migrate CLI path
+  - 24 passing tests (10 new migration tests)
 
 ## Pending Steps
 
 ### Phase 1 — Core Engine (continued)
-- ⏳ **Step 05**: `DatabaseMigrator` + embedded core scripts + `__SchemaVersions`
 - ⏳ **Step 06**: Background task model, enum, interfaces, registry, handler context
 - ⏳ **Step 07**: `BackgroundTaskService<TContext>`, singleton manager id
 - ⏳ **Step 08**: Claim SQL, concurrency cap, lease recovery
@@ -57,9 +63,9 @@ Last updated: 2026-09-18
 - ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
 
 ## Test Status
-- Total tests: 14 passing
+- Total tests: 24 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 4 (Steps 01-04)
+- Git commits: 5 (Steps 01-05)
 
 ## Next Action
-Continue with Step 05 — Migrations (`DatabaseMigrator` + embedded core scripts + `__SchemaVersions`)
+Continue with Step 06 — Background task model, enum, interfaces, registry, handler context
