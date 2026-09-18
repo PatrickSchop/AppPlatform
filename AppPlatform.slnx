@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Wisdi.AppPlatform.Functions/Wisdi.AppPlatform.Functions.csproj" />
     <Project Path="src/Wisdi.AppPlatform/Wisdi.AppPlatform.csproj" />
   </Folder>
   <Folder Name="/tests/">

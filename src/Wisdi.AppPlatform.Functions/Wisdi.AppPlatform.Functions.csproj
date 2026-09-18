@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Wisdi.AppPlatform.Functions</PackageId>
+    <Description>Azure Functions endpoint shims for Wisdi.AppPlatform. Injects [Function] source into the consuming app so worker indexing can see it.</Description>
+    <IsPackable>true</IsPackable>
+
+    <!-- No assembly ships: the endpoints are source, injected into the consumer. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- The shims are content, not compiled here. They are compiled by the consumer. -->
+  <ItemGroup>
+    <Compile Remove="endpoints\**\*.cs" />
+    <None Include="endpoints\**\*.cs" Pack="true" PackagePath="endpoints" />
+    <None Include="build\Wisdi.AppPlatform.Functions.targets" Pack="true" PackagePath="build" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wisdi.AppPlatform\Wisdi.AppPlatform.csproj" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" />
+  </ItemGroup>
+
+</Project>

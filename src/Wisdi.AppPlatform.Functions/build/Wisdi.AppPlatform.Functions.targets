@@ -1,0 +1,7 @@
+<Project>
+  <ItemGroup Condition="'$(WisdiAppPlatformInjectEndpoints)' != 'false'">
+    <Compile Include="$(MSBuildThisFileDirectory)../endpoints/*.cs"
+             Visible="false"
+             WisdiAppPlatformEndpoint="true" />
+  </ItemGroup>
+</Project>
