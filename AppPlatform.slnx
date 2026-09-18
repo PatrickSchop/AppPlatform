@@ -1,2 +1,8 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Wisdi.AppPlatform/Wisdi.AppPlatform.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Wisdi.AppPlatform.Tests/Wisdi.AppPlatform.Tests.csproj" />
+  </Folder>
 </Solution>
