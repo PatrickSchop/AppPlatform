@@ -81,9 +81,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     httpsOnly: true
     siteConfig: {
       minTlsVersion: '1.2'
-      linuxFxVersion: 'DOTNET-ISOLATED|10.0'
       functionAppScaleLimit: 200
-      functionsRuntimeScaleMonitoringEnabled: true
       appSettings: [
         {
           // Configuration via __ (double underscore) separators, not colons.
