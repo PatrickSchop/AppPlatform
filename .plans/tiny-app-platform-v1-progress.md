@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Execution Progress
 
-Last updated: 2026-09-18 (Step 16 complete)
+Last updated: 2026-09-18 (Step 17 complete)
 
 ## Completed Steps
 
@@ -128,11 +128,20 @@ Last updated: 2026-09-18 (Step 16 complete)
   - **PackageReference-only consumer test**: all 13 platform functions injected via targets file
   - Lockstep versioning policy documented in docs/versioning.md
   - All 96 tests pass; Release build clean
+- ✅ **Step 17**: CI and publish workflows; 0.1.0 published to GitHub Packages
+  - Created `.github/workflows/ci.yaml` — runs on push/PR, builds, tests, packs
+  - Package shape assertion: Functions package has no lib/, includes endpoints/ and build/
+  - Created `.github/workflows/publish.yaml` — triggers on release or manual dispatch
+  - Version override via `-p:Version=` strips `-local` suffix for published builds
+  - `--skip-duplicate` prevents re-run failures; GitHub Packages rejects overwrites
+  - Created `docs/consuming-packages.md` — complete authentication guide
+  - **Critical requirement documented**: classic PAT only, `--store-password-in-clear-text` on Windows
+  - Tag `v0.1.0` pushed; CI workflow passed; Publish workflow succeeded
+  - Both packages published to `https://nuget.pkg.github.com/PatrickSchop/index.json`
+  - GitHub CLI installed and authenticated for release management
+  - All 96 tests pass; Release build clean; 17 commits (Steps 01-17)
 
 ## Pending Steps
-
-### Phase 3 — Packaging
-- ⏳ **Step 17**: GitHub Actions publish workflow + versioning policy
 
 ### Phase 4 — Template, Infrastructure, Operations
 - ⏳ **Step 18**: `dotnet new tinyapp` template
@@ -153,8 +162,9 @@ Last updated: 2026-09-18 (Step 16 complete)
 - Total tests: 96 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
 - Gate A: ✅ Passed (critical checks verified; runtime tests deferred)
-- Packaging: ✅ Both packages pack; targets-based injection verified via PackageReference consumer
-- Git commits: 16 (Steps 01-16)
+- Packaging: ✅ Both packages pack and publish; 0.1.0 live in GitHub Packages
+- CI/CD: ✅ Both workflows active and verified
+- Git commits: 17 (Steps 01-17)
 
 ## Next Action
-Continue with Step 17 — **GitHub Actions Publish Workflow** — CI/CD for automated package publishing
+Continue with Step 18 — **`dotnet new tinyapp` Template** — template scaffolding for rapid app creation
