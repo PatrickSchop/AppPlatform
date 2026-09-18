@@ -36,5 +36,10 @@
   <PropertyGroup Condition="$(MSBuildProjectDirectory.Contains('templates\content'))">
     <ExcludeFromSolutionBuild>true</ExcludeFromSolutionBuild>
   </PropertyGroup>
+
+  <!-- NuGet source mapping to allow multiple sources with central package management -->
+  <ItemGroup>
+    <NuGetSourceMapping Condition="'$(NuGetSourceMapping)' != ''"  Include="NuGetSourceMapping.json" />
+  </ItemGroup>
 </Project>
 
