@@ -60,6 +60,8 @@ public static class PlatformDataExtensions
 
         services.AddDbContext<TContext>(configureDbContext);
         services.AddDbContextFactory<TContext>(configureDbContext, ServiceLifetime.Scoped);
+        services.AddScoped<IDbContextFactory<PlatformDbContext>>(sp =>
+            new PlatformDbContextFactoryAdapter<TContext>(sp.GetRequiredService<IDbContextFactory<TContext>>()));
 
         services.AddSingleton<IMigrationScriptProvider, EmbeddedMigrationScriptProvider>();
         services.AddSingleton<IMigrationScriptProvider, DirectoryMigrationScriptProvider>();
@@ -74,6 +76,18 @@ public static class PlatformDataExtensions
         services.AddScoped<ITaskExecutionManager>(sp => sp.GetRequiredService<TaskExecutionManager<TContext>>());
 
         return services;
+    }
+
+    /// <summary>
+    /// Adapts an IDbContextFactory&lt;TContext&gt; to IDbContextFactory&lt;PlatformDbContext&gt;.
+    /// .NET's IDbContextFactory&lt;T&gt; is not covariant, so registering the app's derived
+    /// factory does not satisfy platform services that depend on the base type.
+    /// </summary>
+    private sealed class PlatformDbContextFactoryAdapter<TContext>(IDbContextFactory<TContext> inner)
+        : IDbContextFactory<PlatformDbContext>
+        where TContext : PlatformDbContext
+    {
+        public PlatformDbContext CreateDbContext() => inner.CreateDbContext();
     }
 }
 

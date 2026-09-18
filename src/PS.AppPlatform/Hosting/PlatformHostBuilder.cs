@@ -3,6 +3,8 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PS.AppPlatform.Auth;
+using PS.AppPlatform.Endpoints;
+using PS.AppPlatform.Tasks;
 
 namespace PS.AppPlatform.Hosting;
 
@@ -19,6 +21,7 @@ public static class PlatformHostBuilder
         PlatformAssemblies assemblies)
     {
         services.AddSingleton(assemblies);
+        services.AddEndpointServices();
 
         var serviceBuilderTypes = new List<Type>();
         foreach (var assembly in assemblies.All)
@@ -40,13 +43,22 @@ public static class PlatformHostBuilder
             }
         }
 
+        var backgroundTaskBuilders = new List<ServiceBuilder>();
         foreach (var type in serviceBuilderTypes)
         {
             if (Activator.CreateInstance(type) is ServiceBuilder serviceBuilder)
             {
                 serviceBuilder.BuildServices(services, configuration);
+                backgroundTaskBuilders.Add(serviceBuilder);
             }
         }
+
+        var taskCollection = new BackgroundTaskCollection();
+        foreach (var builder in backgroundTaskBuilders)
+        {
+            builder.RegisterBackgroundTasks(taskCollection);
+        }
+        taskCollection.RegisterBackgroundTaskHandlers(services);
 
         return services;
     }

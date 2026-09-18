@@ -1,8 +1,0 @@
-﻿<Project>
-  <ItemGroup Condition="'$(PSAppPlatformInjectEndpoints)' != 'false'">
-    <Compile Include="$(MSBuildThisFileDirectory)../endpoints/*.cs"
-             Visible="false"
-             PSAppPlatformEndpoint="true" />
-  </ItemGroup>
-</Project>
-
