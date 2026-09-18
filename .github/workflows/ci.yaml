@@ -18,6 +18,9 @@ jobs:
       - run: dotnet build --configuration Release --no-restore
       - run: dotnet test --configuration Release --no-build --logger trx
 
+      - name: Install Azure CLI (for bicep linting)
+        run: curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
       - name: Lint bicep
         run: |
           az bicep install
