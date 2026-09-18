@@ -161,7 +161,24 @@ Last updated: 2026-09-18 (Step 18 complete)
 ## Pending Steps
 
 ### Phase 4 (continued)
-- â³ **Step 19**: **Gate B** â€” ScratchApp from template verification
+## Pending Steps
+
+### Phase 4 (continued)
+- IN PROGRESS: **Step 19**: **Gate B** — ScratchApp from template verification
+  - Template defects fixed: TargetFramework, Directory.Build/Packages.props, version conflicts, nuget.config
+  - Check 1 scaffold succeeds; build awaits GitHub Packages authentication
+  - See .plans/step-19-progress.md for details
+- ⏳ **Step 20**: Bicep infrastructure (`app.bicep`)
+- ⏳ **Step 21**: Reusable GitHub Actions workflows
+- ⏳ **Step 22**: Entra auth runbook
+
+### Phase 5 – Front-End
+- ⏳ **Step 23**: `@PS/app-client` – zero-dep SDK
+- ⏳ **Step 24**: `@PS/app-client-angular`
+- ⏳ **Step 25**: `@PS/app-client-react`
+- ⏳ **Step 26**: Angular starter + design system
+- ⏳ **Step 27**: Vite React starter
+- ⏳ **Step 28**: **Gate C** – both front-ends, one unchanged backend
 - â³ **Step 20**: Bicep infrastructure (`app.bicep`)
 - â³ **Step 21**: Reusable GitHub Actions workflows
 - â³ **Step 22**: Entra auth runbook
