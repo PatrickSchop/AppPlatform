@@ -29,9 +29,9 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
         _leaseSeconds = configuration.GetValue("backgroundTasks:leaseSeconds", 300);
     }
 
-    public async Task<Guid> CreateTaskAsync<T>(string taskType, T taskData, string description, bool requiresNotification)
+    public async Task<Guid> CreateTaskAsync<T>(string taskType, T taskData, string description, bool requiresNotification, CancellationToken ct = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
 
         var task = new BackgroundTask
         {
@@ -49,7 +49,7 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
         };
 
         context.BackgroundTasks.Add(task);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Created background task {TaskId} of type {TaskType}", task.Id, taskType);
 
@@ -58,29 +58,29 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
         return task.Id;
     }
 
-    public async Task<BackgroundTask?> GetTaskStatusAsync(Guid taskId)
+    public async Task<BackgroundTask?> GetTaskStatusAsync(Guid taskId, CancellationToken ct = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
 
         return await context.BackgroundTasks
-            .FirstOrDefaultAsync(t => t.Id == taskId);
+            .FirstOrDefaultAsync(t => t.Id == taskId, ct);
     }
 
-    public async Task<List<BackgroundTask>> GetAllTasksAsync()
+    public async Task<List<BackgroundTask>> GetAllTasksAsync(CancellationToken ct = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
 
         return await context.BackgroundTasks
             .OrderByDescending(t => t.CreatedDate)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<bool> ResumeTaskAsync(Guid taskId)
+    public async Task<bool> ResumeTaskAsync(Guid taskId, CancellationToken ct = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
 
         var task = await context.BackgroundTasks
-            .FirstOrDefaultAsync(t => t.Id == taskId);
+            .FirstOrDefaultAsync(t => t.Id == taskId, ct);
 
         if (task == null)
         {
@@ -101,7 +101,7 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
         task.CompletedDate = null;
         task.UpdatedDate = DateTime.UtcNow;
 
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Resumed task {TaskId}", taskId);
 

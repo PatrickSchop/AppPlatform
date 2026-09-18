@@ -18,4 +18,9 @@ public class TaskHandlerRegistry : ITaskHandlerRegistry
     {
         return _handlers.TryGetValue(taskName, out var handlerType) ? handlerType : null;
     }
+
+    public bool IsRegistered(string taskType)
+    {
+        return _handlers.ContainsKey(taskType);
+    }
 }

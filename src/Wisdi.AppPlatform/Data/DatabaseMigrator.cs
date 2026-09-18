@@ -14,6 +14,7 @@ public interface IDatabaseMigrator
     Task<MigrationResult> InitializeDatabaseAsync(CancellationToken ct = default);
     Task<IReadOnlyList<string>> GetAvailableScriptsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<string>> GetAppliedScriptsAsync(CancellationToken ct = default);
+    Task<bool> CanConnectAsync(CancellationToken ct = default);
 }
 
 public class DatabaseMigrator<TContext> : IDatabaseMigrator
@@ -313,5 +314,18 @@ END";
         using var sha256 = SHA256.Create();
         var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(content));
         return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+    }
+
+    public async Task<bool> CanConnectAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+            return await context.Database.CanConnectAsync(ct);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
