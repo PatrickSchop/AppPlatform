@@ -34,11 +34,19 @@ Last updated: 2026-09-18
   - IBackgroundTaskService, IBackgroundTaskManagementService with RenewLeaseAsync
   - TaskHandlerContext with UpdateProgressAsync that renews lease
   - 9 passing tests for task contracts (33 total tests passing)
+- ✅ **Step 07**: Generic BackgroundTaskService; execution manager id and check gate are host-lifetime (fixes 7.1)
+  - ExecutionManagerIdentity singleton - stable across scopes
+  - TaskCheckGate singleton - serializes CheckAndStartTasksAsync
+  - BackgroundTaskService<TContext> with generic context support
+  - apiBaseUrl is optional (nullable) instead of required
+  - RenewLeaseAsync method for lease extension
+  - TasksServiceBuilder registers singletons
+  - PlatformDataExtensions registers context-dependent services
+  - 8 passing tests for task service (41 total tests passing)
 
 ## Pending Steps
 
 ### Phase 1 — Core Engine (continued)
-- ⏳ **Step 07**: `BackgroundTaskService<TContext>`, singleton manager id
 - ⏳ **Step 08**: Claim SQL, concurrency cap, lease recovery
 - ⏳ **Step 09**: Static content providers, SPA fallback fix, content types, caching
 - ⏳ **Step 10**: Default-deny authorization, CORS-first, role enforcement
@@ -70,9 +78,9 @@ Last updated: 2026-09-18
 - ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
 
 ## Test Status
-- Total tests: 33 passing
+- Total tests: 41 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 6 (Steps 01-06)
+- Git commits: 7 (Steps 01-07)
 
 ## Next Action
-Continue with Step 07 — `BackgroundTaskService<TContext>`, singleton manager id
+Continue with Step 08 — Claim SQL, concurrency cap, lease recovery
