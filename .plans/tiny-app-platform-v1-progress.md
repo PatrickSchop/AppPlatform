@@ -112,18 +112,47 @@ Last updated: 2026-09-18 (Step 20 complete)
 - Deployed app on Azure shows same 404 behavior
 - Timer trigger fails to start due to missing Azure Storage connection (expected in dev)
 
-**Root causes identified:**
-1. ✅ Fixed: `RegisterBackgroundTasks` not being called → ITaskHandlerRegistry missing
-2. ✅ Fixed: `AddEndpointServices` not being called → IHealthEndpoints and others missing
-3. ⏳ Unknown: HTTP listener not starting despite Functions being indexed
+**Third defect found and fixed (commit eb8b394):**
+- `BackgroundTaskEndpoints` depends on `IDbContextFactory<PlatformDbContext>` (base type), but
+  `AddPlatformData<TContext>` only registered `IDbContextFactory<TContext>` (app's derived context)
+- .NET's `IDbContextFactory<T>` is not covariant, so the base-type request was never satisfied
+- Added `PlatformDbContextFactoryAdapter<TContext>` bridging the two
+- **Required installing Azurite locally** (`npm install -g azurite`) — every generated app's
+  `local.settings.json` sets `AzureWebJobsStorage: UseDevelopmentStorage=true`, and the Functions
+  host's internal health check depends on reaching it; without it the host fails its storage health
+  check repeatedly and the HTTP listener never comes up. Documented in root README.
+- With all three fixes, **local `func start` → GET /api/health → 200** confirmed.
 
-**Likely remaining issue:**
-- App may have additional initialization failure preventing HTTP listener startup
-- Could be related to database connectivity, configuration loading, or other service initialization
-- Needs investigation of Azure portal Function App logs or local debugging with verbose output
+**Repo hygiene defect found and fixed (commit eb8b394):**
+- Git's index carried BOTH `src/PS.AppPlatform/*` and `src/Ps.AppPlatform/*` as separate tracked
+  paths aliasing the same physical files (Windows FS is case-insensitive, git's index isn't).
+  80 stray wrong-case entries removed via `git rm --cached` after verifying every one had a
+  correct-case counterpart. This explains every earlier "file alias" error in this session and
+  meant some earlier "commits" may have silently touched the wrong index entry.
+
+**Fourth defect — the actual root cause of Azure 404s (commit 22114a7):**
+- `infra/app.bicep` never set `FUNCTIONS_EXTENSION_VERSION` or `FUNCTIONS_WORKER_RUNTIME` app
+  settings. Azure never knew to run the Function App as a .NET isolated Functions runtime at all.
+  `az functionapp function list` returned **zero functions** — not a DI bug, not a code bug, the
+  app was simply never configured to be a Functions host. This is why even after all platform code
+  fixes were confirmed working locally, Azure kept 404ing on every route with no error anywhere.
+- Fixed by adding both settings to the bicep and redeploying (verified idempotent).
+
+**Verified end-to-end on deployed Azure app (scratchapp-api):**
+- `GET /api/health` → 200 `{"status":"ok","version":"0.1.0.0","environment":"production",...}`
+- `GET /configuration.json` → 200 JSON (confirms Easy Auth still off, no 302s)
+- `GET /api/recipes` (no token) → 404 — **separate pre-existing gap**: ScratchApp's Check 5 never
+  created `Api/RecipeFunctions.cs` (the `[Function]` shim); `RecipeEndpoints.cs` exists but is
+  written as an MVC `ControllerBase`, which this isolated-worker app has no routing for. Not fixed
+  yet — flagged for whoever picks up Check 5 completion.
+
+**Documentation:**
+- README updated with a full Prerequisites split: local development deps (incl. Azurite, LocalDB)
+  vs Azure per-app runtime deps (commit d60f7c5).
 
 ## Next Action
-1. Investigate why HTTP listener not starting despite Functions indexing
-2. Check Azure Function App runtime logs for startup errors
-3. OR proceed to Step 21 (workflows/Entra) and revisit Step 19 later with more context
-4. Total platform fixes this session: 2 critical DI registration bugs
+1. Create `Api/RecipeFunctions.cs` shim in ScratchApp to complete Step 19 Check 5 (currently 404s)
+2. Continue Step 19 Check 7: verify a task created through the deployed API reaches `Completed`
+3. Step 19 Check 8: E2E auth (blocked on Step 22 Entra runbook)
+4. OR proceed to Step 21 (workflows) and revisit remaining Step 19 checks later
+5. Total defects found & fixed this session: 3 platform DI bugs + 1 infra config bug + 1 repo hygiene bug
