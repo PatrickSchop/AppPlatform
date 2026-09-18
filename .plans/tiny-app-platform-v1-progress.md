@@ -87,5 +87,27 @@ Last updated: 2026-09-18 (Step 20 complete)
 
 **Total Commits**: 23 (Steps 01-20)
 
+## Step 19 Check 7 Status
+
+**Infrastructure deployed successfully:**
+- Bicep template deployed all resources (Function App, SQL DB, Managed Identity, roles)
+- Easy Auth verified disabled  
+- ScratchApp code published and deployed to scratchapp-api Function App
+
+**Critical platform defect found and fixed:**
+- `AddPlatform` was not calling `RegisterBackgroundTasks` on discovered ServiceBuilders
+- This prevented ITaskHandlerRegistry registration, causing TaskExecutionManager DI failures
+- Fix committed (9859165), platform tests pass 96/96
+- Root cause: comment said it should call RegisterBackgroundTasks, but code didn't
+
+**Deployment status:**
+- Infrastructure: ✅ All Azure resources created
+- Code deployment: ✅ ScratchApp deployed successfully
+- Function indexing: ⏳ Deployed app returns 404 on `/api/health`
+- Likely causes: Function indexing issue or app startup failure
+- Requires additional debugging (Function logs or local testing with `func start`)
+
 ## Next Action
-Continue with Step 19 Check 7 — deploy ScratchApp to Azure using `infra/app.bicep`
+1. Debug Step 19 Check 7 locally with ScratchApp's `func start` to verify Function indexing
+2. OR proceed to Step 21 (workflows) and return to Complete Step 19 Checks 7-8 later
+3. Check Azure portal Function App logs if Function deployment is blocking
