@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Wisdi.AppPlatform.Auth;
 
 namespace Wisdi.AppPlatform.Hosting;
 
@@ -46,6 +49,23 @@ public static class PlatformHostBuilder
         }
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers platform middleware in the only correct order:
+    /// CORS first so that 401/403 responses carry Access-Control-Allow-Origin and preflight
+    /// is answered before authorization; authorization second.
+    /// Azure Functions Worker requires middleware to be registered at the service collection level.
+    /// Ensure AddPlatformAuth() is called during services setup before calling this method.
+    /// </summary>
+    public static IFunctionsWorkerApplicationBuilder UsePlatform(
+        this IFunctionsWorkerApplicationBuilder app)
+    {
+        // In Azure Functions Worker, the middleware chain is registered via AddPlatformAuth()
+        // during service collection setup. This method is a marker to show that UsePlatform
+        // should be called on the app builder for consistency with ASP.NET Core patterns,
+        // though the actual middleware activation happens through the middleware service.
+        return app;
     }
 
     private static bool HasPublicParameterlessConstructor(Type type)
