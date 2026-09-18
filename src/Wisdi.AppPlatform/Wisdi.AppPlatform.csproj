@@ -24,4 +24,8 @@
     <PackageReference Include="Microsoft.Identity.Web" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Data\Scripts\*.sql" />
+  </ItemGroup>
+
 </Project>

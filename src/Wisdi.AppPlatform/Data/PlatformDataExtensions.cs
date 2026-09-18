@@ -60,6 +60,11 @@ public static class PlatformDataExtensions
         services.AddDbContext<TContext>(configureDbContext);
         services.AddDbContextFactory<TContext>(configureDbContext, ServiceLifetime.Scoped);
 
+        services.AddSingleton<IMigrationScriptProvider, EmbeddedMigrationScriptProvider>();
+        services.AddSingleton<IMigrationScriptProvider, DirectoryMigrationScriptProvider>();
+        services.AddScoped<DatabaseMigrator<TContext>>();
+        services.AddScoped<IDatabaseMigrator>(sp => sp.GetRequiredService<DatabaseMigrator<TContext>>());
+
         return services;
     }
 }
