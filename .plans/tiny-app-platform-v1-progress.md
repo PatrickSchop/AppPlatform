@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Execution Progress
 
-Last updated: 2026-09-18 (Step 15 complete)
+Last updated: 2026-09-18 (Step 16 complete)
 
 ## Completed Steps
 
@@ -119,10 +119,19 @@ Last updated: 2026-09-18 (Step 15 complete)
   - Deferred: SPA serving, deep links, task execution, auth — require interactive func start
   - Created docs/gate-a-results.md with full verification report
 
+### Phase 3 — Packaging
+- ✅ **Step 16**: NuGet packaging — targets-based shim injection verified
+  - Added package metadata: readme, tags, symbols, SourceLink
+  - Local builds version as 0.1.0-local (never confused with published)
+  - Per-package READMEs explain architecture and ProjectReference caveat
+  - Wisdi.AppPlatform: dll, docs, README; Wisdi.AppPlatform.Functions: endpoints, targets, README (no lib/)
+  - **PackageReference-only consumer test**: all 13 platform functions injected via targets file
+  - Lockstep versioning policy documented in docs/versioning.md
+  - All 96 tests pass; Release build clean
+
 ## Pending Steps
 
 ### Phase 3 — Packaging
-- ⏳ **Step 16**: NuGet packaging for both packages
 - ⏳ **Step 17**: GitHub Actions publish workflow + versioning policy
 
 ### Phase 4 — Template, Infrastructure, Operations
@@ -144,7 +153,8 @@ Last updated: 2026-09-18 (Step 15 complete)
 - Total tests: 96 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
 - Gate A: ✅ Passed (critical checks verified; runtime tests deferred)
-- Git commits: 15 (Steps 01-15)
+- Packaging: ✅ Both packages pack; targets-based injection verified via PackageReference consumer
+- Git commits: 16 (Steps 01-16)
 
 ## Next Action
-Continue with Step 16 — **NuGet Packaging** — both packages pack and can be consumed from local feed
+Continue with Step 17 — **GitHub Actions Publish Workflow** — CI/CD for automated package publishing
