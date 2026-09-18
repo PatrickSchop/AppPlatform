@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Wisdi.AppPlatform.Tasks;
 
 namespace Wisdi.AppPlatform.Data;
 
@@ -64,6 +65,10 @@ public static class PlatformDataExtensions
         services.AddSingleton<IMigrationScriptProvider, DirectoryMigrationScriptProvider>();
         services.AddScoped<DatabaseMigrator<TContext>>();
         services.AddScoped<IDatabaseMigrator>(sp => sp.GetRequiredService<DatabaseMigrator<TContext>>());
+
+        services.AddScoped<BackgroundTaskService<TContext>>();
+        services.AddScoped<IBackgroundTaskService>(sp => sp.GetRequiredService<BackgroundTaskService<TContext>>());
+        services.AddScoped<IBackgroundTaskManagementService>(sp => sp.GetRequiredService<BackgroundTaskService<TContext>>());
 
         return services;
     }
