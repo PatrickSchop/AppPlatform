@@ -188,6 +188,16 @@ copy-pasteable verification command and a stated expected result.
 
 **Execute strictly in order.** Every step declares its dependency; nothing is parallel.
 
+**Keep track of state.** Update `tiny-app-platform-v1-progress.md` after completing each step to document what was done, how many tests pass, and what step comes next. This allows re-entrant execution if the session ends.
+
+**Commit and push after each step.** After each step completes green (build and tests pass):
+1. `git add -A` to stage all changes
+2. `git commit -m "Step NN: <description>"` with the commit message from the step document
+3. `git push` to push to the remote repository — this is critical for preserving work
+4. Update `tiny-app-platform-v1-progress.md` and commit/push that as well
+
+Pushing is essential because it ensures work is not lost if the session ends or the local machine fails.
+
 ### Phase 0 — Foundation
 
 | Step | Document | Outcome |
