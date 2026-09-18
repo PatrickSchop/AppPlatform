@@ -70,6 +70,9 @@ public static class PlatformDataExtensions
         services.AddScoped<IBackgroundTaskService>(sp => sp.GetRequiredService<BackgroundTaskService<TContext>>());
         services.AddScoped<IBackgroundTaskManagementService>(sp => sp.GetRequiredService<BackgroundTaskService<TContext>>());
 
+        services.AddScoped<TaskExecutionManager<TContext>>();
+        services.AddScoped<ITaskExecutionManager>(sp => sp.GetRequiredService<TaskExecutionManager<TContext>>());
+
         return services;
     }
 }
