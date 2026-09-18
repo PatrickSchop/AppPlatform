@@ -1,15 +1,15 @@
 targetScope = 'resourceGroup'
 
-@description('Short app name, lowercase, used to derive every resource name.')
+@description('Short app name, lowercase, used to derive every resource name. Capped at 17 chars because it also names a storage account (appName + "storage"), which must stay under Azure\'s 24-char storage account name limit.')
 @minLength(3)
-@maxLength(20)
+@maxLength(17)
 param appName string
 
 @description('Existing shared SQL server name.')
 param sqlServerName string = 'pschop-db'
 
-@description('Existing shared storage account name.')
-param storageAccountName string = 'stockinfostorage'
+@description('Resource group holding the shared SQL server.')
+param sharedResourceGroupName string = 'ApplicationsShared'
 
 param location string = resourceGroup().location
 
@@ -28,26 +28,35 @@ resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' 
   location: location
 }
 
-// SQL database on the existing server
-resource sqlServer 'Microsoft.Sql/servers@2019-06-01-preview' existing = {
-  name: sqlServerName
+// SQL database on the existing server. The server lives in the shared resource group,
+// so this is a module deployed with that scope (see modules/database.bicep) — the
+// database resource must live there too, since child resources can't live in a
+// different resource group than their parent.
+module database 'modules/database.bicep' = {
+  name: '${appName}-database'
+  scope: resourceGroup(sharedResourceGroupName)
+  params: {
+    sqlServerName: sqlServerName
+    appName: appName
+    location: location
+    sqlSkuName: sqlSkuName
+  }
 }
 
-resource database 'Microsoft.Sql/servers/databases@2021-11-01' = {
-  parent: sqlServer
-  name: appName
+// Storage account, owned by this app alone (not shared with other apps): SPA static
+// content plus this Function App's own AzureWebJobsStorage. Sharing one account across
+// apps' AzureWebJobsStorage is a known anti-pattern (host lease/trigger state collides).
+resource storageAccount 'Microsoft.Storage/storageAccounts@2021-06-01' = {
+  name: '${appName}storage'
   location: location
+  kind: 'StorageV2'
   sku: {
-    name: sqlSkuName
+    name: 'Standard_LRS'
   }
   properties: {
-    zoneRedundant: false
+    accessTier: 'Hot'
+    supportsHttpsTrafficOnly: true
   }
-}
-
-// Blob container for SPA static content
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-06-01' existing = {
-  name: storageAccountName
 }
 
 resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-06-01' = {
@@ -99,7 +108,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           // Configuration via __ (double underscore) separators, not colons.
           // This maps to : in IConfiguration on Linux. Using : would silently misconfigure.
           name: 'AzureWebJobsStorage__accountName'
-          value: storageAccountName
+          value: storageAccount.name
         }
         {
           name: 'DEV_ENVIRONMENT'
@@ -123,7 +132,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'staticContent__blob__uri'
-          value: 'https://${storageAccountName}.blob.${environment().suffixes.storage}/web-${appName}'
+          value: 'https://${storageAccount.name}.blob.${environment().suffixes.storage}/web-${appName}'
         }
         {
           name: 'backgroundTasks__apiBaseUrl'
@@ -210,7 +219,7 @@ output identityClientId string = identity.properties.clientId
 output identityPrincipalId string = identity.properties.principalId
 
 @description('Database name')
-output databaseName string = database.name
+output databaseName string = database.outputs.databaseName
 
 @description('Blob container URI')
 output blobContainerUri string = '${storageAccount.properties.primaryEndpoints.blob}web-${appName}'

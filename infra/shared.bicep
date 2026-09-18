@@ -1,22 +1,42 @@
-// DO NOT RUN against the live subscription without review.
-// The shared resources already exist and are used by StockAnalysis.
-// This file documents them and allows recreation in a new subscription.
+// Shared Azure resources for the AppPlatform: the SQL logical server and its Entra
+// admin. Deployed once into the `ApplicationsShared` resource group. Per-app databases
+// are created by app.bicep against this server, in that same resource group (Azure
+// requires child resources to live in their parent's resource group).
+//
+// This is live IaC, not just documentation: run `what-if` before any redeploy to
+// confirm it matches reality with zero unexpected changes.
+//
+// Storage and Azure OpenAI used to be documented here as "shared", but in practice
+// only one app used them. They're provisioned per-app now (storage by app.bicep;
+// OpenAI ad hoc per app, when needed) rather than centrally here.
 
 targetScope = 'resourceGroup'
 
-param location string = 'eastus'
+param location string = resourceGroup().location
 
-// Resource group
-@description('Resource group for all applications. Created once, shared by all apps.')
-param resourceGroupName string = 'Applications'
+@description('SQL server admin login name.')
+param sqlAdminLogin string = 'ps-admin'
+
+@secure()
+@description('SQL server admin password. Pass at deploy time, never commit a value for this.')
+param sqlAdminLoginPassword string
+
+@description('Entra tenant ID for the SQL server AAD admin.')
+param entraTenantId string
+
+@description('Object id (SID) of the Entra AAD admin (user, group, or service principal) for the SQL server.')
+param entraAdminObjectId string
+
+@description('Display name of the Entra AAD admin, shown in the portal.')
+param entraAdminLogin string
 
 // SQL Server with Entra admin
 resource sqlServer 'Microsoft.Sql/servers@2019-06-01-preview' = {
   name: 'pschop-db'
   location: location
   properties: {
-    administratorLogin: 'ps-admin'
-    administratorLoginPassword: 'ChangeMeToStrongPassword!'  // Replace with secure value
+    administratorLogin: sqlAdminLogin
+    administratorLoginPassword: sqlAdminLoginPassword
     version: '12.0'
   }
 }
@@ -27,43 +47,11 @@ resource sqlAadAdmin 'Microsoft.Sql/servers/administrators@2019-06-01-preview' =
   name: 'ActiveDirectory'
   properties: {
     administratorType: 'ActiveDirectory'
-    login: 'AzureAD'
-    sid: 'TenantIdGuid'  // Replace with actual tenant id
-    tenantId: 'TenantIdGuid'  // Replace with actual tenant id
+    login: entraAdminLogin
+    sid: entraAdminObjectId
+    tenantId: entraTenantId
   }
 }
 
-// Storage account for SPA hosting and function app storage
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-06-01' = {
-  name: 'stockinfostorage'
-  location: location
-  kind: 'StorageV2'
-  sku: {
-    name: 'Standard_LRS'
-  }
-  properties: {
-    accessTier: 'Hot'
-    https: true
-  }
-}
-
-// Static website hosting on storage account
-resource staticWebsite 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-06-01' = {
-  name: '${storageAccount.name}/default/$web'
-  properties: {
-    publicAccess: 'Container'
-  }
-}
-
-// Azure OpenAI account
-resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: 'ps-openai'
-  location: location
-  kind: 'OpenAI'
-  sku: {
-    name: 'S0'
-  }
-  properties: {
-    customSubdomainName: 'ps-openai'
-  }
-}
+@description('SQL server name, for app.bicep\'s sqlServerName param.')
+output sqlServerName string = sqlServer.name

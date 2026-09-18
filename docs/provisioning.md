@@ -5,7 +5,8 @@ This guide walks through provisioning a new app on the PS.AppPlatform, from `dot
 **Prerequisites:**
 - `.NET 10 SDK` and `Azure Functions Core Tools`
 - `Azure CLI` authenticated to your subscription
-- Access to the `Applications` resource group
+- Contributor access to create resource groups, and read access to the `ApplicationsShared`
+  resource group (the shared SQL server every app's database lives on)
 - An Entra tenant with admin rights (for app registration)
 
 ## Step 1: Generate the app from template
@@ -17,27 +18,34 @@ cd <AppName>
 
 ## Step 2: Provision Azure resources
 
-Deploy the per-app infrastructure using bicep.
+Each app gets its own resource group, named after the app. Create it, then deploy the
+per-app infrastructure into it.
 
 ```powershell
+az group create --name <AppName> --location westeurope
+
 az deployment group create `
-  --resource-group Applications `
+  --resource-group <AppName> `
   --template-file infra/app.bicep `
   --parameters appName=<app>
 
 # Save the outputs (you'll need them next)
 az deployment group show `
   --name app `
-  --resource-group Applications `
+  --resource-group <AppName> `
   --query properties.outputs
 ```
 
-The deployment creates:
+The deployment creates, all inside `<AppName>`:
 - User-assigned managed identity (`id-<app>`)
-- SQL database (`<app>` on the shared server)
-- Storage blob container (`web-<app>`)
+- Storage account (`<app>storage`) with a blob container (`web-<app>`) for SPA static
+  content and this app's own `AzureWebJobsStorage`
 - Function App (`<app>-api`)
 - Role assignments for managed identity access
+
+It also creates a SQL database (`<app>`) on the shared server in `ApplicationsShared` —
+that one resource lives in the shared resource group, not the app's own, since Azure
+requires a database to live in the same resource group as its server.
 
 ## Step 3: Create database user
 
@@ -82,7 +90,7 @@ If you want a custom domain (e.g., `<app>.PS.nl`):
 
 ```powershell
 az deployment group create `
-  --resource-group Applications `
+  --resource-group <AppName> `
   --template-file infra/app.bicep `
   --parameters appName=<app> customDomain=<app>.PS.nl
 ```
@@ -92,11 +100,10 @@ az deployment group create `
 To completely remove the app and reclaim resources:
 
 ```powershell
-# Delete in this order to avoid dependency issues
-az sql db delete --resource-group Applications --server pschop-db --name <app> --yes
-az functionapp delete --resource-group Applications --name <app>-api
-az storage container delete --account-name stockinfostorage --name web-<app>
-az identity delete --resource-group Applications --name id-<app>
+# The database is the one thing outside the app's own resource group
+az sql db delete --resource-group ApplicationsShared --server pschop-db --name <app> --yes
+
+az group delete --name <AppName> --yes
 ```
 
 A documented teardown makes a throwaway app genuinely throwaway — run it when you're done to avoid surprise charges.
