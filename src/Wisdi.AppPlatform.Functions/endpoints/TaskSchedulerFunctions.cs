@@ -4,7 +4,7 @@ using Wisdi.AppPlatform.Tasks;
 
 namespace Wisdi.AppPlatform.Generated;
 
-public class TaskSchedulerFunctions(ITaskExecutionManager manager, ILogger<TaskSchedulerFunctions> logger)
+public class TaskSchedulerFunctions(ITaskExecutionManager manager)
 {
     /// <summary>
     /// Safety net for queued tasks. The primary trigger is a fire-and-forget self-POST from

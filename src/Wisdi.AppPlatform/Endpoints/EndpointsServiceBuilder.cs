@@ -15,5 +15,6 @@ public static class EndpointsServiceBuilder
         services.AddScoped<IHealthEndpoints, HealthEndpoints>();
         services.AddScoped<IBackgroundTaskEndpoints, BackgroundTaskEndpoints>();
         services.AddScoped<IDatabaseEndpoints, DatabaseEndpoints>();
+        services.AddScoped<IStaticContentEndpoints, StaticContentEndpoints>();
     }
 }

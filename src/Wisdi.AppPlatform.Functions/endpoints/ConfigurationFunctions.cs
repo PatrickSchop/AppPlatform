@@ -16,5 +16,5 @@ public class ConfigurationFunctions(IConfigurationEndpoints inner)
     [Function("GetWebAppConfiguration")]
     public Task<IActionResult> GetConfiguration(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "configuration.json")] HttpRequest req)
-        => inner.GetConfigurationAsync(req, req.HttpContext.RequestAborted);
+        => inner.GetWebAppConfigurationAsync(req, req.HttpContext.RequestAborted);
 }
