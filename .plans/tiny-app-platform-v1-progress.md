@@ -13,11 +13,16 @@ Last updated: 2026-09-18
   - ServiceBuilder, PlatformAssemblies, PlatformConfiguration, PlatformHostBuilder
   - HostingEnvironment, AzureIdentityProvider
   - 11 passing tests
+- ✅ **Step 04**: Generic data layer
+  - PlatformDbContext base class with entity discovery via PlatformAssemblies
+  - AddPlatformData<TContext> generic registration extension
+  - AzureSqlTokenInterceptor for managed identity SQL auth
+  - BackgroundTask stub with required properties
+  - 14 passing tests (3 new data layer tests)
 
 ## Pending Steps
 
 ### Phase 1 — Core Engine (continued)
-- ⏳ **Step 04**: Generic `PlatformDbContext`, `AddPlatformData<TContext>`, SQL token interceptor
 - ⏳ **Step 05**: `DatabaseMigrator` + embedded core scripts + `__SchemaVersions`
 - ⏳ **Step 06**: Background task model, enum, interfaces, registry, handler context
 - ⏳ **Step 07**: `BackgroundTaskService<TContext>`, singleton manager id
@@ -52,9 +57,9 @@ Last updated: 2026-09-18
 - ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
 
 ## Test Status
-- Total tests: 11 passing
+- Total tests: 14 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 3 (Steps 01-03)
+- Git commits: 4 (Steps 01-04)
 
 ## Next Action
-Continue with Step 04 — Data layer (`PlatformDbContext`, `AddPlatformData<TContext>`, SQL token interceptor)
+Continue with Step 05 — Migrations (`DatabaseMigrator` + embedded core scripts + `__SchemaVersions`)
