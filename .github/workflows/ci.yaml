@@ -14,7 +14,10 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - run: dotnet restore
+      - run: dotnet restore src/PS.AppPlatform/PS.AppPlatform.csproj
+      - run: dotnet restore src/PS.AppPlatform.Functions/PS.AppPlatform.Functions.csproj
+      - run: dotnet restore tests/PS.AppPlatform.Tests/PS.AppPlatform.Tests.csproj
+      - run: dotnet restore samples/SampleApp/SampleApp.csproj
       - run: dotnet build --configuration Release --no-restore
       - run: dotnet test --configuration Release --no-build --logger trx
 
