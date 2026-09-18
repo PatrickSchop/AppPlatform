@@ -54,11 +54,20 @@ Last updated: 2026-09-18
   - Fixed typos in error messages
   - Documentation on ITaskHandler<T> about lease/progress obligation
   - 7 passing tests for task execution (48 total tests passing)
+- ✅ **Step 09**: Static content with SPA deep-link fallback, ETag caching and full content types (fixes section 4)
+  - IFilesProvider returns StaticFile with metadata (ETag, LastModified, Length)
+  - LocalFilesProvider with hardened path-traversal protection (sibling directory check)
+  - BlobProvider with optimized single-call download (halves round trips for cold start)
+  - StaticContentHandler with SPA fallback: extensionless paths → index.html
+  - ContentTypes dictionary with 19 MIME types (.ico, .woff2, .map, .wasm, .webp, etc.)
+  - Cache headers: no-cache for index.html, immutable for assets
+  - ETag/If-None-Match with 304 Not Modified support
+  - StaticContentServiceBuilder for pluggable provider selection
+  - 16 passing tests for static content (64 total tests passing)
 
 ## Pending Steps
 
 ### Phase 1 — Core Engine (continued)
-- ⏳ **Step 09**: Static content providers, SPA fallback fix, content types, caching
 - ⏳ **Step 10**: Default-deny authorization, CORS-first, role enforcement
 - ⏳ **Step 11**: `LlmTextParserBase<T>`, `ILlmTextParseClient`
 - ⏳ **Step 12**: Endpoint logic as plain injectable services
@@ -88,9 +97,9 @@ Last updated: 2026-09-18
 - ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
 
 ## Test Status
-- Total tests: 48 passing
+- Total tests: 64 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 8 (Steps 01-08)
+- Git commits: 9 (Steps 01-09)
 
 ## Next Action
-Continue with Step 09 — Static content providers, SPA fallback fix, content types, caching
+Continue with Step 10 — Default-deny authorization, CORS-first, role enforcement
