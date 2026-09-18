@@ -26,11 +26,18 @@ Last updated: 2026-09-18
   - DatabaseMigrator<TContext> with version tracking, batch splitting, checksum calculation
   - MigrationEntryPoint for --migrate CLI path
   - 24 passing tests (10 new migration tests)
+- ✅ **Step 06**: Background task contracts, model, registry, handler context
+  - BackgroundTaskStatus enum with bitmask design (New, Resumed, NotStarted, Running, Paused, Completed, Failed)
+  - BackgroundTask entity with LeaseExpiresUtc property
+  - ITaskHandler<T>, ITaskHandlerRegistry, TaskHandlerRegistry with case-insensitive lookups
+  - IBackgroundTaskCollection, BackgroundTaskCollection (public, with duplicate name checking)
+  - IBackgroundTaskService, IBackgroundTaskManagementService with RenewLeaseAsync
+  - TaskHandlerContext with UpdateProgressAsync that renews lease
+  - 9 passing tests for task contracts (33 total tests passing)
 
 ## Pending Steps
 
 ### Phase 1 — Core Engine (continued)
-- ⏳ **Step 06**: Background task model, enum, interfaces, registry, handler context
 - ⏳ **Step 07**: `BackgroundTaskService<TContext>`, singleton manager id
 - ⏳ **Step 08**: Claim SQL, concurrency cap, lease recovery
 - ⏳ **Step 09**: Static content providers, SPA fallback fix, content types, caching
@@ -63,9 +70,9 @@ Last updated: 2026-09-18
 - ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
 
 ## Test Status
-- Total tests: 24 passing
+- Total tests: 33 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 5 (Steps 01-05)
+- Git commits: 6 (Steps 01-06)
 
 ## Next Action
-Continue with Step 06 — Background task model, enum, interfaces, registry, handler context
+Continue with Step 07 — `BackgroundTaskService<TContext>`, singleton manager id
