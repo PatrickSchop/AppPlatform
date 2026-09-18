@@ -1,0 +1,13 @@
+bin/
+obj/
+node_modules/
+dist/
+*.user
+.vs/
+.vscode/
+artifacts/
+local.settings.json
+appsettings.local.json
+*.nupkg
+TestResults/
+.env
