@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Execution Progress
 
-Last updated: 2026-09-18
+Last updated: 2026-09-18 (Step 10 complete)
 
 ## Completed Steps
 
@@ -64,11 +64,20 @@ Last updated: 2026-09-18
   - ETag/If-None-Match with 304 Not Modified support
   - StaticContentServiceBuilder for pluggable provider selection
   - 16 passing tests for static content (64 total tests passing)
+- ✅ **Step 10**: Default-deny Functions-native authorization, CORS-first, role enforcement (fixes section 6)
+  - PlatformAuthenticationOptions with TenantId/ClientId validation
+  - PlatformAuthExtensions: JWT bearer auth via AddMicrosoftIdentityWebApi
+  - FunctionAuthorizationMiddleware: reads [Authorize]/[AllowAnonymous] from method reflection
+  - Default-deny policy + RequiredRole support with case-insensitive matching
+  - CorsMiddleware: CORS-first ordering, comma-separated origins, Vary header
+  - FunctionContextExtensions: GetTargetFunctionMethod() via EntryPoint reflection
+  - PlatformMiddlewareChain: chains CORS → Authorization
+  - AuthServiceBuilder.AddPlatformAuth() registers all platform auth services
+  - 12 new auth tests (76 total tests passing)
 
 ## Pending Steps
 
 ### Phase 1 — Core Engine (continued)
-- ⏳ **Step 10**: Default-deny authorization, CORS-first, role enforcement
 - ⏳ **Step 11**: `LlmTextParserBase<T>`, `ILlmTextParseClient`
 - ⏳ **Step 12**: Endpoint logic as plain injectable services
 
@@ -97,9 +106,9 @@ Last updated: 2026-09-18
 - ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
 
 ## Test Status
-- Total tests: 64 passing
+- Total tests: 76 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 9 (Steps 01-09)
+- Git commits: 10 (Steps 01-10)
 
 ## Next Action
-Continue with Step 10 — Default-deny authorization, CORS-first, role enforcement
+Continue with Step 11 — LlmTextParserBase<T>, ILlmTextParseClient
