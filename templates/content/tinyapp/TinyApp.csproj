@@ -15,8 +15,8 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" />
-    <PackageReference Include="PS.AppPlatform" Version="0.0.0-PLATFORM-VERSION" />
-    <PackageReference Include="PS.AppPlatform.Functions" Version="0.0.0-PLATFORM-VERSION" />
+    <PackageReference Include="PS.AppPlatform" />
+    <PackageReference Include="PS.AppPlatform.Functions" />
   </ItemGroup>
 
   <!--

@@ -10,6 +10,17 @@ A minimal serverless application on PS.AppPlatform: database migrations, backgro
 - Azure Functions Core Tools (`func`)
 - SQL Server (Azure SQL or localdb)
 - Azure subscription (for deployment)
+- GitHub personal access token (PAT) configured for PS.AppPlatform NuGet feed
+
+**NuGet authentication:** PS.AppPlatform packages are published to GitHub Packages. Before building, configure a PAT in your NuGet credentials:
+
+```powershell
+# On Windows, nuget.config points to GitHub Packages
+# You'll need to set credentials in your system's credential manager or via command line:
+dotnet nuget add source https://nuget.pkg.github.com/PatrickSchop/index.json -n github -u <username> -p <token> --store-password-in-clear-text
+```
+
+See [docs/consuming-packages.md](https://github.com/PatrickSchop/AppPlatform/blob/main/docs/consuming-packages.md) for complete authentication instructions.
 
 ### 1. Create the database
 
