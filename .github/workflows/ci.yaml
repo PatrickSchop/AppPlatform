@@ -5,18 +5,34 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - run: dotnet restore AppPlatform.slnx
       - run: dotnet build AppPlatform.slnx --configuration Release --no-restore
-      - run: dotnet test --configuration Release --no-build --logger trx
+      - run: dotnet test AppPlatform.slnx --configuration Release --no-build --logger trx
 
       - name: Install Azure CLI (for bicep linting)
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | bash
@@ -27,7 +43,7 @@ jobs:
           az bicep build --file infra/app.bicep --stdout > /dev/null
           az bicep build --file infra/shared.bicep --stdout > /dev/null
 
-      - run: dotnet pack --configuration Release --no-build -o artifacts
+      - run: dotnet pack AppPlatform.slnx --configuration Release --no-build -o artifacts
 
       - name: Assert the Functions package ships no assembly
         shell: pwsh
@@ -43,4 +59,5 @@ jobs:
         with:
           name: packages
           path: artifacts/*
+          retention-days: 14
 
