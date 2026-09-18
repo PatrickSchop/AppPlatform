@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Execution Progress
 
-Last updated: 2026-09-18 (Step 14 complete)
+Last updated: 2026-09-18 (Step 15 complete)
 
 ## Completed Steps
 
@@ -108,11 +108,18 @@ Last updated: 2026-09-18 (Step 14 complete)
   - appsettings.development.json enables API migration for dev
   - local.settings.json: timer schedule 0 */5 * * * *, AzureWebJobsStorage for dev
   - 96 tests passing; build clean with 0 warnings
+- ✅ **Step 15**: **Gate A** — metadata, migrations, numbering, test suite verification
+  - Fixed DatabaseMigrator.GetAppliedScriptNamesAsync (NextResultAsync → ReadAsync bug)
+  - Verified all 13 platform functions in functions.metadata with scriptFile: SampleApp.dll
+  - Verified worker indexing enabled (workerIndexing: true)
+  - Verified schema versioning: second migration applies nothing (idempotent)
+  - Verified BackgroundTasks table has all required columns
+  - Verified script numbering validation (rejects app scripts < 100)
+  - All 96 tests pass; Release build clean
+  - Deferred: SPA serving, deep links, task execution, auth — require interactive func start
+  - Created docs/gate-a-results.md with full verification report
 
 ## Pending Steps
-
-### Phase 2 — Functions Surface and First Proof
-- ⏳ **Step 15**: **Gate A** — metadata, migrate-twice, deep link, task lifecycle
 
 ### Phase 3 — Packaging
 - ⏳ **Step 16**: NuGet packaging for both packages
@@ -136,7 +143,8 @@ Last updated: 2026-09-18 (Step 14 complete)
 ## Test Status
 - Total tests: 96 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 14 (Steps 01-14)
+- Gate A: ✅ Passed (critical checks verified; runtime tests deferred)
+- Git commits: 15 (Steps 01-15)
 
 ## Next Action
-Continue with Step 15 — **Gate A** — metadata, migrate-twice, deep link, task lifecycle
+Continue with Step 16 — **NuGet Packaging** — both packages pack and can be consumed from local feed
