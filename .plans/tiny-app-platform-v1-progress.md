@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Execution Progress
 
-Last updated: 2026-09-18 (Step 12 complete)
+Last updated: 2026-09-18 (Step 13 complete)
 
 ## Completed Steps
 
@@ -85,14 +85,19 @@ Last updated: 2026-09-18 (Step 12 complete)
   - LlmServiceBuilder: optional module, only registers when azureOpenAI config exists
   - Logs warning for apiKey auth (prefers managed identity)
   - 10 new LLM tests (86 total tests passing)
+- ✅ **Step 13**: Source-injected Functions shim package and timer safety net
+  - Wisdi.AppPlatform.Functions: packaging-only project (IncludeBuildOutput=false)
+  - 6 endpoint shim files: BackgroundTaskFunctions, ConfigurationFunctions, HealthFunctions, DatabaseFunctions, StaticContentFunctions, TaskSchedulerFunctions
+  - build/Wisdi.AppPlatform.Functions.targets auto-imports endpoints into consumer
+  - TaskSchedulerFunctions: timer trigger with configurable schedule (%backgroundTasks:checkSchedule%)
+  - Security model embedded in StaticContentFunctions: SPA is public, /api/* is default-deny
+  - Package verified: contains endpoints/*.cs and build/*.targets, no lib/ folder
+  - README.md documents ProjectReference vs PackageReference trap
+  - 96 tests still passing (shims only compile in consumer)
 
 ## Pending Steps
 
-### Phase 1 — Core Engine (continued)
-- ⏳ **Step 12**: Endpoint logic as plain injectable services
-
 ### Phase 2 — Functions Surface and First Proof
-- ⏳ **Step 13**: Shim `.cs` files + auto-imported `.targets` + timer trigger
 - ⏳ **Step 14**: `samples/SampleApp` — the standing regression gate
 - ⏳ **Step 15**: **Gate A** — metadata, migrate-twice, deep link, task lifecycle
 
@@ -118,7 +123,7 @@ Last updated: 2026-09-18 (Step 12 complete)
 ## Test Status
 - Total tests: 96 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 12 (Steps 01-12)
+- Git commits: 13 (Steps 01-13)
 
 ## Next Action
-Continue with Step 13 — Shim `.cs` files + auto-imported `.targets` + timer trigger
+Continue with Step 14 — `samples/SampleApp` — the standing regression gate
