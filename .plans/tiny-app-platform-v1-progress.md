@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Execution Progress
 
-Last updated: 2026-09-18 (Step 17 complete)
+Last updated: 2026-09-18 (Step 18 complete)
 
 ## Completed Steps
 
@@ -141,10 +141,26 @@ Last updated: 2026-09-18 (Step 17 complete)
   - GitHub CLI installed and authenticated for release management
   - All 96 tests pass; Release build clean; 17 commits (Steps 01-17)
 
+### Phase 4 — Template, Infrastructure, Operations
+- ✅ **Step 18**: `dotnet new tinyapp` template
+  - Created templates/ directory structure with full scaffolding content
+  - template.json with parameterization: PlatformVersion (0.1.0), AppRole, SqlServer, StorageAccount, Frontend choice
+  - dotnetcli.host.json (CLI short names) and ide.host.json (IDE support)
+  - Scaffolded content: Program.cs, AppServiceBuilder (stubs with comments), AppDbContext, config layers
+  - Database/Scripts/100_InitialSchema.sql with commented example and numbering rules
+  - .github/workflows/deploy.yaml stub and infra/main.bicepparam for infrastructure
+  - Wisdi.AppPlatform.Templates.csproj (packaging-only: IncludeBuildOutput=false, Compile=none)
+  - Directory.Build.props updated with `templates\content` exclusion from solution build
+  - publish.yaml updated to pack all three packages in lockstep (platform, functions, templates)
+  - Verified: `dotnet new tinyapp -n SmokeApp -pv 0.1.0-local -ar smoke.user` scaffolds correctly
+  - Verified: No TinyApp strings, no placeholder tokens, correct parameterization
+  - Verified: Root build clean (0 warnings, 0 errors), all 96 tests passing
+  - Created templates/README.md with installation and usage instructions
+  - Template not added to solution; only packing explicitly
+
 ## Pending Steps
 
-### Phase 4 — Template, Infrastructure, Operations
-- ⏳ **Step 18**: `dotnet new tinyapp` template
+### Phase 4 (continued)
 - ⏳ **Step 19**: **Gate B** — ScratchApp from template verification
 - ⏳ **Step 20**: Bicep infrastructure (`app.bicep`)
 - ⏳ **Step 21**: Reusable GitHub Actions workflows
@@ -162,9 +178,10 @@ Last updated: 2026-09-18 (Step 17 complete)
 - Total tests: 96 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
 - Gate A: ✅ Passed (critical checks verified; runtime tests deferred)
-- Packaging: ✅ Both packages pack and publish; 0.1.0 live in GitHub Packages
-- CI/CD: ✅ Both workflows active and verified
-- Git commits: 17 (Steps 01-17)
+- Packaging: ✅ All three packages (platform, functions, templates) pack successfully
+- Template: ✅ Verified local scaffold without placeholder tokens
+- CI/CD: ✅ CI workflow active; Publish workflow packs all three packages
+- Git commits: 18 (Steps 01-18)
 
 ## Next Action
-Continue with Step 18 — **`dotnet new tinyapp` Template** — template scaffolding for rapid app creation
+Continue with Step 19 — **Gate B: Template Verification** — build a real app from the template
