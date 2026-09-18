@@ -180,15 +180,9 @@ END";
         using var reader = await command.ExecuteReaderAsync(ct);
 
         var scripts = new List<string>();
-        while (await reader.NextResultAsync(ct))
+        while (await reader.ReadAsync(ct))
         {
-            if (reader.HasRows)
-            {
-                while (await reader.ReadAsync(ct))
-                {
-                    scripts.Add(reader.GetString(0));
-                }
-            }
+            scripts.Add(reader.GetString(0));
         }
 
         return scripts;
