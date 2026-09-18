@@ -84,6 +84,18 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
       functionAppScaleLimit: 200
       appSettings: [
         {
+          // Required for Azure to run this as a .NET isolated Functions app at all.
+          // Without these two, the platform is silently never invoked: the Function App
+          // accepts deployments and reports healthy, but indexes zero functions and every
+          // route 404s, with no error surfaced anywhere.
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'dotnet-isolated'
+        }
+        {
           // Configuration via __ (double underscore) separators, not colons.
           // This maps to : in IConfiguration on Linux. Using : would silently misconfigure.
           name: 'AzureWebJobsStorage__accountName'
