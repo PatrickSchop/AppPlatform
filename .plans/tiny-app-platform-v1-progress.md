@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Execution Progress
 
-Last updated: 2026-09-18 (Step 13 complete)
+Last updated: 2026-09-18 (Step 14 complete)
 
 ## Completed Steps
 
@@ -95,10 +95,23 @@ Last updated: 2026-09-18 (Step 13 complete)
   - README.md documents ProjectReference vs PackageReference trap
   - 96 tests still passing (shims only compile in consumer)
 
+### Phase 2 — Functions Surface and First Proof
+- ✅ **Step 14**: `samples/SampleApp` — the standing regression gate
+  - First consumer of Step 13 shims; shims compile here via ProjectReference
+  - Note entity with optional WordCount field and CreatedUtc timestamp
+  - WordCountTaskHandler: 2.5s task (~500ms per note) with progress reporting via UpdateProgressAsync
+  - NotesEndpoints service (GetAll, Create, StartWordCount) + NotesFunctions shims
+  - SampleServiceBuilder registers NotesEndpoints and WordCountTaskHandler
+  - HTML5 UI: config fetch, note list, form, task polling with progress bar
+  - Deep-link test: /dashboard (non-existent) serves index.html via SPA fallback
+  - docs/background-tasks.md documents lease renewal obligation (300s default)
+  - appsettings.development.json enables API migration for dev
+  - local.settings.json: timer schedule 0 */5 * * * *, AzureWebJobsStorage for dev
+  - 96 tests passing; build clean with 0 warnings
+
 ## Pending Steps
 
 ### Phase 2 — Functions Surface and First Proof
-- ⏳ **Step 14**: `samples/SampleApp` — the standing regression gate
 - ⏳ **Step 15**: **Gate A** — metadata, migrate-twice, deep link, task lifecycle
 
 ### Phase 3 — Packaging
@@ -123,7 +136,7 @@ Last updated: 2026-09-18 (Step 13 complete)
 ## Test Status
 - Total tests: 96 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 13 (Steps 01-13)
+- Git commits: 14 (Steps 01-14)
 
 ## Next Action
-Continue with Step 14 — `samples/SampleApp` — the standing regression gate
+Continue with Step 15 — **Gate A** — metadata, migrate-twice, deep link, task lifecycle
