@@ -43,11 +43,21 @@ Last updated: 2026-09-18
   - TasksServiceBuilder registers singletons
   - PlatformDataExtensions registers context-dependent services
   - 8 passing tests for task service (41 total tests passing)
+- ✅ **Step 08**: Task execution manager with shared identity, claim SQL and orphan lease recovery (fixes 7.2)
+  - TaskExecutionManager<TContext> with shared ExecutionManagerIdentity and TaskCheckGate
+  - Atomic claim SQL with concurrency cap and slot management
+  - Resumed tasks prioritized before New tasks in claim ordering
+  - LeaseExpiresUtc set when tasks are claimed
+  - ReclaimExpiredLeasesAsync for orphan recovery
+  - Fire-and-forget task execution with continuation-based error logging
+  - Handler resolution from isolated async scope (fixes disposed-scope bug)
+  - Fixed typos in error messages
+  - Documentation on ITaskHandler<T> about lease/progress obligation
+  - 7 passing tests for task execution (48 total tests passing)
 
 ## Pending Steps
 
 ### Phase 1 — Core Engine (continued)
-- ⏳ **Step 08**: Claim SQL, concurrency cap, lease recovery
 - ⏳ **Step 09**: Static content providers, SPA fallback fix, content types, caching
 - ⏳ **Step 10**: Default-deny authorization, CORS-first, role enforcement
 - ⏳ **Step 11**: `LlmTextParserBase<T>`, `ILlmTextParseClient`
@@ -78,9 +88,9 @@ Last updated: 2026-09-18
 - ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
 
 ## Test Status
-- Total tests: 41 passing
+- Total tests: 48 passing
 - Build status: ✅ Clean (0 warnings, 0 errors)
-- Git commits: 7 (Steps 01-07)
+- Git commits: 8 (Steps 01-08)
 
 ## Next Action
-Continue with Step 08 — Claim SQL, concurrency cap, lease recovery
+Continue with Step 09 — Static content providers, SPA fallback fix, content types, caching
