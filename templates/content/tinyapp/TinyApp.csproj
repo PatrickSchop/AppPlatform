@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>TinyApp</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" />
+    <PackageReference Include="Wisdi.AppPlatform" Version="0.0.0-PLATFORM-VERSION" />
+    <PackageReference Include="Wisdi.AppPlatform.Functions" Version="0.0.0-PLATFORM-VERSION" />
+  </ItemGroup>
+
+  <!--
+    With PackageReference, the Wisdi.AppPlatform.Functions package automatically
+    injects its build/Wisdi.AppPlatform.Functions.targets file, which includes
+    the [Function] shim files (endpoints/*.cs) into the compilation. This happens
+    automatically — no explicit <Compile Include> is needed or desired.
+    See src/Wisdi.AppPlatform.Functions/README.md for more details.
+  -->
+
+  <ItemGroup>
+    <None Update="host.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="local.settings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="appsettings.development.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="appsettings.deployment.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Database\Scripts\**\*.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

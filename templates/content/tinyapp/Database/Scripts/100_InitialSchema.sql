@@ -1,0 +1,14 @@
+-- Schema scripts for your app go here, numbered 100 and up.
+-- Platform scripts (000-099) are managed automatically.
+-- Each script is executed once and tracked in [dbo].[__SchemaVersions].
+--
+-- Example:
+-- IF NOT EXISTS (SELECT * FROM sys.objects
+--                WHERE object_id = OBJECT_ID(N'[dbo].[YourTable]') AND type = N'U')
+-- BEGIN
+--     CREATE TABLE [dbo].[YourTable] (
+--         [Id]         UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
+--         [Name]       NVARCHAR(200)    NOT NULL,
+--         [CreatedUtc] DATETIME2        NOT NULL DEFAULT GETUTCDATE()
+--     );
+-- END

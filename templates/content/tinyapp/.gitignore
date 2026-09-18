@@ -1,0 +1,31 @@
+# Local dev files
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.userprefs
+
+# Azure Functions
+azure-functions-core-tools/
+
+# NuGet
+packages/
+.nuget/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local settings
+local.settings.json
+
+# Build output
+artifacts/
+publish/

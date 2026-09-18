@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json.schemastore.org/dotnetcli.host.schema.json",
+  "symbolInfo": {
+    "PlatformVersion": {
+      "longName": "platform-version",
+      "shortName": "pv",
+      "description": "Version of Wisdi.AppPlatform packages to reference"
+    },
+    "AppRole": {
+      "longName": "app-role",
+      "shortName": "ar",
+      "description": "Entra app role required to access this app"
+    },
+    "SqlServer": {
+      "longName": "sql-server",
+      "shortName": "sql",
+      "description": "SQL Server logical server name (without .database.windows.net)"
+    },
+    "StorageAccount": {
+      "longName": "storage-account",
+      "shortName": "st",
+      "description": "Storage account name for background job coordination"
+    },
+    "Frontend": {
+      "longName": "frontend",
+      "shortName": "fe",
+      "description": "Frontend starter to include: none, angular, or react"
+    }
+  }
+}

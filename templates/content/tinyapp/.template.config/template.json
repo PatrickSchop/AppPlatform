@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Wisdi",
+  "classifications": ["Cloud", "Serverless", "Web", "Azure Functions"],
+  "identity": "Wisdi.AppPlatform.TinyApp",
+  "name": "Wisdi tiny app",
+  "shortName": "tinyapp",
+  "description": "An Azure Functions app on Wisdi.AppPlatform: SPA hosting, background tasks, Entra auth and script migrations.",
+  "tags": { "language": "C#", "type": "project" },
+  "sourceName": "TinyApp",
+  "preferNameDirectory": true,
+  "symbols": {
+    "PlatformVersion": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "0.1.0",
+      "replaces": "0.0.0-PLATFORM-VERSION",
+      "description": "Wisdi.AppPlatform package version."
+    },
+    "AppRole": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "",
+      "replaces": "APP-ROLE-PLACEHOLDER",
+      "description": "Entra App Role required to use this app, e.g. recipes.user. Leave empty to require authentication only."
+    },
+    "SqlServer": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "pschop-db",
+      "replaces": "SQL-SERVER-PLACEHOLDER"
+    },
+    "StorageAccount": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "stockinfostorage",
+      "replaces": "STORAGE-ACCOUNT-PLACEHOLDER"
+    },
+    "Frontend": {
+      "type": "parameter",
+      "datatype": "choice",
+      "defaultValue": "none",
+      "choices": [
+        { "choice": "none",    "description": "Backend only" },
+        { "choice": "angular", "description": "Include the Angular starter" },
+        { "choice": "react",   "description": "Include the React starter" }
+      ],
+      "description": "Front-end starter to include."
+    },
+    "skipRestore": { "type": "parameter", "datatype": "bool", "defaultValue": "false" }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        { "condition": "(Frontend != 'angular')", "exclude": ["WebApp/**"] },
+        { "condition": "(Frontend != 'react')",   "exclude": ["WebApp-React/**"] }
+      ]
+    }
+  ],
+  "postActions": [
+    {
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages",
+      "manualInstructions": [{ "text": "Run 'dotnet restore'" }],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}
