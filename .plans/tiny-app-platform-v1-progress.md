@@ -100,14 +100,30 @@ Last updated: 2026-09-18 (Step 20 complete)
 - Fix committed (9859165), platform tests pass 96/96
 - Root cause: comment said it should call RegisterBackgroundTasks, but code didn't
 
-**Deployment status:**
-- Infrastructure: ✅ All Azure resources created
-- Code deployment: ✅ ScratchApp deployed successfully
-- Function indexing: ⏳ Deployed app returns 404 on `/api/health`
-- Likely causes: Function indexing issue or app startup failure
-- Requires additional debugging (Function logs or local testing with `func start`)
+**Second defect found and fixed:**
+- `AddEndpointServices` extension method was defined but never called
+- IHealthEndpoints and other endpoint services (Configuration, BackgroundTask, Database, StaticContent) not registered
+- Fix committed (24dca98), added `AddEndpointServices()` call to `AddPlatform`
+- Platform tests still pass 96/96
+
+**Local testing findings:**
+- Functions ARE properly indexed locally (`GetHealth`, `GetRecipes`, `CreateTask`, etc. all listed)
+- HTTP listener on port 7071 not responding (app may crash after indexing or fail to start HTTP listener)
+- Deployed app on Azure shows same 404 behavior
+- Timer trigger fails to start due to missing Azure Storage connection (expected in dev)
+
+**Root causes identified:**
+1. ✅ Fixed: `RegisterBackgroundTasks` not being called → ITaskHandlerRegistry missing
+2. ✅ Fixed: `AddEndpointServices` not being called → IHealthEndpoints and others missing
+3. ⏳ Unknown: HTTP listener not starting despite Functions being indexed
+
+**Likely remaining issue:**
+- App may have additional initialization failure preventing HTTP listener startup
+- Could be related to database connectivity, configuration loading, or other service initialization
+- Needs investigation of Azure portal Function App logs or local debugging with verbose output
 
 ## Next Action
-1. Debug Step 19 Check 7 locally with ScratchApp's `func start` to verify Function indexing
-2. OR proceed to Step 21 (workflows) and return to Complete Step 19 Checks 7-8 later
-3. Check Azure portal Function App logs if Function deployment is blocking
+1. Investigate why HTTP listener not starting despite Functions indexing
+2. Check Azure Function App runtime logs for startup errors
+3. OR proceed to Step 21 (workflows/Entra) and revisit Step 19 later with more context
+4. Total platform fixes this session: 2 critical DI registration bugs
