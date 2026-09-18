@@ -6,6 +6,7 @@ dist/
 .vs/
 .vscode/
 artifacts/
+localfeed/
 local.settings.json
 appsettings.local.json
 *.nupkg

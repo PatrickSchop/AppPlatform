@@ -18,4 +18,18 @@
     <RepositoryType>git</RepositoryType>
     <VersionPrefix>0.1.0</VersionPrefix>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <VersionSuffix Condition="'$(VersionSuffix)' == '' and '$(GITHUB_ACTIONS)' != 'true'">local</VersionSuffix>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>azure-functions;spa;background-tasks;platform</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
 </Project>
