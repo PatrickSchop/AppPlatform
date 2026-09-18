@@ -1,3 +1,4 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Wisdi.AppPlatform.Tests")]
+[assembly: InternalsVisibleTo("PS.AppPlatform.Tests")]
+

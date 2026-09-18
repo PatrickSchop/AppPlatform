@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -12,7 +12,7 @@
 
   <PropertyGroup Label="Package identity">
     <Authors>Patrick Schop</Authors>
-    <Company>Wisdi</Company>
+    <Company>PS</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/PatrickSchop/AppPlatform</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -37,3 +37,4 @@
     <ExcludeFromSolutionBuild>true</ExcludeFromSolutionBuild>
   </PropertyGroup>
 </Project>
+

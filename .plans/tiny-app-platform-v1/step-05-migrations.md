@@ -1,6 +1,6 @@
-# Step 05 — Migrations with version tracking
+﻿# Step 05 â€” Migrations with version tracking
 
-**Phase:** 1 — Core engine
+**Phase:** 1 â€” Core engine
 **Depends on:** Step 04
 **Working directory:** `C:\Dev\AppPlatform`
 
@@ -10,7 +10,7 @@ Rebuild `DatabaseMigrator` so it runs each script **once**, merges core scripts 
 embedded resources in the package with app scripts on disk, and has a well-defined order
 across the package boundary.
 
-## The problems being solved (analysis §3)
+## The problems being solved (analysis Â§3)
 
 The source migrator (`App\Database\DatabaseMigrator.cs`) reads `*.sql` from a folder and
 runs **every script on every call**, relying on hand-written `IF NOT EXISTS` guards, with
@@ -28,9 +28,9 @@ Two fixes:
 
 ### 1. Create the core scripts
 
-Under `src/Wisdi.AppPlatform/Data/Scripts/`:
+Under `src/PS.AppPlatform/Data/Scripts/`:
 
-**`000_CreateSchemaVersions.sql`** — the bootstrap. Runs before tracking exists, so it must
+**`000_CreateSchemaVersions.sql`** â€” the bootstrap. Runs before tracking exists, so it must
 be idempotent on its own and is never recorded in the table:
 
 ```sql
@@ -45,7 +45,7 @@ BEGIN
 END
 ```
 
-**`010_CreateBackgroundTasks.sql`** — the consolidation of source `004`+`005`+`006`, plus
+**`010_CreateBackgroundTasks.sql`** â€” the consolidation of source `004`+`005`+`006`, plus
 the new lease column from Step 08. One `CREATE TABLE` with every column present:
 
 ```sql
@@ -82,12 +82,12 @@ END
 `TaskType` is widened from the source's `NVARCHAR(50)` to `NVARCHAR(100)`; 50 is tight for
 a namespaced task name and widening later is a migration nobody wants to write.
 
-Keep the `IF NOT EXISTS` guards even though tracking now prevents re-runs — they make the
+Keep the `IF NOT EXISTS` guards even though tracking now prevents re-runs â€” they make the
 scripts safe to apply to a database that predates tracking.
 
 ### 2. Embed the scripts
 
-In `Wisdi.AppPlatform.csproj`:
+In `PS.AppPlatform.csproj`:
 
 ```xml
 <ItemGroup>
@@ -95,7 +95,7 @@ In `Wisdi.AppPlatform.csproj`:
 </ItemGroup>
 ```
 
-Resource names become `Wisdi.AppPlatform.Data.Scripts.000_CreateSchemaVersions.sql` etc.
+Resource names become `PS.AppPlatform.Data.Scripts.000_CreateSchemaVersions.sql` etc.
 
 ### 3. `Data/MigrationScript.cs`
 
@@ -103,7 +103,7 @@ Resource names become `Wisdi.AppPlatform.Data.Scripts.000_CreateSchemaVersions.s
 public sealed record MigrationScript(string Name, string Source, Func<CancellationToken, Task<string>> ReadAsync);
 ```
 
-`Source` is `"core"` or `"app"` — used only for logging.
+`Source` is `"core"` or `"app"` â€” used only for logging.
 
 ### 4. `Data/IMigrationScriptProvider.cs` and the two implementations
 
@@ -114,16 +114,16 @@ public interface IMigrationScriptProvider
 }
 ```
 
-**`EmbeddedMigrationScriptProvider`** — scans the platform assembly for resources matching
-`Wisdi.AppPlatform.Data.Scripts.*.sql` and yields them with the resource-name prefix
+**`EmbeddedMigrationScriptProvider`** â€” scans the platform assembly for resources matching
+`PS.AppPlatform.Data.Scripts.*.sql` and yields them with the resource-name prefix
 stripped, so `Name` is just `000_CreateSchemaVersions.sql`.
 
-**`DirectoryMigrationScriptProvider`** — reads `*.sql` from a directory, top level only.
+**`DirectoryMigrationScriptProvider`** â€” reads `*.sql` from a directory, top level only.
 Resolution order for the directory, first hit wins:
 1. `{assemblyDirectory}\Database\Scripts`
 2. `{currentDirectory}\Database\Scripts`
 
-Drop the source's third fallback (`..\..\..\..\App\Database\Scripts`) — it hard-codes the
+Drop the source's third fallback (`..\..\..\..\App\Database\Scripts`) â€” it hard-codes the
 StockAnalysis layout. Returning zero scripts when the directory is absent is **not** an
 error; an app with no schema of its own is legitimate.
 
@@ -144,8 +144,8 @@ public class DatabaseMigrator
 ```
 
 **Constructor note:** `IDbContextFactory<PlatformDbContext>` will not resolve, because the
-factory is registered for the concrete `TContext`. Make the migrator generic —
-`DatabaseMigrator<TContext> where TContext : PlatformDbContext` — and have
+factory is registered for the concrete `TContext`. Make the migrator generic â€”
+`DatabaseMigrator<TContext> where TContext : PlatformDbContext` â€” and have
 `AddPlatformData<TContext>` register both `DatabaseMigrator<TContext>` and a non-generic
 `DatabaseMigrator` base or interface `IDatabaseMigrator` that endpoints depend on. Endpoints
 must not be generic.
@@ -153,7 +153,7 @@ must not be generic.
 Algorithm for `InitializeDatabaseAsync`:
 
 1. Create a context from the factory. `if (!await Database.CanConnectAsync(ct))` return
-   `Success = false, CanConnect = false` with the source's message — the database must
+   `Success = false, CanConnect = false` with the source's message â€” the database must
    already exist; the migrator never creates it.
 2. Execute `000_CreateSchemaVersions.sql` unconditionally. It is idempotent and is never
    recorded.
@@ -166,7 +166,7 @@ Algorithm for `InitializeDatabaseAsync`:
    - an app script whose leading number is below `100`
    - a duplicate `Name` across the two providers
 
-   Failing loudly here is the point — silent misordering across the package boundary is
+   Failing loudly here is the point â€” silent misordering across the package boundary is
    exactly the bug this step exists to prevent.
 6. For each script not already applied:
    - split the text into batches on lines that are exactly `GO` (trimmed,
@@ -178,7 +178,7 @@ Algorithm for `InitializeDatabaseAsync`:
    - commit; on exception roll back, log, and return `Success = false` with the scripts
      applied so far
 7. Return `Success = true` with `AppliedMigrations` = the names applied **in this run**.
-   An unchanged database must therefore report an **empty** list — this is what Step 15
+   An unchanged database must therefore report an **empty** list â€” this is what Step 15
    asserts.
 
 Keep `MigrationResult` as the source defines it (`Success`, `Message`, `AppliedMigrations`,
@@ -225,7 +225,7 @@ so it is testable. The app's `Main` does `return await MigrationEntryPoint.RunAs
 
 ## Tests to add
 
-`tests/Wisdi.AppPlatform.Tests/MigrationTests.cs` — these need no database:
+`tests/PS.AppPlatform.Tests/MigrationTests.cs` â€” these need no database:
 
 1. `EmbeddedMigrationScriptProvider` returns exactly the two core scripts, named
    `000_CreateSchemaVersions.sql` and `010_CreateBackgroundTasks.sql`.
@@ -255,7 +255,7 @@ dotnet test
 - [ ] Build clean, all tests pass
 - [ ] Core scripts are embedded resources, not files copied to output
 - [ ] `010_CreateBackgroundTasks.sql` creates the table with **all** columns including
-      `StatusMessage`, `ExecutionManagerId` and `LeaseExpiresUtc` — the §3 drift bug is gone
+      `StatusMessage`, `ExecutionManagerId` and `LeaseExpiresUtc` â€” the Â§3 drift bug is gone
 - [ ] Out-of-range script numbers fail the run rather than being silently reordered
 - [ ] A second `InitializeDatabaseAsync` on an unchanged database returns an empty
       `AppliedMigrations`
@@ -266,3 +266,4 @@ dotnet test
 git add -A
 git commit -m "Step 05: script-tracked migrations with embedded core scripts and 000-099/100+ ordering"
 ```
+

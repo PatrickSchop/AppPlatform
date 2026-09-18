@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Tasks;
+﻿namespace PS.AppPlatform.Tasks;
 
 /// <summary>
 /// Handles the execution of a background task of type T.
@@ -22,3 +22,4 @@ public interface ITaskHandler<T>
 {
     Task HandleAsync(BackgroundTask task, T taskData, TaskHandlerContext context, CancellationToken cancellationToken);
 }
+

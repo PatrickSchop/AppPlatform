@@ -1,8 +1,8 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Json;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 public static class PlatformConfiguration
 {
@@ -45,3 +45,4 @@ public static class PlatformConfiguration
     public static string ResolveEnvironmentName() =>
         (Environment.GetEnvironmentVariable("DEV_ENVIRONMENT") ?? "production").ToLowerInvariant();
 }
+

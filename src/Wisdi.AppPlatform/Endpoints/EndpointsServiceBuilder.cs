@@ -1,6 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Wisdi.AppPlatform.Endpoints;
+namespace PS.AppPlatform.Endpoints;
 
 public static class EndpointsServiceBuilder
 {
@@ -18,3 +18,4 @@ public static class EndpointsServiceBuilder
         services.AddScoped<IStaticContentEndpoints, StaticContentEndpoints>();
     }
 }
+

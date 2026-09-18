@@ -1,7 +1,7 @@
-using Microsoft.Azure.Functions.Worker;
+﻿using Microsoft.Azure.Functions.Worker;
 using System.Reflection;
 
-namespace Wisdi.AppPlatform.Auth;
+namespace PS.AppPlatform.Auth;
 
 internal static class FunctionContextExtensions
 {
@@ -47,3 +47,4 @@ internal static class FunctionContextExtensions
         }
     }
 }
+

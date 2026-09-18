@@ -1,21 +1,21 @@
-# Step 07 — Background task service
+﻿# Step 07 â€” Background task service
 
-**Phase:** 1 — Core engine
+**Phase:** 1 â€” Core engine
 **Depends on:** Step 06
 **Working directory:** `C:\Dev\AppPlatform`
 
 ## Goal
 
-Port `BackgroundTaskService` generically over `TContext`, and fix analysis §7.1 — the
+Port `BackgroundTaskService` generically over `TContext`, and fix analysis Â§7.1 â€” the
 execution manager id must be **host-lifetime**, not per-request.
 
-## The problem being solved (analysis §7.1)
+## The problem being solved (analysis Â§7.1)
 
 In the source, `TaskExecutionManager` is registered `Scoped` (a reasonable fix for captured
 `DbContext`s) but generates `_executionManagerId = Guid.NewGuid()` in its **constructor**
 (`TaskExecutionManager.cs:43`), and the claim SQL counts running tasks *for that id only*.
 So every HTTP request gets a fresh id, the running count is always zero,
-`maxConcurrentTasks` caps nothing globally, and the `SemaphoreSlim` — also per-instance —
+`maxConcurrentTasks` caps nothing globally, and the `SemaphoreSlim` â€” also per-instance â€”
 serialises nothing.
 
 The fix is to separate the two lifetimes: the **identity** and the **gate** are singletons;
@@ -29,7 +29,7 @@ them.
 ### 1. `Tasks/ExecutionManagerIdentity.cs`
 
 ```csharp
-namespace Wisdi.AppPlatform.Tasks;
+namespace PS.AppPlatform.Tasks;
 
 /// <summary>
 /// The host-lifetime identity of this worker instance. Registered as a singleton so that
@@ -65,7 +65,7 @@ public sealed class TaskCheckGate : IDisposable
 
 `AcquireAsync` waits on the semaphore and returns a disposable that releases it, so callers
 write `using var _ = await gate.AcquireAsync();`. Release exactly once even if the returned
-disposable is disposed twice — guard with an `int` and `Interlocked.Exchange`.
+disposable is disposed twice â€” guard with an `int` and `Interlocked.Exchange`.
 
 ### 3. `Tasks/BackgroundTaskService.cs`
 
@@ -87,7 +87,7 @@ Port these members with **no behaviour change**:
 `CreateTaskAsync<T>`, `GetTaskStatusAsync`, `GetAllTasksAsync`, `ResumeTaskAsync`,
 `UpdateProgressAsync`, both `UpdateStatusAsync` overloads.
 
-Keep the flag logic in `UpdateStatusAsync` exactly as written — it is subtle and correct:
+Keep the flag logic in `UpdateStatusAsync` exactly as written â€” it is subtle and correct:
 
 ```csharp
 if ((status & BackgroundTaskStatus.ExecutingFlag) == 0)
@@ -123,7 +123,7 @@ if (_apiBaseUrl is null)
 }
 ```
 
-**b. `RenewLeaseAsync`** — new, required by the Step 06 interface:
+**b. `RenewLeaseAsync`** â€” new, required by the Step 06 interface:
 
 ```csharp
 public async Task RenewLeaseAsync(Guid taskId, CancellationToken ct = default)
@@ -143,9 +143,9 @@ and must be cheap and non-conflicting.
 
 `_leaseSeconds` comes from `backgroundTasks:leaseSeconds`, default `300`.
 
-**c. `TriggerTaskCheckAsync` keeps its fire-and-forget shape** — including the 5-second
+**c. `TriggerTaskCheckAsync` keeps its fire-and-forget shape** â€” including the 5-second
 timeout and swallowed exceptions. It is a best-effort optimisation, and Step 13's timer
-trigger is the correctness backstop (analysis §7.3). Rename it to `TriggerTaskCheck`
+trigger is the correctness backstop (analysis Â§7.3). Rename it to `TriggerTaskCheck`
 (no `Async` suffix) since it returns `void` and awaits nothing; the source name is
 misleading.
 
@@ -154,8 +154,8 @@ misleading.
 
 ### 5. `Tasks/TasksServiceBuilder.cs`
 
-The platform's task module. It cannot register the generic service itself — it does not know
-`TContext` — so split the registration:
+The platform's task module. It cannot register the generic service itself â€” it does not know
+`TContext` â€” so split the registration:
 
 ```csharp
 public sealed class TasksServiceBuilder : ServiceBuilder
@@ -181,7 +181,7 @@ All three resolve the **same** scoped instance, as the source intends.
 
 ## Tests to add
 
-`tests/Wisdi.AppPlatform.Tests/BackgroundTaskServiceTests.cs`, using the EF in-memory
+`tests/PS.AppPlatform.Tests/BackgroundTaskServiceTests.cs`, using the EF in-memory
 provider and a `TestDbContext : PlatformDbContext`:
 
 1. `CreateTaskAsync` persists a row with `Status = New`, `CompletionPercentage = 0`,
@@ -196,10 +196,10 @@ provider and a `TestDbContext : PlatformDbContext`:
 6. Constructing the service with **no** `backgroundTasks:apiBaseUrl` does not throw.
 7. `ExecutionManagerIdentity` resolved twice from one provider is the same instance with
    the same `Id`; resolved from two different **scopes** it is still the same instance.
-   This is the §7.1 regression test — name it so that is obvious, e.g.
+   This is the Â§7.1 regression test â€” name it so that is obvious, e.g.
    `ExecutionManagerId_is_stable_across_scopes`.
 
-`RenewLeaseAsync` uses raw SQL and cannot run on the in-memory provider — cover it at
+`RenewLeaseAsync` uses raw SQL and cannot run on the in-memory provider â€” cover it at
 Step 15 instead, and note that in a comment.
 
 ## Verification
@@ -216,7 +216,7 @@ dotnet test
 
 - [ ] Build clean, all tests pass
 - [ ] `ExecutionManagerIdentity` and `TaskCheckGate` are singletons; the service stays scoped
-- [ ] `ExecutionManagerId_is_stable_across_scopes` passes — §7.1 is fixed and guarded
+- [ ] `ExecutionManagerId_is_stable_across_scopes` passes â€” Â§7.1 is fixed and guarded
 - [ ] A missing `apiBaseUrl` no longer throws at construction
 - [ ] `LeaseExpiresUtc` is cleared whenever `ExecutionManagerId` is
 
@@ -226,3 +226,4 @@ dotnet test
 git add -A
 git commit -m "Step 07: generic BackgroundTaskService; execution manager id and check gate are host-lifetime (fixes 7.1)"
 ```
+

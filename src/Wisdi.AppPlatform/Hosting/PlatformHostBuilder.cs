@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Wisdi.AppPlatform.Auth;
+using PS.AppPlatform.Auth;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 public static class PlatformHostBuilder
 {
@@ -73,3 +73,4 @@ public static class PlatformHostBuilder
         return type.GetConstructor(System.Type.EmptyTypes) != null;
     }
 }
+

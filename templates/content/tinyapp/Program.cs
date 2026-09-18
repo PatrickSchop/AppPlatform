@@ -1,9 +1,9 @@
-using Microsoft.Azure.Functions.Worker.Builder;
+﻿using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using TinyApp.Data;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Hosting;
 
 namespace TinyApp;
 
@@ -28,3 +28,4 @@ public static class Program
         return 0;
     }
 }
+

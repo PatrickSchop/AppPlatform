@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SampleApp.Data;
 using SampleApp.Tasks;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Tasks;
 
 namespace SampleApp.Api;
 
@@ -38,3 +38,4 @@ public class NotesEndpoints(IDbContextFactory<AppDbContext> factory, IBackground
         return new OkObjectResult(new { taskId });
     }
 }
+

@@ -1,8 +1,8 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Wisdi.AppPlatform.Llm;
+namespace PS.AppPlatform.Llm;
 
 /// <summary>
 /// Converts HTML5 to XHTML format that can be loaded into XDocument
@@ -131,3 +131,4 @@ public static class HtmlToXhtmlConverter
         return html;
     }
 }
+

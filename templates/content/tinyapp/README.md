@@ -1,6 +1,6 @@
-# Tiny App
+﻿# Tiny App
 
-A minimal serverless application on Wisdi.AppPlatform: database migrations, background tasks, and Entra authentication.
+A minimal serverless application on PS.AppPlatform: database migrations, background tasks, and Entra authentication.
 
 ## Getting started
 
@@ -35,10 +35,10 @@ func start
 
 The app runs on `http://localhost:7071`.
 
-- **`/api/configuration`** — public endpoint returning app config
-- **`/health`** — liveness probe
-- **`/static/**`** — SPA hosting (files from `wwwroot/`)
-- All other `/api/**` routes — require Entra authentication
+- **`/api/configuration`** â€” public endpoint returning app config
+- **`/health`** â€” liveness probe
+- **`/static/**`** â€” SPA hosting (files from `wwwroot/`)
+- All other `/api/**` routes â€” require Entra authentication
 
 ### 4. Add your first entity
 
@@ -89,7 +89,7 @@ Create `Api/YourEndpoints.cs`:
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TinyApp.Data;
-using Wisdi.AppPlatform.Endpoints;
+using PS.AppPlatform.Endpoints;
 
 namespace TinyApp.Api;
 
@@ -124,7 +124,7 @@ Create `Tasks/YourTaskHandler.cs`:
 
 ```csharp
 using TinyApp.Data;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Tasks;
 
 namespace TinyApp.Tasks;
 
@@ -152,7 +152,7 @@ public override void RegisterBackgroundTasks(IBackgroundTaskCollection tasks)
 
 **Tenant and client IDs must be configured before deployment.**
 
-See `docs/auth-setup.md` (in your Wisdi.AppPlatform repository) for the Entra app registration and role setup runbook.
+See `docs/auth-setup.md` (in your PS.AppPlatform repository) for the Entra app registration and role setup runbook.
 
 In `appsettings.json`, set:
 
@@ -207,6 +207,7 @@ TinyApp/
 
 ## See also
 
-- [Wisdi.AppPlatform source](https://github.com/PatrickSchop/AppPlatform)
+- [PS.AppPlatform source](https://github.com/PatrickSchop/AppPlatform)
 - [Background task lease renewal](docs/lease-renewal.md) (in platform repo)
 - [Authentication setup](docs/auth-setup.md) (in platform repo)
+

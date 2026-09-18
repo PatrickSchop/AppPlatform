@@ -1,12 +1,12 @@
-# Step 14 — Sample app (the standing regression gate)
+﻿# Step 14 â€” Sample app (the standing regression gate)
 
-**Phase:** 2 — Functions surface
+**Phase:** 2 â€” Functions surface
 **Depends on:** Step 13
 **Working directory:** `C:\Dev\AppPlatform`
 
 ## Goal
 
-Build `samples/SampleApp` — a minimal but genuinely real consumer of the platform. It is the
+Build `samples/SampleApp` â€” a minimal but genuinely real consumer of the platform. It is the
 first thing that compiles the Step 13 shims, and from here on it is the regression gate:
 **every later step must leave it building, migrating and serving.**
 
@@ -16,7 +16,7 @@ like here is what the template generates.
 ## What it contains
 
 One entity (`Note`), one task handler (`WordCountTaskHandler`), one endpoint
-(`NotesEndpoints`). Nothing more — the point is to exercise every platform seam with the
+(`NotesEndpoints`). Nothing more â€” the point is to exercise every platform seam with the
 least possible app code.
 
 ## Tasks
@@ -44,16 +44,16 @@ least possible app code.
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Wisdi.AppPlatform\Wisdi.AppPlatform.csproj" />
+    <ProjectReference Include="..\..\src\PS.AppPlatform\PS.AppPlatform.csproj" />
   </ItemGroup>
 
   <!--
     ProjectReference does not flow build/*.targets the way PackageReference does, so the
     shims are included explicitly here. A real app consuming the NuGet package gets these
-    automatically. See src/Wisdi.AppPlatform.Functions/README.md.
+    automatically. See src/PS.AppPlatform.Functions/README.md.
   -->
   <ItemGroup>
-    <Compile Include="..\..\src\Wisdi.AppPlatform.Functions\endpoints\*.cs" Visible="false" />
+    <Compile Include="..\..\src\PS.AppPlatform.Functions\endpoints\*.cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -67,7 +67,7 @@ least possible app code.
 </Project>
 ```
 
-Unlike the engine, this project **does** reference `Microsoft.Azure.Functions.Worker.Sdk` —
+Unlike the engine, this project **does** reference `Microsoft.Azure.Functions.Worker.Sdk` â€”
 it is the Functions app, and it needs the metadata source generator.
 
 ### 2. `samples/SampleApp/Program.cs`
@@ -79,8 +79,8 @@ using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using SampleApp.Data;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Hosting;
 
 namespace SampleApp;
 
@@ -108,7 +108,7 @@ public static class Program
 ```
 
 If any of those calls do not line up with what Steps 03-10 actually produced, **change the
-platform, not this file**. This shape — nine lines, one generic argument — is the product
+platform, not this file**. This shape â€” nine lines, one generic argument â€” is the product
 requirement. If it cannot be met, that is a design problem worth fixing now rather than
 baking into the template.
 
@@ -136,7 +136,7 @@ public class Note : Entity
 
 ### 5. `samples/SampleApp/Database/Scripts/100_CreateNotes.sql`
 
-Numbered `100` — the app range. Anything under `100` must be rejected by Step 05's validation,
+Numbered `100` â€” the app range. Anything under `100` must be rejected by Step 05's validation,
 and Step 15 tests that.
 
 ```sql
@@ -184,16 +184,16 @@ public class WordCountTaskHandler(IDbContextFactory<AppDbContext> factory, ILogg
 public sealed record WordCountTaskData(bool Recount = true);
 ```
 
-Note it calls `UpdateProgressAsync` in the loop — which also renews the lease (Step 06). That
+Note it calls `UpdateProgressAsync` in the loop â€” which also renews the lease (Step 06). That
 is the convention handlers should follow, and the sample should model it.
 
 ### 7. `samples/SampleApp/Api/NotesEndpoints.cs` and `NotesFunctions.cs`
 
 Two files, deliberately, to show apps the same split the platform uses:
 
-- `NotesEndpoints` — a plain service with `GetAllAsync`, `CreateAsync`, `StartWordCountAsync`
+- `NotesEndpoints` â€” a plain service with `GetAllAsync`, `CreateAsync`, `StartWordCountAsync`
   (which calls `IBackgroundTaskService.CreateTaskAsync("wordcount", new WordCountTaskData(), "Counting words", requiresNotification: true)`)
-- `NotesFunctions` — `[Function]` shims in the **app's own** compilation, all `[Authorize]`,
+- `NotesFunctions` â€” `[Function]` shims in the **app's own** compilation, all `[Authorize]`,
   routes `api/notes` (get, post) and `api/notes/wordcount` (post)
 
 ### 8. `samples/SampleApp/SampleServiceBuilder.cs`
@@ -211,7 +211,7 @@ public sealed class SampleServiceBuilder : ServiceBuilder
 
 ### 9. Configuration files
 
-**`appsettings.json`** — no secrets, ever:
+**`appsettings.json`** â€” no secrets, ever:
 
 ```json
 {
@@ -237,7 +237,7 @@ public sealed class SampleServiceBuilder : ServiceBuilder
 }
 ```
 
-**No `authentication` section** — so Step 10 resolves `Enabled` to false, the app runs
+**No `authentication` section** â€” so Step 10 resolves `Enabled` to false, the app runs
 locally without Entra, and the startup warning fires. Step 15 verifies both that it runs and
 that the warning appears.
 
@@ -255,17 +255,17 @@ that the warning appears.
 }
 ```
 
-`backgroundTasks:checkSchedule` must be here, not only in `appsettings.json` — the
-`%…%` syntax in a `TimerTrigger` reads **app settings** (Step 13).
+`backgroundTasks:checkSchedule` must be here, not only in `appsettings.json` â€” the
+`%â€¦%` syntax in a `TimerTrigger` reads **app settings** (Step 13).
 
-**`host.json`** — port from `C:\Dev\StockAnalysis\App\host.json`, keeping
+**`host.json`** â€” port from `C:\Dev\StockAnalysis\App\host.json`, keeping
 `"extensions": { "http": { "routePrefix": "" } }`. The empty route prefix is required: every
 platform route already carries its own `api/` prefix, and the catch-all static route must sit
 at the site root.
 
 ### 10. `samples/SampleApp/wwwroot/`
 
-A single hand-written `index.html` — no framework. It should:
+A single hand-written `index.html` â€” no framework. It should:
 - fetch `/configuration.json` and show the title
 - list notes from `/api/notes`, with a form to add one
 - a button that POSTs `/api/notes/wordcount` and then polls
@@ -275,13 +275,13 @@ A single hand-written `index.html` — no framework. It should:
 without any front-end toolchain, and so Step 28 has a reference behaviour to compare the
 Angular and React starters against.
 
-Also add `wwwroot/dashboard` as **nothing at all** — the deep-link test at Step 15 navigates
+Also add `wwwroot/dashboard` as **nothing at all** â€” the deep-link test at Step 15 navigates
 to `/dashboard`, and the point is that no such file exists and `index.html` is served anyway.
 
 ### 11. `docs/background-tasks.md`
 
 Short. Cover: defining an `ITaskHandler<T>`, registering it in a `ServiceBuilder`, creating a
-task, and — importantly — **the lease obligation**: a handler running longer than
+task, and â€” importantly â€” **the lease obligation**: a handler running longer than
 `backgroundTasks:leaseSeconds` (default 300) must call `context.UpdateProgressAsync`
 periodically or its task will be reclaimed and re-run.
 
@@ -300,7 +300,7 @@ dotnet test
 ```
 
 **Expected:** builds clean. This is the first compilation of the Step 13 shims, so expect to
-fix typos in them here — that is the point of this step existing before Step 15.
+fix typos in them here â€” that is the point of this step existing before Step 15.
 
 Full runtime verification is Step 15. Do not attempt `func start` yet.
 
@@ -320,3 +320,4 @@ Full runtime verification is Step 15. Do not attempt `func start` yet.
 git add -A
 git commit -m "Step 14: SampleApp consumer - one entity, one task handler, one endpoint"
 ```
+

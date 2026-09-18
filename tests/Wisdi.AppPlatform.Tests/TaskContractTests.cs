@@ -1,9 +1,9 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Tasks;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class TaskContractTests
 {
@@ -114,3 +114,4 @@ public class TaskContractTests
         }
     }
 }
+

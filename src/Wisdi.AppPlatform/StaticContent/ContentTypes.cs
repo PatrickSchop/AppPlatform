@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.StaticContent;
+﻿namespace PS.AppPlatform.StaticContent;
 
 public static class ContentTypes
 {
@@ -33,3 +33,4 @@ public static class ContentTypes
             : "application/octet-stream";
     }
 }
+

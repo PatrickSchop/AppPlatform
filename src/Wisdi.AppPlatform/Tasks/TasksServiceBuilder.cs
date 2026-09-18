@@ -1,8 +1,8 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Hosting;
 
-namespace Wisdi.AppPlatform.Tasks;
+namespace PS.AppPlatform.Tasks;
 
 public sealed class TasksServiceBuilder : ServiceBuilder
 {
@@ -12,3 +12,4 @@ public sealed class TasksServiceBuilder : ServiceBuilder
         services.AddSingleton<TaskCheckGate>();
     }
 }
+

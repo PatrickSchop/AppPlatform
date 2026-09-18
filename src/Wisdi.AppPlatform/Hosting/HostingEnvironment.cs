@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 public class HostingEnvironment : IHostingEnvironment
 {
@@ -15,3 +15,4 @@ public class HostingEnvironment : IHostingEnvironment
         };
     }
 }
+

@@ -1,10 +1,10 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Tasks;
 
-namespace Wisdi.AppPlatform.Data;
+namespace PS.AppPlatform.Data;
 
 /// <summary>
 /// Extensions for registering the platform data layer.
@@ -76,3 +76,4 @@ public static class PlatformDataExtensions
         return services;
     }
 }
+

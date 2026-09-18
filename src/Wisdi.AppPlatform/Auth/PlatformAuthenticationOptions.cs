@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Auth;
+﻿namespace PS.AppPlatform.Auth;
 
 public sealed class PlatformAuthenticationOptions
 {
@@ -23,3 +23,4 @@ public sealed class AzureEntraIdOptions
     /// <summary>Extra accepted audiences, e.g. "api://{clientId}".</summary>
     public string[] AdditionalAudiences { get; set; } = [];
 }
+

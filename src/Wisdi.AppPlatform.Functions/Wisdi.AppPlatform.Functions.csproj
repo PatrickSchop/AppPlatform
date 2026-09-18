@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Wisdi.AppPlatform.Functions</PackageId>
-    <Description>Azure Functions endpoint shims for Wisdi.AppPlatform. Injects [Function] source into the consuming app so worker indexing can see it.</Description>
+    <PackageId>PS.AppPlatform.Functions</PackageId>
+    <Description>Azure Functions endpoint shims for PS.AppPlatform. Injects [Function] source into the consuming app so worker indexing can see it.</Description>
     <IsPackable>true</IsPackable>
 
     <!-- No assembly ships: the endpoints are source, injected into the consumer. -->
@@ -16,11 +16,11 @@
   <ItemGroup>
     <Compile Remove="endpoints\**\*.cs" />
     <None Include="endpoints\**\*.cs" Pack="true" PackagePath="endpoints" />
-    <None Include="build\Wisdi.AppPlatform.Functions.targets" Pack="true" PackagePath="build" />
+    <None Include="build\PS.AppPlatform.Functions.targets" Pack="true" PackagePath="build" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Wisdi.AppPlatform\Wisdi.AppPlatform.csproj" />
+    <ProjectReference Include="..\PS.AppPlatform\PS.AppPlatform.csproj" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" />
@@ -33,3 +33,4 @@
   </ItemGroup>
 
 </Project>
+

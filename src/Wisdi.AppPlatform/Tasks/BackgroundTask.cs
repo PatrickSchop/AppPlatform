@@ -1,6 +1,6 @@
-using Wisdi.AppPlatform.Data;
+﻿using PS.AppPlatform.Data;
 
-namespace Wisdi.AppPlatform.Tasks;
+namespace PS.AppPlatform.Tasks;
 
 public class BackgroundTask : Entity
 {
@@ -18,3 +18,4 @@ public class BackgroundTask : Entity
     public Guid? ExecutionManagerId { get; set; }
     public DateTime? LeaseExpiresUtc { get; set; }
 }
+

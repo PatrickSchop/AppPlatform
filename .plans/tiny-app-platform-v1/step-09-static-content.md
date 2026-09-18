@@ -1,6 +1,6 @@
-# Step 09 — Static content and SPA hosting
+﻿# Step 09 â€” Static content and SPA hosting
 
-**Phase:** 1 — Core engine
+**Phase:** 1 â€” Core engine
 **Depends on:** Step 08
 **Working directory:** `C:\Dev\AppPlatform`
 
@@ -9,21 +9,21 @@
 Port the static file providers and rebuild the SPA fallback handler, fixing the deep-link
 bug that makes React Router (and Angular routing on hard refresh) unusable today.
 
-## The problems being solved (analysis §4)
+## The problems being solved (analysis Â§4)
 
 `C:\Dev\StockAnalysis\App\StaticContent\Static.cs:28-41` falls back to `index.html` only for
-the **empty** path. Any deep link — `/dashboard`, `/management` — returns 404 on a hard
+the **empty** path. Any deep link â€” `/dashboard`, `/management` â€” returns 404 on a hard
 refresh. Also missing: `.ico`, `.woff2`, `.map` content types, and any `ETag`/`Cache-Control`.
 
 ## Tasks
 
 ### 1. `StaticContent/IFilesProvider.cs`
 
-Extend the source interface — the caller now needs metadata for `ETag` and content length,
+Extend the source interface â€” the caller now needs metadata for `ETag` and content length,
 not just a stream.
 
 ```csharp
-namespace Wisdi.AppPlatform.StaticContent;
+namespace PS.AppPlatform.StaticContent;
 
 public interface IFilesProvider
 {
@@ -40,7 +40,7 @@ wrong control flow for something that happens on every deep link.
 
 ### 2. `StaticContent/LocalFilesProvider.cs`
 
-Port from the source. Keep the path-traversal guard — it is the security-relevant line:
+Port from the source. Keep the path-traversal guard â€” it is the security-relevant line:
 
 ```csharp
 string fullPath = Path.GetFullPath(Path.Combine(_rootPath, relativePath.TrimStart('/', '\\')));
@@ -70,7 +70,7 @@ Changes:
   `Length` from `Details`.
 - Make the class `public`.
 
-### 4. `StaticContent/StaticContentHandler.cs` — the rewrite
+### 4. `StaticContent/StaticContentHandler.cs` â€” the rewrite
 
 This is **not** a `[Function]` class. It is a plain injectable service; the shim comes in
 Step 13.
@@ -89,19 +89,19 @@ Algorithm:
 1. Normalise: trim leading `/`; if empty, use `index.html`.
 2. Reject any path containing `..` with `BadRequestResult` before touching the provider.
 3. Try `GetFileAsync(path)`.
-4. **If not found, apply the SPA fallback** — the §4 fix:
+4. **If not found, apply the SPA fallback** â€” the Â§4 fix:
    ```csharp
    if (file is null && !Path.HasExtension(path))
        file = await _filesProvider.GetFileAsync("index.html", ct);
    ```
    The "no extension" rule is what makes `/dashboard` serve the app while
    `/assets/missing.png` correctly 404s.
-5. Still null → `NotFoundResult`.
+5. Still null â†’ `NotFoundResult`.
 6. If the request carries `If-None-Match` matching the file's `ETag`, dispose the stream and
    return `StatusCode(304)`.
 7. Set headers, then return `new FileStreamResult(file.Content, contentType)`.
 
-Header policy — this is the caching fix:
+Header policy â€” this is the caching fix:
 
 | Resource | `Cache-Control` |
 |---|---|
@@ -117,7 +117,7 @@ Always set `ETag` when the provider supplied one.
 ### 5. `StaticContent/ContentTypes.cs`
 
 Replace the source's chained ternary with a static dictionary, and add the missing types
-(analysis §4):
+(analysis Â§4):
 
 ```
 .html text/html                      .css  text/css
@@ -140,7 +140,7 @@ the current IANA registration.
 ### 6. `StaticContent/StaticContentServiceBuilder.cs`
 
 Port `App\StaticContent\ServiceBuilder.cs`. Keep the resolver-lambda pattern and the comment
-explaining it — provider selection is deferred to first use because throwing during Functions
+explaining it â€” provider selection is deferred to first use because throwing during Functions
 host startup produces an unreadable failure.
 
 ```csharp
@@ -155,14 +155,14 @@ but the key it checks is `blob`.
 
 ## Tests to add
 
-`tests/Wisdi.AppPlatform.Tests/StaticContentTests.cs`, with a fake `IFilesProvider` backed by
+`tests/PS.AppPlatform.Tests/StaticContentTests.cs`, with a fake `IFilesProvider` backed by
 a dictionary:
 
 1. `""` serves `index.html`.
-2. **`"dashboard"` serves `index.html`** — the §4 deep-link fix. Name it
+2. **`"dashboard"` serves `index.html`** â€” the Â§4 deep-link fix. Name it
    `Extensionless_path_falls_back_to_index_html`.
 3. `"app/settings/advanced"` also serves `index.html`.
-4. `"assets/missing.png"` returns 404 — extensions do **not** fall back.
+4. `"assets/missing.png"` returns 404 â€” extensions do **not** fall back.
 5. `"../secrets.txt"` returns 400.
 6. `LocalFilesProvider` rejects a path escaping the root, including the
    `root` / `root-evil` sibling case.
@@ -184,7 +184,7 @@ dotnet test
 ## Done when
 
 - [ ] Build clean, all tests pass
-- [ ] `Extensionless_path_falls_back_to_index_html` passes — §4 is fixed and guarded
+- [ ] `Extensionless_path_falls_back_to_index_html` passes â€” Â§4 is fixed and guarded
 - [ ] `.ico`, `.woff2`, `.map`, `.wasm`, `.webp` all resolve
 - [ ] `ETag`/`If-None-Match` handling works; `index.html` is `no-cache`
 - [ ] `StaticContentHandler` carries **no** `[Function]` attribute
@@ -197,3 +197,4 @@ dotnet test
 git add -A
 git commit -m "Step 09: static content with SPA deep-link fallback, ETag caching and full content types (fixes section 4)"
 ```
+

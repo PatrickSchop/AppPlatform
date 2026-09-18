@@ -1,8 +1,8 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Tasks;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 /// <summary>
 /// A DI module. Subclasses are discovered by reflection across the assemblies
@@ -20,3 +20,4 @@ public abstract class ServiceBuilder
 
     public virtual void RegisterBackgroundTasks(IBackgroundTaskCollection backgroundTasks) { }
 }
+

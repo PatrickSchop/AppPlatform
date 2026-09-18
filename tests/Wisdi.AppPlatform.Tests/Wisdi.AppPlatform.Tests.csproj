@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>Wisdi.AppPlatform.Tests</RootNamespace>
+    <RootNamespace>PS.AppPlatform.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
@@ -15,7 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Wisdi.AppPlatform\Wisdi.AppPlatform.csproj" />
+    <ProjectReference Include="..\..\src\PS.AppPlatform\PS.AppPlatform.csproj" />
   </ItemGroup>
 
 </Project>
+

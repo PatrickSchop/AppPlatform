@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Endpoints;
+﻿namespace PS.AppPlatform.Endpoints;
 
 /// <summary>
 /// Response model for background task information.
@@ -16,3 +16,4 @@ public sealed record BackgroundTaskResponse(
     DateTime updatedDate,
     DateTime? startedDate,
     DateTime? completedDate);
+

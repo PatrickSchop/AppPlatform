@@ -1,6 +1,6 @@
-using System.Reflection;
+﻿using System.Reflection;
 
-namespace Wisdi.AppPlatform.Data;
+namespace PS.AppPlatform.Data;
 
 /// <summary>
 /// Provides migration scripts embedded as resources in the platform assembly.
@@ -16,7 +16,7 @@ public class EmbeddedMigrationScriptProvider : IMigrationScriptProvider
 
     public IEnumerable<MigrationScript> GetScripts()
     {
-        var prefix = "Wisdi.AppPlatform.Data.Scripts.";
+        var prefix = "PS.AppPlatform.Data.Scripts.";
         var resourceNames = _assembly
             .GetManifestResourceNames()
             .Where(name => name.StartsWith(prefix) && name.EndsWith(".sql"))
@@ -40,3 +40,4 @@ public class EmbeddedMigrationScriptProvider : IMigrationScriptProvider
         return await reader.ReadToEndAsync(ct);
     }
 }
+

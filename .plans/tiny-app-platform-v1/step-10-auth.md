@@ -1,6 +1,6 @@
-# Step 10 — Authentication and authorization
+﻿# Step 10 â€” Authentication and authorization
 
-**Phase:** 1 — Core engine
+**Phase:** 1 â€” Core engine
 **Depends on:** Step 09
 **Working directory:** `C:\Dev\AppPlatform`
 
@@ -10,7 +10,7 @@ Replace the source's non-functional auth with a Functions-native, **default-deny
 authorization pipeline. This is the step that most needs doing properly, because every app
 built on the platform inherits it.
 
-## The problems being solved (analysis §6)
+## The problems being solved (analysis Â§6)
 
 1. **No enforcement.** Exactly one `[Authorize]` exists in the whole source backend, on the
    static-content function. Every `/api/*` endpoint is `AuthorizationLevel.Anonymous` with
@@ -28,8 +28,8 @@ built on the platform inherits it.
 
 Read `[Authorize]`/`[AllowAnonymous]` off the target method via
 `FunctionContext.GetTargetFunctionMethod()` and evaluate policies directly through
-`IAuthorizationService`. **Deny unless a function opts out.** Order: CORS → Authentication
-→ Authorization.
+`IAuthorizationService`. **Deny unless a function opts out.** Order: CORS â†’ Authentication
+â†’ Authorization.
 
 ## Tasks
 
@@ -75,7 +75,7 @@ Behaviour:
 2. `Enabled` resolves to `options.Enabled ?? (options.AzureEntraId is not null)`.
 3. **When disabled:** register nothing but the options, and log **one Warning at startup**:
    `"Platform authentication is DISABLED. Every endpoint is publicly reachable. Set authentication:azureEntraId to enable."`
-   This must be a warning, not information — a production app running unauthenticated by
+   This must be a warning, not information â€” a production app running unauthenticated by
    accident is the failure mode to make loud.
 4. **When enabled:**
    - `AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddMicrosoftIdentityWebApi(...)`,
@@ -86,11 +86,11 @@ Behaviour:
      accepting only the bare client id is a frequent cause of a valid token being rejected.
    - **Fail fast** if `TenantId` or `ClientId` is missing, or if `TenantId == ClientId`.
      That equality is the exact copy-paste error present at
-     `C:\Dev\StockAnalysis\App\appsettings.json` (both are `6d91dfaa-…`, analysis §6), and it
+     `C:\Dev\StockAnalysis\App\appsettings.json` (both are `6d91dfaa-â€¦`, analysis Â§6), and it
      produces a confusing audience-validation failure at request time rather than at startup.
      Throw `InvalidOperationException` naming both keys and pointing at `docs/auth-setup.md`.
 5. Register the authorization policies:
-   - `PlatformPolicies.Default` — `RequireAuthenticatedUser()`, plus
+   - `PlatformPolicies.Default` â€” `RequireAuthenticatedUser()`, plus
      `RequireRole(options.RequiredRole)` when `RequiredRole` is set.
    - Set it as the `FallbackPolicy` **and** the `DefaultPolicy`.
 
@@ -111,29 +111,29 @@ public sealed class FunctionAuthorizationMiddleware : IFunctionsWorkerMiddleware
 
 Algorithm:
 
-1. `var httpContext = context.GetHttpContext();` — if null (a non-HTTP trigger such as the
+1. `var httpContext = context.GetHttpContext();` â€” if null (a non-HTTP trigger such as the
    Step 13 timer), call `next` and return. Timer triggers are not user-reachable.
-2. Resolve **everything from `context.InstanceServices`**, the per-invocation scope — never
+2. Resolve **everything from `context.InstanceServices`**, the per-invocation scope â€” never
    from a captured root `IServiceProvider`. This is fix (4).
 3. If auth is disabled, call `next` and return.
 4. `var method = context.GetTargetFunctionMethod();`
 5. Opt-out check, in this order:
-   - `method` has `[AllowAnonymous]`, or its declaring type does → anonymous
-   - `context.FunctionDefinition.Name` is in `options.AnonymousFunctions` → anonymous
+   - `method` has `[AllowAnonymous]`, or its declaring type does â†’ anonymous
+   - `context.FunctionDefinition.Name` is in `options.AnonymousFunctions` â†’ anonymous
 
    `AnonymousFunctions` exists because the shims in Step 13 are shipped source, and an app
    needs a way to open one up without editing package content.
 6. Otherwise **authorization is required** (default-deny). Determine the policy:
-   - `[Authorize(Policy = "X")]` on the method, else on the declaring type → policy `X`
-   - no attribute at all → `PlatformPolicies.Default`
+   - `[Authorize(Policy = "X")]` on the method, else on the declaring type â†’ policy `X`
+   - no attribute at all â†’ `PlatformPolicies.Default`
 
    That last line is the whole point: an endpoint with no attribute is **protected**, not open.
 7. Authenticate: `var result = await httpContext.AuthenticateAsync(JwtBearerDefaults.AuthenticationScheme);`
    and set `httpContext.User = result.Principal` when it succeeds.
 8. Evaluate: `await authorizationService.AuthorizeAsync(httpContext.User, resource: null, policyName)`.
-9. On failure, short-circuit — do **not** call `next`:
-   - not authenticated → `401`, with `WWW-Authenticate: Bearer`
-   - authenticated but not authorized → `403`
+9. On failure, short-circuit â€” do **not** call `next`:
+   - not authenticated â†’ `401`, with `WWW-Authenticate: Bearer`
+   - authenticated but not authorized â†’ `403`
    - write a small JSON body `{"error":"unauthorized"}` / `{"error":"forbidden"}`
    - log at Information with the function name and, on 403, the caller's `oid`. Never log
      the token.
@@ -144,7 +144,7 @@ is written from scratch.
 
 ### 4. `Auth/PlatformAuthenticationMiddleware.cs`
 
-Not needed as a separate middleware — step 7 above does the authentication inline, where the
+Not needed as a separate middleware â€” step 7 above does the authentication inline, where the
 result can actually be used. Do not port `App\Host\AuthenticationMiddleware.cs`.
 
 Record that decision in a comment in `FunctionAuthorizationMiddleware`, so the next reader
@@ -155,7 +155,7 @@ does not "restore" it.
 Port `App\Host\CORSMiddleware.cs` with its behaviour intact: read
 `httpAccessControl:allowOrigin`, disable when empty, short-circuit `OPTIONS` with 204 and
 the three `Access-Control-*` headers, and set `Access-Control-Allow-Origin` on the way out.
-Keep the `catch (ObjectDisposedException)` — it handles a cancelled request.
+Keep the `catch (ObjectDisposedException)` â€” it handles a cancelled request.
 
 Changes:
 - Make it `public`.
@@ -167,7 +167,7 @@ Changes:
 - **Set the CORS headers on the short-circuit paths too.** This is fix (3): the middleware
   must run *before* authorization, and the 401/403 responses that authorization writes must
   still carry `Access-Control-Allow-Origin`. Since CORS runs first and sets the header on
-  the way out, this happens naturally — but add a test for it, because it is the exact
+  the way out, this happens naturally â€” but add a test for it, because it is the exact
   regression being fixed.
 
 ### 6. Middleware ordering
@@ -188,7 +188,7 @@ public static IFunctionsWorkerApplicationBuilder UsePlatform(this IFunctionsWork
 }
 ```
 
-The source order was Authentication → Authorization → CORS (`Program.cs:72-75`), which is
+The source order was Authentication â†’ Authorization â†’ CORS (`Program.cs:72-75`), which is
 exactly backwards.
 
 ### 7. `Auth/AuthServiceBuilder.cs`
@@ -199,11 +199,11 @@ and call `AddPlatformAuthentication`.
 
 ## Tests to add
 
-`tests/Wisdi.AppPlatform.Tests/AuthorizationTests.cs`. Build a fake `FunctionContext` with a
+`tests/PS.AppPlatform.Tests/AuthorizationTests.cs`. Build a fake `FunctionContext` with a
 `DefaultHttpContext` and a service provider containing the options and a real
 `IAuthorizationService` from `AddAuthorization`.
 
-1. **`Endpoint_without_attributes_is_denied`** — the headline default-deny test. An
+1. **`Endpoint_without_attributes_is_denied`** â€” the headline default-deny test. An
    unauthenticated call to a method with no attributes gets 401 and `next` is never invoked.
 2. `[AllowAnonymous]` on the method passes through.
 3. `[AllowAnonymous]` on the declaring type passes through.
@@ -214,7 +214,7 @@ and call `AddPlatformAuthentication`.
 7. The role check is case-insensitive.
 8. With auth disabled, an attribute-free endpoint passes and a warning was logged.
 9. A null `HttpContext` (timer trigger) passes through.
-10. **`Denied_response_carries_cors_headers`** — run `CorsMiddleware` then
+10. **`Denied_response_carries_cors_headers`** â€” run `CorsMiddleware` then
     `FunctionAuthorizationMiddleware` over a denied request and assert the 401 response has
     `Access-Control-Allow-Origin`. This is fix (3).
 11. `OPTIONS` short-circuits at 204 without reaching authorization.
@@ -234,9 +234,9 @@ dotnet test
 ## Done when
 
 - [ ] Build clean, all tests pass
-- [ ] `Endpoint_without_attributes_is_denied` passes — default-deny is real
+- [ ] `Endpoint_without_attributes_is_denied` passes â€” default-deny is real
 - [ ] Attributes are read via `GetTargetFunctionMethod()`, not endpoint metadata
-- [ ] `Denied_response_carries_cors_headers` passes — CORS runs first
+- [ ] `Denied_response_carries_cors_headers` passes â€” CORS runs first
 - [ ] All services resolve from `context.InstanceServices`
 - [ ] `tenantId == clientId` fails at startup with a message naming both keys
 - [ ] The wrapped ASP.NET `AuthenticationMiddleware`/`AuthorizationMiddleware` were not ported
@@ -248,3 +248,4 @@ dotnet test
 git add -A
 git commit -m "Step 10: default-deny Functions-native authorization, CORS-first ordering, scoped resolution (fixes section 6)"
 ```
+

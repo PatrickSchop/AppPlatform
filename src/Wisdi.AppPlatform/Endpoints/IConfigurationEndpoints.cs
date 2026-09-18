@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Wisdi.AppPlatform.Endpoints;
+namespace PS.AppPlatform.Endpoints;
 
 /// <summary>
 /// Interface for application configuration endpoints.
@@ -15,3 +15,4 @@ public interface IConfigurationEndpoints
     /// </summary>
     Task<IActionResult> GetWebAppConfigurationAsync(HttpRequest request, CancellationToken ct = default);
 }
+

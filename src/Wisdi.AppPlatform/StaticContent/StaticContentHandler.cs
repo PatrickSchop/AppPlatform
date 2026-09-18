@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Wisdi.AppPlatform.StaticContent;
+namespace PS.AppPlatform.StaticContent;
 
 public class StaticContentHandler
 {
@@ -47,7 +47,7 @@ public class StaticContentHandler
             file = await _filesProvider.GetFileAsync("index.html", ct);
         }
 
-        // Still null → NotFound
+        // Still null â†’ NotFound
         if (file is null)
         {
             return new NotFoundResult();
@@ -113,3 +113,4 @@ public class CachedFileStreamResult : IActionResult
         await _innerResult.ExecuteResultAsync(context);
     }
 }
+

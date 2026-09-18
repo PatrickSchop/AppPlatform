@@ -1,6 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Wisdi.AppPlatform.Tasks;
+namespace PS.AppPlatform.Tasks;
 
 /// <summary>
 /// Implementation of IBackgroundTaskCollection that collects background task handler registrations.
@@ -57,3 +57,4 @@ public class BackgroundTaskCollection : IBackgroundTaskCollection
         });
     }
 }
+

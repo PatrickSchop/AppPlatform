@@ -1,15 +1,15 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Endpoints;
-using Wisdi.AppPlatform.Hosting;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Endpoints;
+using PS.AppPlatform.Hosting;
+using PS.AppPlatform.Tasks;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class EndpointTests
 {
@@ -170,3 +170,4 @@ public class EndpointTests
         Assert.Contains(typeof(ITaskHandlerRegistry), paramTypes);
     }
 }
+

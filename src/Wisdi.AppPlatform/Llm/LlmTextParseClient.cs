@@ -1,9 +1,9 @@
-using Azure.AI.OpenAI;
+﻿using Azure.AI.OpenAI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenAI.Chat;
 
-namespace Wisdi.AppPlatform.Llm;
+namespace PS.AppPlatform.Llm;
 
 /// <summary>
 /// Client for making LLM text parsing requests to Azure OpenAI
@@ -69,3 +69,4 @@ public class LlmTextParseClient : ILlmTextParseClient
         return content;
     }
 }
+

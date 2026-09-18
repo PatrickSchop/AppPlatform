@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
@@ -18,16 +18,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Wisdi.AppPlatform\Wisdi.AppPlatform.csproj" />
+    <ProjectReference Include="..\..\src\PS.AppPlatform\PS.AppPlatform.csproj" />
   </ItemGroup>
 
   <!--
     ProjectReference does not flow build/*.targets the way PackageReference does, so the
     shims are included explicitly here. A real app consuming the NuGet package gets these
-    automatically. See src/Wisdi.AppPlatform.Functions/README.md.
+    automatically. See src/PS.AppPlatform.Functions/README.md.
   -->
   <ItemGroup>
-    <Compile Include="..\..\src\Wisdi.AppPlatform.Functions\endpoints\*.cs" Visible="false" />
+    <Compile Include="..\..\src\PS.AppPlatform.Functions\endpoints\*.cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,3 +39,4 @@
   </ItemGroup>
 
 </Project>
+

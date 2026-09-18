@@ -1,8 +1,8 @@
-# Versioning Policy
+﻿# Versioning Policy
 
 ## Overview
 
-Both packages (`Wisdi.AppPlatform` and `Wisdi.AppPlatform.Functions`) use **semantic versioning** and are released together as a lockstep.
+Both packages (`PS.AppPlatform` and `PS.AppPlatform.Functions`) use **semantic versioning** and are released together as a lockstep.
 
 ## Version Source
 
@@ -13,7 +13,7 @@ Local builds append `-local` suffix (via `VersionSuffix`), so local packages are
 ## Release Process
 
 - **Patch (0.x.Z)**: Bug fixes to platform code, schema migration fixes. No API surface changes.
-- **Minor (0.Y.0)**: New endpoints added to `endpoints/` directory, new public services. **Consuming apps pick up new shims on upgrade without code changes** — this is the payoff of source injection over code generation.
+- **Minor (0.Y.0)**: New endpoints added to `endpoints/` directory, new public services. **Consuming apps pick up new shims on upgrade without code changes** â€” this is the payoff of source injection over code generation.
 - **Major (X.0.0)**: Breaking changes to public interfaces (`IXxxEndpoint` contracts, endpoint signatures, data layer conventions).
 
 ## The Lockstep Rule: Critical
@@ -24,8 +24,8 @@ Local builds append `-local` suffix (via `VersionSuffix`), so local packages are
 
 An app's `packages.lock.json` can contain:
 ```json
-"Wisdi.AppPlatform": "0.3.0",
-"Wisdi.AppPlatform.Functions": "0.2.0"
+"PS.AppPlatform": "0.3.0",
+"PS.AppPlatform.Functions": "0.2.0"
 ```
 
 If the Functions package was injected at version 0.2.0 but the platform was upgraded to 0.3.0, a breaking change in 0.3.0's public interface will cause **compilation errors in the injected source**.
@@ -36,8 +36,8 @@ The MSBuild targets file can validate version equality at build time:
 
 ```xml
 <Target Name="ValidatePlatformVersions" BeforeTargets="Build">
-  <Error Condition="'$(Wisdi_AppPlatform_Version)' != '$(Wisdi_AppPlatform_Functions_Version)'"
-         Text="Wisdi.AppPlatform and Wisdi.AppPlatform.Functions must have the same version." />
+  <Error Condition="'$(PS_AppPlatform_Version)' != '$(PS_AppPlatform_Functions_Version)'"
+         Text="PS.AppPlatform and PS.AppPlatform.Functions must have the same version." />
 </Target>
 ```
 
@@ -50,3 +50,4 @@ The MSBuild targets file can validate version equality at build time:
 3. Push both `.nupkg` files to NuGet.org with the same version
 
 The GitHub Actions publish workflow enforces this by packing both projects in one action.
+

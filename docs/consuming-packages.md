@@ -1,6 +1,6 @@
-# Consuming Wisdi.AppPlatform Packages
+﻿# Consuming PS.AppPlatform Packages
 
-The `Wisdi.AppPlatform` and `Wisdi.AppPlatform.Functions` packages are published to GitHub Packages, which requires authentication even for private repositories.
+The `PS.AppPlatform` and `PS.AppPlatform.Functions` packages are published to GitHub Packages, which requires authentication even for private repositories.
 
 ## Developer Machine Setup
 
@@ -14,7 +14,7 @@ Create `nuget.config` in your consuming app's repository root:
   <packageSources>
     <clear />
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-    <add key="wisdi" value="https://nuget.pkg.github.com/PatrickSchop/index.json" />
+    <add key="PS" value="https://nuget.pkg.github.com/PatrickSchop/index.json" />
   </packageSources>
 </configuration>
 ```
@@ -24,7 +24,7 @@ Create `nuget.config` in your consuming app's repository root:
 Run this command **once per machine** to store credentials in the user-level NuGet configuration:
 
 ```powershell
-dotnet nuget update source wisdi `
+dotnet nuget update source PS `
   --username PatrickSchop `
   --password <a classic PAT with read:packages> `
   --store-password-in-clear-text `
@@ -43,8 +43,8 @@ In your `.csproj`, add the package references:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Wisdi.AppPlatform" Version="0.1.0" />
-  <PackageReference Include="Wisdi.AppPlatform.Functions" Version="0.1.0" />
+  <PackageReference Include="PS.AppPlatform" Version="0.1.0" />
+  <PackageReference Include="PS.AppPlatform.Functions" Version="0.1.0" />
 </ItemGroup>
 ```
 
@@ -84,7 +84,7 @@ jobs:
 If your consuming app is in a different GitHub organization or account, create a Personal Access Token in the `PatrickSchop` account and store it as a repository secret:
 
 1. Create a [classic PAT](https://github.com/settings/tokens) with `read:packages` scope in the `PatrickSchop` account
-2. Add it as a repository secret (e.g., `WISDI_PACKAGES_TOKEN`) in your consuming repo
+2. Add it as a repository secret (e.g., `PS_PACKAGES_TOKEN`) in your consuming repo
 3. Use it in your workflow:
 
 ```yaml
@@ -105,9 +105,9 @@ jobs:
         shell: bash
         run: |
           dotnet nuget add source https://nuget.pkg.github.com/PatrickSchop/index.json \
-            --name wisdi \
+            --name PS \
             --username PatrickSchop \
-            --password ${{ secrets.WISDI_PACKAGES_TOKEN }} \
+            --password ${{ secrets.PS_PACKAGES_TOKEN }} \
             --store-password-in-clear-text
 
       - run: dotnet restore
@@ -123,7 +123,8 @@ jobs:
 
 **"Package not found":**
 - Verify the version exists in [GitHub Packages](https://github.com/PatrickSchop/AppPlatform/packages)
-- Ensure you're referencing the correct package name: `Wisdi.AppPlatform` or `Wisdi.AppPlatform.Functions`
+- Ensure you're referencing the correct package name: `PS.AppPlatform` or `PS.AppPlatform.Functions`
 
 **Fine-grained tokens don't work:**
 - GitHub Packages only supports classic PATs for NuGet. Create one with the `read:packages` scope.
+

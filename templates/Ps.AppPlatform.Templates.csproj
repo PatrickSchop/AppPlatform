@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Wisdi.AppPlatform.Templates</PackageId>
+    <PackageId>PS.AppPlatform.Templates</PackageId>
     <PackageType>Template</PackageType>
-    <Title>Wisdi tiny app templates</Title>
-    <Description>dotnet new templates for Wisdi.AppPlatform.</Description>
+    <Title>PS tiny app templates</Title>
+    <Description>dotnet new templates for PS.AppPlatform.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -24,3 +24,4 @@
   </ItemGroup>
 
 </Project>
+

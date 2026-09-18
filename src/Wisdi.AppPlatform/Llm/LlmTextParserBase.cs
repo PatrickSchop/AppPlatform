@@ -1,8 +1,8 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
 
-namespace Wisdi.AppPlatform.Llm;
+namespace PS.AppPlatform.Llm;
 
 /// <summary>
 /// Wrapper class for LLM JSON responses containing a data property
@@ -217,3 +217,4 @@ public abstract class LlmTextParserBase<TResult>
         return trimmed.Trim();
     }
 }
+

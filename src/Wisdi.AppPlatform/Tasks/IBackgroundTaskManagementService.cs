@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Tasks;
+﻿namespace PS.AppPlatform.Tasks;
 
 /// <summary>
 /// Internal interface for managing task state.
@@ -23,3 +23,4 @@ public interface IBackgroundTaskManagementService : IBackgroundTaskService
     /// </summary>
     Task RenewLeaseAsync(Guid taskId, CancellationToken ct = default);
 }
+

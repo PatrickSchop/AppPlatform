@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 public sealed class HostingServiceBuilder : ServiceBuilder
 {
@@ -12,3 +12,4 @@ public sealed class HostingServiceBuilder : ServiceBuilder
         services.AddHttpClient();
     }
 }
+

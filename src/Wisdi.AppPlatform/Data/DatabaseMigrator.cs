@@ -1,9 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Wisdi.AppPlatform.Data;
+namespace PS.AppPlatform.Data;
 
 /// <summary>
 /// Manages database migrations with version tracking. Supports embedded core scripts (000-099)
@@ -323,3 +323,4 @@ END";
         }
     }
 }
+

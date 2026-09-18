@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
@@ -9,10 +9,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Reflection;
 using System.Security.Claims;
-using Wisdi.AppPlatform.Auth;
+using PS.AppPlatform.Auth;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class AuthorizationTests
 {
@@ -236,3 +236,4 @@ public static class AnonymousEndpoints
 {
     public static void AnyMethod() { }
 }
+

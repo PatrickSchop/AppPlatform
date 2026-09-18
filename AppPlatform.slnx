@@ -1,12 +1,13 @@
-<Solution>
+﻿<Solution>
   <Folder Name="/samples/">
     <Project Path="samples/SampleApp/SampleApp.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/Wisdi.AppPlatform.Functions/Wisdi.AppPlatform.Functions.csproj" />
-    <Project Path="src/Wisdi.AppPlatform/Wisdi.AppPlatform.csproj" />
+    <Project Path="src/PS.AppPlatform.Functions/PS.AppPlatform.Functions.csproj" />
+    <Project Path="src/PS.AppPlatform/PS.AppPlatform.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Wisdi.AppPlatform.Tests/Wisdi.AppPlatform.Tests.csproj" />
+    <Project Path="tests/PS.AppPlatform.Tests/PS.AppPlatform.Tests.csproj" />
   </Folder>
 </Solution>
+

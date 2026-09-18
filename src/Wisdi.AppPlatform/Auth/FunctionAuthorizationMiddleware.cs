@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using System.Reflection;
 using System.Text.Json;
 
-namespace Wisdi.AppPlatform.Auth;
+namespace PS.AppPlatform.Auth;
 
 public sealed class FunctionAuthorizationMiddleware : IFunctionsWorkerMiddleware
 {
@@ -129,3 +129,4 @@ public sealed class FunctionAuthorizationMiddleware : IFunctionsWorkerMiddleware
         return null;
     }
 }
+

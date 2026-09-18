@@ -1,8 +1,8 @@
-using Azure.Identity;
+﻿using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 public class AzureIdentityProvider : IAzureIdentityProvider
 {
@@ -46,3 +46,4 @@ public class AzureIdentityProvider : IAzureIdentityProvider
         throw new InvalidOperationException($"Unsupported Azure identity type: {credentialType}");
     }
 }
+

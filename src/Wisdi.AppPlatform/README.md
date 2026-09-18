@@ -1,6 +1,6 @@
-# Wisdi.AppPlatform
+﻿# PS.AppPlatform
 
-Reusable engine for small Azure Functions apps. Handles hosting, data layer, background task execution, static SPA content, and authentication — leaving only the app-specific endpoints and data model for you to write.
+Reusable engine for small Azure Functions apps. Handles hosting, data layer, background task execution, static SPA content, and authentication â€” leaving only the app-specific endpoints and data model for you to write.
 
 ## Quick start
 
@@ -41,3 +41,4 @@ The platform reads these sections from `appsettings.json`:
 ## Docs
 
 See [the repository](https://github.com/PatrickSchop/AppPlatform) for detailed architecture and runbooks.
+

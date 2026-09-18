@@ -1,11 +1,11 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Wisdi.AppPlatform.Llm;
+using PS.AppPlatform.Llm;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class LlmTests
 {
@@ -124,8 +124,8 @@ public class LlmTests
 
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton<Wisdi.AppPlatform.Hosting.IAzureIdentityProvider>(
-            NSubstitute.Substitute.For<Wisdi.AppPlatform.Hosting.IAzureIdentityProvider>());
+        services.AddSingleton<PS.AppPlatform.Hosting.IAzureIdentityProvider>(
+            NSubstitute.Substitute.For<PS.AppPlatform.Hosting.IAzureIdentityProvider>());
 
         services.AddLlmServices(config);
         var sp = services.BuildServiceProvider();
@@ -231,3 +231,4 @@ public class LlmTests
         }
     }
 }
+

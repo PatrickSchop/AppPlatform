@@ -1,6 +1,6 @@
-# Wisdi.AppPlatform.Functions
+﻿# PS.AppPlatform.Functions
 
-Platform endpoint shims for Azure Functions. This package **does not contain compiled assemblies** — instead, it injects endpoint source code (`.cs` files) into your app's compilation via an auto-imported `.targets` file.
+Platform endpoint shims for Azure Functions. This package **does not contain compiled assemblies** â€” instead, it injects endpoint source code (`.cs` files) into your app's compilation via an auto-imported `.targets` file.
 
 ## Why source injection?
 
@@ -8,14 +8,14 @@ Azure Functions worker indexing is source-generator based and only sees the curr
 
 ## What's included
 
-- `GetNotificationTasks`, `GetTasks`, `GetTaskStatus`, `CreateTask`, `CheckTasks` — background task endpoints
-- `StaticContent` — SPA hosting with deep-link fallback and caching
-- `GetWebAppConfiguration` — public app config endpoint
-- `GetHealth` — health check
-- `InitializeDatabase` — one-time migration trigger
-- `ScheduledTaskCheck` — timer-triggered task executor
+- `GetNotificationTasks`, `GetTasks`, `GetTaskStatus`, `CreateTask`, `CheckTasks` â€” background task endpoints
+- `StaticContent` â€” SPA hosting with deep-link fallback and caching
+- `GetWebAppConfiguration` â€” public app config endpoint
+- `GetHealth` â€” health check
+- `InitializeDatabase` â€” one-time migration trigger
+- `ScheduledTaskCheck` â€” timer-triggered task executor
 
-All endpoints are wired to services from `Wisdi.AppPlatform` — nothing special to configure beyond adding the platform modules to your host.
+All endpoints are wired to services from `PS.AppPlatform` â€” nothing special to configure beyond adding the platform modules to your host.
 
 ## Disabling shim injection
 
@@ -23,7 +23,7 @@ If you need to customize an endpoint, add this to your app's `.csproj` **before*
 
 ```xml
 <PropertyGroup>
-  <WisdiAppPlatformInjectEndpoints>false</WisdiAppPlatformInjectEndpoints>
+  <PSAppPlatformInjectEndpoints>false</PSAppPlatformInjectEndpoints>
 </PropertyGroup>
 ```
 
@@ -38,3 +38,4 @@ This package **requires PackageReference consumption**. If you use `ProjectRefer
 ## Docs
 
 See [the repository](https://github.com/PatrickSchop/AppPlatform) for detailed architecture.
+

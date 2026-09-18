@@ -1,11 +1,11 @@
-using Azure;
+﻿using Azure;
 using Azure.AI.OpenAI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Hosting;
 
-namespace Wisdi.AppPlatform.Llm;
+namespace PS.AppPlatform.Llm;
 
 public static class LlmServiceBuilder
 {
@@ -64,3 +64,4 @@ public static class LlmServiceBuilder
         services.AddTransient<ILlmTextParseClient, LlmTextParseClient>();
     }
 }
+

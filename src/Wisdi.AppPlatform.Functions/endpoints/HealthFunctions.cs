@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Wisdi.AppPlatform.Endpoints;
+using PS.AppPlatform.Endpoints;
 
-namespace Wisdi.AppPlatform.Generated;
+namespace PS.AppPlatform.Generated;
 
 [AllowAnonymous]
 public class HealthFunctions(IHealthEndpoints inner)
@@ -14,3 +14,4 @@ public class HealthFunctions(IHealthEndpoints inner)
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/health")] HttpRequest req)
         => inner.GetHealthAsync(req, req.HttpContext.RequestAborted);
 }
+

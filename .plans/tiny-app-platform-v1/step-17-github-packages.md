@@ -1,6 +1,6 @@
-# Step 17 — Publish to GitHub Packages
+﻿# Step 17 â€” Publish to GitHub Packages
 
-**Phase:** 3 — Packaging
+**Phase:** 3 â€” Packaging
 **Depends on:** Step 16
 **Working directory:** `C:\Dev\AppPlatform`
 
@@ -48,7 +48,7 @@ jobs:
         shell: pwsh
         run: |
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $pkg = Get-ChildItem artifacts/Wisdi.AppPlatform.Functions.*.nupkg | Select-Object -First 1
+          $pkg = Get-ChildItem artifacts/PS.AppPlatform.Functions.*.nupkg | Select-Object -First 1
           $entries = [IO.Compression.ZipFile]::OpenRead($pkg.FullName).Entries.FullName
           if ($entries -match '^lib/') { throw "Functions package contains lib/ - shims would be invisible to worker indexing" }
           if (-not ($entries -match '^endpoints/')) { throw "Functions package is missing endpoints/" }
@@ -63,8 +63,8 @@ jobs:
 The inline assertion matters more than it looks: the `lib/` mistake is silent, survives all
 unit tests, and only shows up as "my endpoints return 404" in someone's app weeks later.
 
-Note `dotnet-version: '10.0.x'` — the source repo's workflow defaults to `9.0.x` against a
-`net10.0` project (analysis §5). Do not repeat that here.
+Note `dotnet-version: '10.0.x'` â€” the source repo's workflow defaults to `9.0.x` against a
+`net10.0` project (analysis Â§5). Do not repeat that here.
 
 ### 2. `.github/workflows/publish.yaml`
 
@@ -120,10 +120,10 @@ jobs:
 clean `0.2.0` rather than `0.2.0-local`.
 
 `--skip-duplicate` prevents a re-run of a release from failing the workflow. GitHub Packages
-does not allow overwriting a published version, which is the correct behaviour — if a bad
+does not allow overwriting a published version, which is the correct behaviour â€” if a bad
 version ships, publish a new one rather than trying to replace it.
 
-### 3. Consumer authentication — `docs/consuming-packages.md`
+### 3. Consumer authentication â€” `docs/consuming-packages.md`
 
 GitHub Packages requires authentication even for reading a package from a private repo, which
 is the single most common stumbling block. Document it properly.
@@ -138,7 +138,7 @@ is the single most common stumbling block. Document it properly.
   <packageSources>
     <clear />
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-    <add key="wisdi" value="https://nuget.pkg.github.com/PatrickSchop/index.json" />
+    <add key="PS" value="https://nuget.pkg.github.com/PatrickSchop/index.json" />
   </packageSources>
 </configuration>
 ```
@@ -146,7 +146,7 @@ is the single most common stumbling block. Document it properly.
 Credentials go in the **user-level** config, never in the repo:
 
 ```powershell
-dotnet nuget update source wisdi `
+dotnet nuget update source PS `
   --username PatrickSchop `
   --password <a classic PAT with read:packages> `
   --store-password-in-clear-text `
@@ -154,7 +154,7 @@ dotnet nuget update source wisdi `
 ```
 
 State plainly that `--store-password-in-clear-text` is required on Windows for this feed and
-that the token must be a **classic** PAT with `read:packages` — fine-grained tokens do not
+that the token must be a **classic** PAT with `read:packages` â€” fine-grained tokens do not
 work with GitHub Packages for NuGet. Both of these cost people an hour if undocumented.
 
 **For a consuming app's GitHub Actions workflow:** `secrets.GITHUB_TOKEN` works for
@@ -206,3 +206,4 @@ if you skip it, the first real app will find out instead.
 git add -A
 git commit -m "Step 17: CI and publish workflows; 0.1.0 published to GitHub Packages"
 ```
+

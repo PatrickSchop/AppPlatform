@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Tasks;
+﻿namespace PS.AppPlatform.Tasks;
 
 /// <summary>
 /// Interface for collecting background task handler registrations.
@@ -14,3 +14,4 @@ public interface IBackgroundTaskCollection
 
     void AddBackgroundTask<T>(string taskName) where T : class;
 }
+

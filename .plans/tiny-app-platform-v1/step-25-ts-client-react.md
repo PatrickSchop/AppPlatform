@@ -1,15 +1,15 @@
-# Step 25 — `@wisdi/app-client-react`
+﻿# Step 25 â€” `@PS/app-client-react`
 
-**Phase:** 5 — Front-end
+**Phase:** 5 â€” Front-end
 **Depends on:** Step 24
 **Working directory:** `C:\Dev\AppPlatform\clients\app-client-react`
 
 ## Goal
 
-The React adapter — hooks and a provider over `@wisdi/app-client`. Same thinness rule as
+The React adapter â€” hooks and a provider over `@PS/app-client`. Same thinness rule as
 Step 24: under ~300 lines of non-test source.
 
-This package is the actual test of the §4 claim. If it needs any backend change, front-end
+This package is the actual test of the Â§4 claim. If it needs any backend change, front-end
 flexibility was not real. It should need none.
 
 ## Tasks
@@ -18,17 +18,17 @@ flexibility was not real. It should need none.
 
 ```json
 {
-  "name": "@wisdi/app-client-react",
+  "name": "@PS/app-client-react",
   "version": "0.1.0",
   "type": "module",
   "peerDependencies": {
     "react": ">=18.0.0",
-    "@wisdi/app-client": "^0.1.0"
+    "@PS/app-client": "^0.1.0"
   }
 }
 ```
 
-Build with `tsup` or plain `tsc` — no bundler gymnastics needed for a package this small.
+Build with `tsup` or plain `tsc` â€” no bundler gymnastics needed for a package this small.
 Target React 18+; nothing here requires 19.
 
 ### 2. `PlatformProvider`
@@ -49,7 +49,7 @@ while pending and `errorFallback` on failure.
 
 Two things to get right, because both are easy to get wrong in React:
 - **Guard against double-initialisation in StrictMode.** Development double-mounting must not
-  produce two `TaskPoller`s — one will leak and poll forever.
+  produce two `TaskPoller`s â€” one will leak and poll forever.
 - **Stop the poller on unmount**, in the effect cleanup.
 
 ### 3. Hooks
@@ -73,10 +73,10 @@ Implement `useBackgroundTasks` with **`useSyncExternalStore`** over the poller's
 not `useState` plus `useEffect`. The poller is an external store; `useSyncExternalStore` is
 what it is for, and it gets tearing and concurrent rendering right for free.
 
-`usePlatform` outside a provider must throw a message that names `PlatformProvider` — a
+`usePlatform` outside a provider must throw a message that names `PlatformProvider` â€” a
 generic "cannot read property of null" here costs real debugging time.
 
-### 4. `useApiQuery` — a small data hook
+### 4. `useApiQuery` â€” a small data hook
 
 ```ts
 export function useApiQuery<T>(path: string | null, options?: { enabled?: boolean }): {
@@ -91,7 +91,7 @@ A deliberately minimal fetch-on-mount hook: aborts on unmount, refetches when `p
 and does nothing when `path` is null.
 
 **Do not build a cache, deduplication or retry.** An app that needs those should use TanStack
-Query with `useApi()` — say exactly that in the README, so nobody grows this into a bad
+Query with `useApi()` â€” say exactly that in the README, so nobody grows this into a bad
 query library.
 
 ### 5. `<TaskProgress />`
@@ -152,5 +152,6 @@ npm test
 
 ```powershell
 git add -A
-git commit -m "Step 25: @wisdi/app-client-react adapter"
+git commit -m "Step 25: @PS/app-client-react adapter"
 ```
+

@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Llm;
+﻿namespace PS.AppPlatform.Llm;
 
 /// <summary>
 /// Interface for making LLM text parsing requests to Azure OpenAI
@@ -14,3 +14,4 @@ public interface ILlmTextParseClient
     /// <returns>The JSON response from the LLM</returns>
     Task<string> ParseAsync(string systemPrompt, string userPrompt, CancellationToken cancellationToken = default);
 }
+

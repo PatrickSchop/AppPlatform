@@ -1,24 +1,24 @@
-# Step 20 — Azure infrastructure as bicep
+﻿# Step 20 â€” Azure infrastructure as bicep
 
-**Phase:** 4 — Template and infrastructure
+**Phase:** 4 â€” Template and infrastructure
 **Depends on:** Step 18
 **Working directory:** `C:\Dev\AppPlatform`
 
 ## Goal
 
-Put the per-app Azure footprint in code. Today **none** of it is (analysis §5) — there is no
+Put the per-app Azure footprint in code. Today **none** of it is (analysis Â§5) â€” there is no
 bicep, ARM or terraform anywhere in StockAnalysis, and every resource was created by hand.
 That is precisely the "shortcuts get taken" risk this whole exercise exists to remove.
 
-## The topology (analysis §5)
+## The topology (analysis Â§5)
 
-| Shared — created once, referenced by id | Per app — created by `app.bicep` |
+| Shared â€” created once, referenced by id | Per app â€” created by `app.bicep` |
 |---|---|
 | Resource group `Applications` | Azure SQL **database** on the shared server |
 | SQL server `pschop-db` | Function App (consumption, Flex Consumption if available) |
 | Storage account `stockinfostorage` | Blob container `web-<app>` |
 | Entra tenant | User-assigned managed identity |
-| Azure OpenAI account | Custom domain `<app>.wisdi.nl` |
+| Azure OpenAI account | Custom domain `<app>.PS.nl` |
 
 A new app is then `dotnet new tinyapp` plus one bicep deployment.
 
@@ -45,7 +45,7 @@ param location string = resourceGroup().location
 @description('SQL database SKU. Basic is the cheap default; GP_S_Gen5_1 auto-pauses.')
 param sqlSkuName string = 'Basic'
 
-@description('Custom domain, e.g. recipes.wisdi.nl. Empty skips domain binding.')
+@description('Custom domain, e.g. recipes.PS.nl. Empty skips domain binding.')
 param customDomain string = ''
 
 @description('Azure OpenAI account resource id. Empty skips the role assignment.')
@@ -67,19 +67,19 @@ Resources to create:
    - `DEV_ENVIRONMENT = production`
    - `azureIdentity__type = userAssigned`
    - `azureIdentity__clientId = <identity client id>`
-   - `database__connectionString` — `Server=tcp:<server>.database.windows.net,1433;Database=<appName>;Encrypt=True;`
+   - `database__connectionString` â€” `Server=tcp:<server>.database.windows.net,1433;Database=<appName>;Encrypt=True;`
      with **no credentials**; the Step 04 interceptor supplies the token
    - `database__useManagedIdentity = true`
    - `staticContent__blob__uri = https://<storage>.blob.core.windows.net/web-<appName>`
    - `backgroundTasks__apiBaseUrl = https://<appName>-api.azurewebsites.net`
    - `backgroundTasks__checkSchedule = 0 */5 * * * *`
 
-   Use `__` (double underscore) as the section separator — it is what maps to `:` in
+   Use `__` (double underscore) as the section separator â€” it is what maps to `:` in
    `IConfiguration` on Linux. Getting this wrong is a silent misconfiguration, so put a
    comment in the bicep saying so.
 6. **Easy Auth explicitly disabled.** The platform authenticates in-process (Step 10); App
    Service Authentication would intercept requests before any platform code runs and break
-   the security model — see `docs/auth-setup.md` Part 4a for the three specific failures.
+   the security model â€” see `docs/auth-setup.md` Part 4a for the three specific failures.
 
    Declare it rather than relying on the default, so that a redeploy also *reverts* it if
    someone enabled it by hand in the portal:
@@ -110,7 +110,7 @@ Resources to create:
    - `Cognitive Services OpenAI User` on `openAiAccountId`, conditional on it being non-empty
 8. **Custom domain binding** plus a managed certificate, conditional on `customDomain`.
    Note in a comment that the DNS `CNAME` and the `asuid` TXT record must exist **before**
-   this deploys, or it fails — that ordering constraint is not obvious.
+   this deploys, or it fails â€” that ordering constraint is not obvious.
 
 Outputs: `functionAppName`, `functionAppHostName`, `identityClientId`, `identityPrincipalId`,
 `databaseName`, `blobContainerUri`.
@@ -133,12 +133,12 @@ ALTER ROLE db_ddladmin  ADD MEMBER [<identity-name>];
 ```
 
 `db_ddladmin` is needed because the app runs its own migrations. Say so in a comment, and say
-that dropping it means moving migrations out of the app — a real trade-off worth stating
+that dropping it means moving migrations out of the app â€” a real trade-off worth stating
 rather than silently granting.
 
 ### 3. `infra/shared.bicep`
 
-The shared resources, for documentation and disaster recovery. It is **not** run routinely —
+The shared resources, for documentation and disaster recovery. It is **not** run routinely â€”
 these already exist and running it could disrupt StockAnalysis.
 
 Put a prominent header comment:
@@ -212,7 +212,7 @@ az deployment group what-if `
   --parameters appName=biceptest
 ```
 
-**Expected:** compiles clean; the what-if lists **only** creates — the identity, database,
+**Expected:** compiles clean; the what-if lists **only** creates â€” the identity, database,
 container, function app, auth settings and role assignments. **If it shows a modify or delete
 on any shared resource, stop and fix `app.bicep`.** It must never touch the shared server,
 storage account or anything belonging to StockAnalysis.
@@ -251,3 +251,4 @@ A real deployment happens as part of Step 19 Check 7.
 git add -A
 git commit -m "Step 20: bicep for the per-app Azure footprint; shared resources documented"
 ```
+

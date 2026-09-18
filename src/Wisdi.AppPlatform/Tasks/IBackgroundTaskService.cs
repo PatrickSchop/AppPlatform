@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Tasks;
+﻿namespace PS.AppPlatform.Tasks;
 
 /// <summary>
 /// Public interface for starting tasks and monitoring task status.
@@ -26,3 +26,4 @@ public interface IBackgroundTaskService
     /// </summary>
     Task<List<BackgroundTask>> GetAllTasksAsync(CancellationToken ct = default);
 }
+

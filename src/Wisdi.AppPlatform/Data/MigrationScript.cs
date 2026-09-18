@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Data;
+﻿namespace PS.AppPlatform.Data;
 
 /// <summary>
 /// Represents a migration script to be applied to the database.
@@ -10,3 +10,4 @@ public sealed record MigrationScript(
     string Name,
     string Source,
     Func<CancellationToken, Task<string>> ReadAsync);
+

@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Wisdi.AppPlatform.Endpoints;
+namespace PS.AppPlatform.Endpoints;
 
 /// <summary>
 /// Interface for health check endpoints.
-/// This endpoint should typically be in AnonymousFunctions — a health check that requires a token is not useful.
+/// This endpoint should typically be in AnonymousFunctions â€” a health check that requires a token is not useful.
 /// </summary>
 public interface IHealthEndpoints
 {
@@ -16,3 +16,4 @@ public interface IHealthEndpoints
     /// </summary>
     Task<IActionResult> GetHealthAsync(HttpRequest request, CancellationToken ct = default);
 }
+

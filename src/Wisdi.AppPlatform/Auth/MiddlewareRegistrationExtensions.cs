@@ -1,8 +1,8 @@
-using Microsoft.Azure.Functions.Worker;
+﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Wisdi.AppPlatform.Auth;
+namespace PS.AppPlatform.Auth;
 
 /// <summary>
 /// Middleware pipeline activator that chains CORS and Authorization middleware.
@@ -21,11 +21,12 @@ internal sealed class PlatformMiddlewareChain : IFunctionsWorkerMiddleware
 
     public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
     {
-        // Chain: CORS → Authorization → next
+        // Chain: CORS â†’ Authorization â†’ next
         await _corsMiddleware.Invoke(context, async ctx =>
         {
             await _authzMiddleware.Invoke(ctx, next);
         });
     }
 }
+
 

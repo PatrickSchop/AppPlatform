@@ -1,12 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Hosting;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Hosting;
+using PS.AppPlatform.Tasks;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class DataTests
 {
@@ -70,3 +70,4 @@ public class DataTests
         Assert.Contains("database", ex.Message);
     }
 }
+

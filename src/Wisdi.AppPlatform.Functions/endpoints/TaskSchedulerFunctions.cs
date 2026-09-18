@@ -1,8 +1,8 @@
-using Microsoft.Azure.Functions.Worker;
+﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Tasks;
 
-namespace Wisdi.AppPlatform.Generated;
+namespace PS.AppPlatform.Generated;
 
 public class TaskSchedulerFunctions(ITaskExecutionManager manager)
 {
@@ -17,3 +17,4 @@ public class TaskSchedulerFunctions(ITaskExecutionManager manager)
         await manager.CheckAndStartTasksAsync();
     }
 }
+

@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Tasks;
+﻿namespace PS.AppPlatform.Tasks;
 
 public class TaskHandlerRegistry : ITaskHandlerRegistry
 {
@@ -24,3 +24,4 @@ public class TaskHandlerRegistry : ITaskHandlerRegistry
         return _handlers.ContainsKey(taskType);
     }
 }
+

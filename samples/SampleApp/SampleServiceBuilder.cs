@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SampleApp.Api;
 using SampleApp.Tasks;
-using Wisdi.AppPlatform.Hosting;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Hosting;
+using PS.AppPlatform.Tasks;
 
 namespace SampleApp;
 
@@ -15,3 +15,4 @@ public sealed class SampleServiceBuilder : ServiceBuilder
     public override void RegisterBackgroundTasks(IBackgroundTaskCollection tasks)
         => tasks.AddBackgroundTask<WordCountTaskHandler>("wordcount");
 }
+

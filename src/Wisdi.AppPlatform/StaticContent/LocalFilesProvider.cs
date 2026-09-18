@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
-namespace Wisdi.AppPlatform.StaticContent;
+namespace PS.AppPlatform.StaticContent;
 
 public class LocalFilesProvider : IFilesProvider
 {
@@ -41,3 +41,4 @@ public class LocalFilesProvider : IFilesProvider
         );
     }
 }
+

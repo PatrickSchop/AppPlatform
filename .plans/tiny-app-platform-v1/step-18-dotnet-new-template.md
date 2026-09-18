@@ -1,6 +1,6 @@
-# Step 18 — `dotnet new tinyapp` template
+﻿# Step 18 â€” `dotnet new tinyapp` template
 
-**Phase:** 4 — Template and infrastructure
+**Phase:** 4 â€” Template and infrastructure
 **Depends on:** Step 17
 **Working directory:** `C:\Dev\AppPlatform`
 
@@ -24,7 +24,7 @@ Note domain removed and the names parameterised.
 
 ```
 templates/
-  Wisdi.AppPlatform.Templates.csproj
+  PS.AppPlatform.Templates.csproj
   content/
     tinyapp/
       .template.config/
@@ -52,12 +52,12 @@ templates/
 ```json
 {
   "$schema": "http://json.schemastore.org/template",
-  "author": "Wisdi",
+  "author": "PS",
   "classifications": ["Cloud", "Serverless", "Web", "Azure Functions"],
-  "identity": "Wisdi.AppPlatform.TinyApp",
-  "name": "Wisdi tiny app",
+  "identity": "PS.AppPlatform.TinyApp",
+  "name": "PS tiny app",
   "shortName": "tinyapp",
-  "description": "An Azure Functions app on Wisdi.AppPlatform: SPA hosting, background tasks, Entra auth and script migrations.",
+  "description": "An Azure Functions app on PS.AppPlatform: SPA hosting, background tasks, Entra auth and script migrations.",
   "tags": { "language": "C#", "type": "project" },
   "sourceName": "TinyApp",
   "preferNameDirectory": true,
@@ -67,7 +67,7 @@ templates/
       "datatype": "string",
       "defaultValue": "0.1.0",
       "replaces": "0.0.0-PLATFORM-VERSION",
-      "description": "Wisdi.AppPlatform package version."
+      "description": "PS.AppPlatform package version."
     },
     "AppRole": {
       "type": "parameter",
@@ -121,8 +121,8 @@ templates/
 }
 ```
 
-`sourceName: "TinyApp"` means every occurrence of `TinyApp` — filenames, namespaces, the
-csproj name — becomes the `-n` value.
+`sourceName: "TinyApp"` means every occurrence of `TinyApp` â€” filenames, namespaces, the
+csproj name â€” becomes the `-n` value.
 
 The `Frontend` choice depends on Steps 26 and 27. Set it up now but leave the
 `WebApp/`/`WebApp-React/` content out; Step 27 adds it and updates the default.
@@ -133,14 +133,14 @@ Copy from `samples/SampleApp`, then:
 
 - **Remove** everything Note-related: `Data/Note.cs`, `Tasks/`, `Api/`,
   `wwwroot/`, the Notes lines in `AppServiceBuilder`.
-- `AppDbContext` keeps only the base — no `DbSet`s, with a comment showing how to add one.
+- `AppDbContext` keeps only the base â€” no `DbSet`s, with a comment showing how to add one.
 - `AppServiceBuilder` is a stub with both overrides present but empty, each with a one-line
   comment showing what goes there. An empty method with a worked comment teaches more than
   an absent one.
 - `100_InitialSchema.sql` is a commented-out `CREATE TABLE` example plus a header explaining
   the `000-099` core / `100+` app numbering rule.
 - `TinyApp.csproj` uses `PackageReference` with `0.0.0-PLATFORM-VERSION`, and **no**
-  `<Compile Include>` for the shims — the targets file does that. Add a comment saying so,
+  `<Compile Include>` for the shims â€” the targets file does that. Add a comment saying so,
   since its absence is otherwise mysterious.
 - `appsettings.json` gets an `authentication` section with
   `"requiredRole": "APP-ROLE-PLACEHOLDER"` and empty tenant/client ids, plus a comment
@@ -148,15 +148,15 @@ Copy from `samples/SampleApp`, then:
 - `README.md` is a real getting-started: prerequisites, create the database, `--migrate`,
   `func start`, add an entity, add a task handler, deploy. Keep it under a page.
 
-### 4. `templates/Wisdi.AppPlatform.Templates.csproj`
+### 4. `templates/PS.AppPlatform.Templates.csproj`
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>Wisdi.AppPlatform.Templates</PackageId>
+    <PackageId>PS.AppPlatform.Templates</PackageId>
     <PackageType>Template</PackageType>
-    <Title>Wisdi tiny app templates</Title>
-    <Description>dotnet new templates for Wisdi.AppPlatform.</Description>
+    <Title>PS tiny app templates</Title>
+    <Description>dotnet new templates for PS.AppPlatform.</Description>
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <ContentTargetFolders>content</ContentTargetFolders>
@@ -172,7 +172,7 @@ Copy from `samples/SampleApp`, then:
 </Project>
 ```
 
-`EnableDefaultItems=false` and `<Compile Remove="**\*" />` are both needed — otherwise MSBuild
+`EnableDefaultItems=false` and `<Compile Remove="**\*" />` are both needed â€” otherwise MSBuild
 tries to compile the template's `Program.cs` as part of this project and fails on the
 placeholder tokens.
 
@@ -197,13 +197,13 @@ root build, take that route.
 
 ```powershell
 cd C:\Dev\AppPlatform
-dotnet pack templates\Wisdi.AppPlatform.Templates.csproj -c Release -o artifacts
-dotnet new uninstall Wisdi.AppPlatform.Templates 2>$null
-dotnet new install artifacts\Wisdi.AppPlatform.Templates.0.1.0-local.nupkg
+dotnet pack templates\PS.AppPlatform.Templates.csproj -c Release -o artifacts
+dotnet new uninstall PS.AppPlatform.Templates 2>$null
+dotnet new install artifacts\PS.AppPlatform.Templates.0.1.0-local.nupkg
 dotnet new list tinyapp
 ```
 
-**Expected:** `tinyapp` is listed with the "Wisdi tiny app" name.
+**Expected:** `tinyapp` is listed with the "PS tiny app" name.
 
 ### 7. Add to the publish workflow
 
@@ -223,13 +223,13 @@ Get-ChildItem -Recurse -File | Select-Object -ExpandProperty FullName
 
 **Expected:**
 - A `SmokeApp` folder with `SmokeApp.csproj` and `Program.cs`
-- **No `TinyApp` string anywhere** — check with
+- **No `TinyApp` string anywhere** â€” check with
   `Select-String -Path .\SmokeApp\* -Pattern 'TinyApp' -Recurse`, which must return nothing
 - `appsettings.json` has `"requiredRole": "smoke.user"`
-- `SmokeApp.csproj` references `Wisdi.AppPlatform 0.1.0-local`
+- `SmokeApp.csproj` references `PS.AppPlatform 0.1.0-local`
 - No `0.0.0-PLATFORM-VERSION` or `*-PLACEHOLDER` token survives anywhere
 
-Building it is Step 19 — that is the actual gate.
+Building it is Step 19 â€” that is the actual gate.
 
 ## Done when
 
@@ -246,3 +246,4 @@ Building it is Step 19 — that is the actual gate.
 git add -A
 git commit -m "Step 18: dotnet new tinyapp template"
 ```
+

@@ -1,9 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Reflection;
-using Wisdi.AppPlatform.Hosting;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Hosting;
+using PS.AppPlatform.Tasks;
 
-namespace Wisdi.AppPlatform.Data;
+namespace PS.AppPlatform.Data;
 
 /// <summary>
 /// Base DbContext for platform apps. Holds only the platform's own entities; apps derive
@@ -70,3 +70,4 @@ public abstract class PlatformDbContext : DbContext
         catch (ReflectionTypeLoadException ex) { return ex.Types.Where(t => t is not null)!; }
     }
 }
+

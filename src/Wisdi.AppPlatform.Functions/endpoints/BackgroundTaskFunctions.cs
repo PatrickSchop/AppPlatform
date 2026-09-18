@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Wisdi.AppPlatform.Endpoints;
+using PS.AppPlatform.Endpoints;
 
-namespace Wisdi.AppPlatform.Generated;
+namespace PS.AppPlatform.Generated;
 
 /// <summary>
 /// AuthorizationLevel.Anonymous refers to the Functions host key check, which the platform
@@ -43,3 +43,4 @@ public class BackgroundTaskFunctions(IBackgroundTaskEndpoints inner)
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/tasks/check")] HttpRequest req)
         => inner.CheckAsync(req, req.HttpContext.RequestAborted);
 }
+

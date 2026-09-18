@@ -1,28 +1,28 @@
-# Step 26 — Angular starter
+﻿# Step 26 â€” Angular starter
 
-**Phase:** 5 — Front-end
+**Phase:** 5 â€” Front-end
 **Depends on:** Step 25
 **Working directory:** `C:\Dev\AppPlatform\starters\angular`
 
 ## Goal
 
 A ready-to-use Angular front-end: the existing `WebApp` **minus the stock domain**, keeping
-its design system, wired to `@wisdi/app-client-angular`, and with the MSAL sign-in the source
+its design system, wired to `@PS/app-client-angular`, and with the MSAL sign-in the source
 app never had.
 
 ## Reference material (read-only)
 
-`C:\Dev\StockAnalysis\WebApp\` — in particular:
+`C:\Dev\StockAnalysis\WebApp\` â€” in particular:
 
 | Take | Leave |
 |---|---|
-| `src/styles/` — the nine partials, a real design system | `src/app/analysis-results/`, `investment/`, `dashboard/`, `beheer/`, `management/` |
-| `src/app/background-task-status/` — the progress popover, reworked | `src/app/models/` — all stock domain |
-| `angular.json`, `tsconfig*.json` shape | `src/app/services/*` — replaced by the adapter |
-| The shell: `app.ts`, `app.html`, `app.routes.ts`, `app.config.ts` | `Program.cs`, `WebApp.csproj` — never deployed (analysis §1) |
+| `src/styles/` â€” the nine partials, a real design system | `src/app/analysis-results/`, `investment/`, `dashboard/`, `beheer/`, `management/` |
+| `src/app/background-task-status/` â€” the progress popover, reworked | `src/app/models/` â€” all stock domain |
+| `angular.json`, `tsconfig*.json` shape | `src/app/services/*` â€” replaced by the adapter |
+| The shell: `app.ts`, `app.html`, `app.routes.ts`, `app.config.ts` | `Program.cs`, `WebApp.csproj` â€” never deployed (analysis Â§1) |
 
 **Drop `@microsoft/signalr`.** It has zero imports anywhere in `WebApp/src` and the hub it
-targets was never implemented (analysis §1, §4).
+targets was never implemented (analysis Â§1, Â§4).
 
 ## Tasks
 
@@ -33,9 +33,9 @@ cd C:\Dev\AppPlatform\starters
 npx @angular/cli@latest new angular --style=scss --routing --ssr=false --skip-git
 ```
 
-Then `npm i @wisdi/app-client @wisdi/app-client-angular @azure/msal-browser bootstrap`.
+Then `npm i @PS/app-client @PS/app-client-angular @azure/msal-browser bootstrap`.
 
-Keep `bootstrap` — the source design system is built on it (`_bootstrap-overrides.scss`) and
+Keep `bootstrap` â€” the source design system is built on it (`_bootstrap-overrides.scss`) and
 discarding that means rewriting nine SCSS partials for no benefit.
 
 ### 2. Port the design system
@@ -43,7 +43,7 @@ discarding that means rewriting nine SCSS partials for no benefit.
 Copy `src/styles/` verbatim: `_variables`, `_fonts`, `_bootstrap-overrides`, `_layout`,
 `_menu`, `_buttons`, `_tables`, `_kpis`, `_popover`.
 
-Review each for stock-specific rules — `_kpis.scss` in particular may carry finance-shaped
+Review each for stock-specific rules â€” `_kpis.scss` in particular may carry finance-shaped
 assumptions. Generalise class names where they name a domain concept; leave the rest alone.
 
 This is the one part of the front-end with real accumulated value. Do not rewrite it.
@@ -65,30 +65,30 @@ Five lines. That is the point of Step 24.
 ### 4. The shell
 
 Port `app.html` and `app.ts`, stripped to: a navbar with the app title from config, the
-`<wisdi-task-progress>` popover, a sign-in/sign-out control, and `<router-outlet>`.
+`<PS-task-progress>` popover, a sign-in/sign-out control, and `<router-outlet>`.
 
 Two starter routes: `/` (a home page showing config and auth state) and `/example` (a list
 page backed by `useApi`-equivalent calls). `/example` exists specifically so the deep-link
 fallback from Step 09 can be verified with a real router.
 
-### 5. Auth UI — **the gap this closes**
+### 5. Auth UI â€” **the gap this closes**
 
-The source `WebApp` **cannot authenticate at all** — no MSAL, no interceptor, no guards
-(analysis §6). Enabling backend enforcement today would lock it out entirely.
+The source `WebApp` **cannot authenticate at all** â€” no MSAL, no interceptor, no guards
+(analysis Â§6). Enabling backend enforcement today would lock it out entirely.
 
 Add:
 - a sign-in button calling `AuthClient.signIn()`
 - the signed-in account name and a sign-out control
 - a `canActivate` guard redirecting to sign-in for protected routes
 - a friendly 403 page distinguishing "you are not signed in" from "you lack the required
-  role" — the latter is unfixable by the user and should say who to ask
+  role" â€” the latter is unfixable by the user and should say who to ask
 
 ### 6. Background task UI
 
 Port `background-task-status/` to use `BackgroundTaskService` from the adapter. Keep the
 popover behaviour: a navbar indicator that expands to per-task progress bars.
 
-Delete the source's own polling code — it lives in `TaskPoller` now.
+Delete the source's own polling code â€” it lives in `TaskPoller` now.
 
 ### 7. `configuration.json` for development
 
@@ -99,7 +99,7 @@ Delete the source's own polling code — it lives in `TaskPoller` now.
 ```
 
 The deploy workflow deletes this file before upload (the source workflow already does), so
-the deployed app reads the real `/configuration.json` from the API. Note that in the README —
+the deployed app reads the real `/configuration.json` from the API. Note that in the README â€”
 it is a genuinely confusing arrangement on first encounter.
 
 ### 8. Wire into the template
@@ -138,7 +138,7 @@ Browse `http://localhost:4200`:
 - [ ] Starting a background task shows progress that advances to completion
 - [ ] No console errors, and no CORS errors
 
-Then the deployed-shape check — build and serve through the backend:
+Then the deployed-shape check â€” build and serve through the backend:
 
 ```powershell
 npm run build
@@ -148,7 +148,7 @@ npm run build
 - [ ] `http://localhost:7071/` loads the app
 - [ ] **`http://localhost:7071/example` on a hard refresh loads the app**, not a 404
 
-That last check is the §4 fix verified with a real router, which is what it was always for.
+That last check is the Â§4 fix verified with a real router, which is what it was always for.
 
 Finally confirm SignalR is gone:
 
@@ -175,3 +175,4 @@ Select-String -Path package.json,src -Pattern 'signalr' -Recurse
 git add -A
 git commit -m "Step 26: Angular starter with design system, MSAL sign-in and task progress"
 ```
+

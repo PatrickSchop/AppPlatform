@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
         shell: pwsh
         run: |
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $pkg = Get-ChildItem artifacts/Wisdi.AppPlatform.Functions.*.nupkg | Select-Object -First 1
+          $pkg = Get-ChildItem artifacts/PS.AppPlatform.Functions.*.nupkg | Select-Object -First 1
           $entries = [IO.Compression.ZipFile]::OpenRead($pkg.FullName).Entries.FullName
           if ($entries -match '^lib/') { throw "Functions package contains lib/ - shims would be invisible to worker indexing" }
           if (-not ($entries -match '^endpoints/')) { throw "Functions package is missing endpoints/" }
@@ -33,3 +33,4 @@ jobs:
         with:
           name: packages
           path: artifacts/*
+

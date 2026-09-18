@@ -1,6 +1,6 @@
-using System.Reflection;
+﻿using System.Reflection;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 /// <summary>
 /// The set of assemblies scanned for ServiceBuilder modules and Entity subclasses.
@@ -27,3 +27,4 @@ public sealed class PlatformAssemblies
 
     public IReadOnlyList<Assembly> All => _assemblies;
 }
+

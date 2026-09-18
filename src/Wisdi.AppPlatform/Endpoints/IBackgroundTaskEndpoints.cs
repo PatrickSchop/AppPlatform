@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Wisdi.AppPlatform.Endpoints;
+namespace PS.AppPlatform.Endpoints;
 
 /// <summary>
 /// Interface for background task endpoints.
@@ -39,3 +39,4 @@ public interface IBackgroundTaskEndpoints
     /// </summary>
     Task<IActionResult> CheckAsync(HttpRequest request, CancellationToken ct = default);
 }
+

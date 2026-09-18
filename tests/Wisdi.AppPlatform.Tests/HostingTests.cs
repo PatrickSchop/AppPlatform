@@ -1,10 +1,10 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Hosting;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class HostingTests
 {
@@ -96,3 +96,4 @@ public class HostingTests
 
     public class TestService { }
 }
+

@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Tasks;
+﻿namespace PS.AppPlatform.Tasks;
 
 /// <summary>
 /// The host-lifetime identity of this worker instance. Registered as a singleton so that
@@ -14,3 +14,4 @@ public sealed class ExecutionManagerIdentity
 {
     public Guid Id { get; } = Guid.NewGuid();
 }
+

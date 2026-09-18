@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
@@ -15,16 +15,16 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" />
-    <PackageReference Include="Wisdi.AppPlatform" Version="0.0.0-PLATFORM-VERSION" />
-    <PackageReference Include="Wisdi.AppPlatform.Functions" Version="0.0.0-PLATFORM-VERSION" />
+    <PackageReference Include="PS.AppPlatform" Version="0.0.0-PLATFORM-VERSION" />
+    <PackageReference Include="PS.AppPlatform.Functions" Version="0.0.0-PLATFORM-VERSION" />
   </ItemGroup>
 
   <!--
-    With PackageReference, the Wisdi.AppPlatform.Functions package automatically
-    injects its build/Wisdi.AppPlatform.Functions.targets file, which includes
+    With PackageReference, the PS.AppPlatform.Functions package automatically
+    injects its build/PS.AppPlatform.Functions.targets file, which includes
     the [Function] shim files (endpoints/*.cs) into the compilation. This happens
-    automatically — no explicit <Compile Include> is needed or desired.
-    See src/Wisdi.AppPlatform.Functions/README.md for more details.
+    automatically â€” no explicit <Compile Include> is needed or desired.
+    See src/PS.AppPlatform.Functions/README.md for more details.
   -->
 
   <ItemGroup>
@@ -37,3 +37,4 @@
   </ItemGroup>
 
 </Project>
+

@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Data;
+﻿namespace PS.AppPlatform.Data;
 
 /// <summary>
 /// Provides migration scripts for database initialization.
@@ -10,3 +10,4 @@ public interface IMigrationScriptProvider
     /// </summary>
     IEnumerable<MigrationScript> GetScripts();
 }
+

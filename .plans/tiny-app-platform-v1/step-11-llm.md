@@ -1,13 +1,13 @@
-# Step 11 — LLM text parsing
+﻿# Step 11 â€” LLM text parsing
 
-**Phase:** 1 — Core engine
+**Phase:** 1 â€” Core engine
 **Depends on:** Step 10
 **Working directory:** `C:\Dev\AppPlatform`
 
 ## Goal
 
 Port the generic typed-LLM-parsing helper. Despite living under `App/StockData/` in the
-source, it contains no finance knowledge (analysis §1) and is one of the more useful things
+source, it contains no finance knowledge (analysis Â§1) and is one of the more useful things
 a small app gets for free.
 
 ## Reference material (read-only)
@@ -17,17 +17,17 @@ a small app gets for free.
 | `App\StockData\UserInput\LlmTextParserBase.cs` (180 lines) | Port; generalise |
 | `App\StockData\UserInput\ILlmTextParseClient.cs` | Port |
 | `App\StockData\UserInput\LlmTextParseClient.cs` | Port the Azure OpenAI implementation |
-| `App\Host\ServiceBuilder.cs` (the `AzureOpenAIClient` lambda) | Move here — it belongs with the LLM module, not with hosting |
+| `App\Host\ServiceBuilder.cs` (the `AzureOpenAIClient` lambda) | Move here â€” it belongs with the LLM module, not with hosting |
 
 **Do not port** `AbnAmroShareOwnershipParser.cs`, `ShareOwnershipItem.cs`,
-`StockNameMatcher*.cs`, `StockMatchingService.cs`, `IStockNameMatcherClient.cs` — all domain.
+`StockNameMatcher*.cs`, `StockMatchingService.cs`, `IStockNameMatcherClient.cs` â€” all domain.
 
 Read `LlmTextParserBase.cs` in full before starting; the retry and JSON-repair logic is the
 value here and should be preserved rather than reinvented.
 
 ## Tasks
 
-All files go in `src/Wisdi.AppPlatform/Llm/`, namespace `Wisdi.AppPlatform.Llm`.
+All files go in `src/PS.AppPlatform/Llm/`, namespace `PS.AppPlatform.Llm`.
 
 ### 1. `ILlmTextParseClient.cs`
 
@@ -39,7 +39,7 @@ a parameter name, rename to neutral terms (`input`, `systemPrompt`, `userPrompt`
 Port the Azure OpenAI implementation. It takes `AzureOpenAIClient` and the deployment name
 from configuration.
 
-Configuration shape — keep the source's `azureOpenAI` section:
+Configuration shape â€” keep the source's `azureOpenAI` section:
 
 ```json
 "azureOpenAI": {
@@ -53,7 +53,7 @@ Configuration shape — keep the source's `azureOpenAI` section:
 
 Port as `public abstract class LlmTextParserBase<T>`. Preserve:
 
-- the typed round trip: prompt → completion → `JsonSerializer.Deserialize<T>`
+- the typed round trip: prompt â†’ completion â†’ `JsonSerializer.Deserialize<T>`
 - the retry loop with the parse error fed back into the next attempt
 - the max-attempts cap from configuration
 
@@ -61,8 +61,8 @@ Changes:
 - Make everything the subclass needs `protected` or `public`; the source is `internal`.
 - Move the attempt count to `azureOpenAI:maxParseAttempts`, default `3`.
 - Add a `CancellationToken` parameter to the public entry point if the source lacks one.
-- Strip a fenced code block (` ```json … ``` `) from the completion before deserialising if
-  the source does not already — it is the single most common cause of a retry.
+- Strip a fenced code block (` ```json â€¦ ``` `) from the completion before deserialising if
+  the source does not already â€” it is the single most common cause of a retry.
 
 ### 4. `HtmlToXhtmlConverter`
 
@@ -92,12 +92,12 @@ module. Port the lambda as-is: it switches on `azureOpenAI:authentication:type`,
 
 - **Log a warning when `type` is `apiKey`.** A live Azure Cognitive Services key is committed
   at `C:\Dev\StockAnalysis\App\appsettings.json:25` and is in that repo's git history
-  (analysis §6). The platform should nudge away from that path:
+  (analysis Â§6). The platform should nudge away from that path:
   `"azureOpenAI is using apiKey authentication. Prefer managed identity; if a key is required, store it in Function App settings or a Key Vault reference, never in appsettings.json."`
 
 ## Tests to add
 
-`tests/Wisdi.AppPlatform.Tests/LlmTests.cs`, with a fake `ILlmTextParseClient` — **no
+`tests/PS.AppPlatform.Tests/LlmTests.cs`, with a fake `ILlmTextParseClient` â€” **no
 network calls**:
 
 1. A well-formed JSON completion deserialises to `T` on the first attempt, and the client is
@@ -118,7 +118,7 @@ dotnet build --configuration Release
 dotnet test
 ```
 
-**Expected:** zero warnings, zero errors, all tests pass. No test may make a network call —
+**Expected:** zero warnings, zero errors, all tests pass. No test may make a network call â€”
 if one hangs, that is the bug.
 
 ## Done when
@@ -135,3 +135,4 @@ if one hangs, that is the bug.
 git add -A
 git commit -m "Step 11: generic LLM text parsing with retry; Azure OpenAI client registration made optional"
 ```
+

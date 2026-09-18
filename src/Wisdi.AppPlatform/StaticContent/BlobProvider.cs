@@ -1,9 +1,9 @@
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Hosting;
 
-namespace Wisdi.AppPlatform.StaticContent;
+namespace PS.AppPlatform.StaticContent;
 
 public class BlobProvider : IFilesProvider
 {
@@ -44,3 +44,4 @@ public class BlobProvider : IFilesProvider
         }
     }
 }
+

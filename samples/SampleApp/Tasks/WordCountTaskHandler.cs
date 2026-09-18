@@ -1,8 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SampleApp.Data;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Tasks;
 
 namespace SampleApp.Tasks;
 
@@ -29,3 +29,4 @@ public class WordCountTaskHandler(IDbContextFactory<AppDbContext> factory)
 }
 
 public sealed record WordCountTaskData(bool Recount = true);
+

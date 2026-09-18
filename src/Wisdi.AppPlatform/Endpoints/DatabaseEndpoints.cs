@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Wisdi.AppPlatform.Data;
+using PS.AppPlatform.Data;
 
-namespace Wisdi.AppPlatform.Endpoints;
+namespace PS.AppPlatform.Endpoints;
 
 public sealed class DatabaseEndpoints : IDatabaseEndpoints
 {
@@ -79,3 +79,4 @@ public sealed class DatabaseEndpoints : IDatabaseEndpoints
         }
     }
 }
+

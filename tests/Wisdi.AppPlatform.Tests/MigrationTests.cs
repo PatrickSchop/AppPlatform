@@ -1,7 +1,7 @@
-using Wisdi.AppPlatform.Data;
+﻿using PS.AppPlatform.Data;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class MigrationTests
 {
@@ -293,3 +293,4 @@ public class MigrationTests
         }
     }
 }
+

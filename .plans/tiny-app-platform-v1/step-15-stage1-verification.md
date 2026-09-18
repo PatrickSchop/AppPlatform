@@ -1,6 +1,6 @@
-# Step 15 — Gate A: the seam holds
+﻿# Step 15 â€” Gate A: the seam holds
 
-**Phase:** 2 — Functions surface
+**Phase:** 2 â€” Functions surface
 **Depends on:** Step 14
 **Working directory:** `C:\Dev\AppPlatform`
 
@@ -9,7 +9,7 @@
 Prove the extraction actually works at runtime. This is the first gate; **do not start
 Phase 3 until every check below passes.**
 
-This step writes almost no code — it runs things and checks results. Where a check fails,
+This step writes almost no code â€” it runs things and checks results. Where a check fails,
 fix the relevant earlier step and re-run the whole gate.
 
 ## Prerequisites
@@ -19,7 +19,7 @@ fix the relevant earlier step and re-run the whole gate.
 - Azurite or the storage emulator running, for `AzureWebJobsStorage` (the timer trigger needs
   it). `npx azurite --silent` in a separate shell is enough.
 
-## Check 1 — Function metadata (analysis §2.1)
+## Check 1 â€” Function metadata (analysis Â§2.1)
 
 This is the direct test that source-injected shims are visible to worker indexing.
 
@@ -30,7 +30,7 @@ Get-Content samples\SampleApp\obj\Debug\net10.0\functions.metadata | ConvertFrom
     Select-Object name, scriptFile, entryPoint | Format-Table -AutoSize
 ```
 
-**Expected — all of these present:**
+**Expected â€” all of these present:**
 
 | name | scriptFile |
 |---|---|
@@ -47,7 +47,7 @@ Get-Content samples\SampleApp\obj\Debug\net10.0\functions.metadata | ConvertFrom
 | `GetNotes`, `CreateNote`, `StartWordCount` | `SampleApp.dll` |
 
 **Fails if:** any platform function is missing (the targets/`Compile Include` did not take),
-or any `scriptFile` is `Wisdi.AppPlatform.dll` (a `[Function]` leaked into the engine — the
+or any `scriptFile` is `PS.AppPlatform.dll` (a `[Function]` leaked into the engine â€” the
 Step 02 architecture test should have caught that).
 
 Also confirm worker indexing is still on, since that is what the whole design protects:
@@ -58,7 +58,7 @@ Get-Content samples\SampleApp\bin\Debug\net10.0\worker.config.json
 
 **Expected:** `"workerIndexing": "true"`.
 
-## Check 2 — Migration runs once (analysis §3)
+## Check 2 â€” Migration runs once (analysis Â§3)
 
 ```powershell
 cd C:\Dev\AppPlatform\samples\SampleApp
@@ -76,7 +76,7 @@ dotnet exec SampleApp.dll --migrate
   (`000_CreateSchemaVersions.sql` is the untracked bootstrap and is not listed)
 - **Second run: an empty applied list** and exit code 0. This is the `__SchemaVersions` proof.
 
-Then confirm the §3 drift bug is gone — the table must have every column from one script:
+Then confirm the Â§3 drift bug is gone â€” the table must have every column from one script:
 
 ```powershell
 sqlcmd -S "(localdb)\." -d SampleApp -Q "SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('dbo.BackgroundTasks') ORDER BY name;"
@@ -85,7 +85,7 @@ sqlcmd -S "(localdb)\." -d SampleApp -Q "SELECT ScriptName FROM dbo.__SchemaVers
 
 **Expected columns include:** `StatusMessage`, `ExecutionManagerId`, `LeaseExpiresUtc`.
 
-## Check 3 — Script numbering is enforced
+## Check 3 â€” Script numbering is enforced
 
 ```powershell
 Copy-Item samples\SampleApp\Database\Scripts\100_CreateNotes.sql `
@@ -97,7 +97,7 @@ dotnet exec SampleApp.dll --migrate
 **Expected:** non-zero exit, and a message naming `090_Bad.sql` and the `100+` rule.
 **Then delete `090_Bad.sql`** and re-run to confirm it is clean again.
 
-## Check 4 — The app runs and serves the SPA
+## Check 4 â€” The app runs and serves the SPA
 
 ```powershell
 cd C:\Dev\AppPlatform\samples\SampleApp
@@ -109,7 +109,7 @@ func start
 - the Step 10 warning: `Platform authentication is DISABLED...`
 - exactly **one** `TaskExecutionManager initialized with ID ...` line
 
-That last one is the §7.1 fix visible at runtime. If it appears once per request, the
+That last one is the Â§7.1 fix visible at runtime. If it appears once per request, the
 `ExecutionManagerIdentity` singleton is not wired correctly.
 
 Then, in another shell:
@@ -128,8 +128,8 @@ curl.exe -i http://localhost:7071/assets/definitely-missing.png
 | `/api/health` | 200, `{"status":"ok"...}` |
 | `/configuration.json` | 200, the `webApp` section including `"title":"Sample App"` |
 | `/` | 200, `index.html`, `Cache-Control: no-cache` |
-| **`/dashboard`** | **200 and `index.html`** — the §4 deep-link fix |
-| `/assets/definitely-missing.png` | 404 — extensions do not fall back |
+| **`/dashboard`** | **200 and `index.html`** â€” the Â§4 deep-link fix |
+| `/assets/definitely-missing.png` | 404 â€” extensions do not fall back |
 
 Also confirm routing precedence: `/api/health` returned JSON, not `index.html`. If the
 catch-all swallowed it, the `routePrefix: ""` setting or route ordering is wrong.
@@ -144,7 +144,7 @@ curl.exe -i -H 'If-None-Match: "<etag>"' http://localhost:7071/index.html
 
 **Expected:** 200 then **304**.
 
-## Check 5 — The background task lifecycle
+## Check 5 â€” The background task lifecycle
 
 Open `http://localhost:7071/` in a browser.
 
@@ -153,7 +153,7 @@ Open `http://localhost:7071/` in a browser.
 3. **Expected:** the progress indicator appears and advances, and the task reaches
    `Completed`. The notes now show word counts.
 
-Confirm the lease was actually being renewed while it ran — during execution:
+Confirm the lease was actually being renewed while it ran â€” during execution:
 
 ```powershell
 sqlcmd -S "(localdb)\." -d SampleApp -Q "SELECT Status, CompletionPercentage, ExecutionManagerId, LeaseExpiresUtc FROM dbo.BackgroundTasks;"
@@ -164,7 +164,7 @@ sqlcmd -S "(localdb)\." -d SampleApp -Q "SELECT Status, CompletionPercentage, Ex
 **Expected after completion:** `Status = 32`, `ExecutionManagerId` and `LeaseExpiresUtc`
 both null.
 
-## Check 6 — Orphan recovery (analysis §7.2)
+## Check 6 â€” Orphan recovery (analysis Â§7.2)
 
 ```powershell
 # With the app stopped, fake a task abandoned by a dead worker:
@@ -176,20 +176,20 @@ VALUES (NEWID(), 'wordcount', 9, '{}', 'orphan', 1, DATEADD(minute, -10, GETUTCD
 
 Start the app and either wait for the timer or `curl.exe -X POST http://localhost:7071/api/tasks/check`.
 
-**Expected:** the orphan is reclaimed — `StatusMessage` mentions the reclaim, and it then
-runs to `Completed`. Without the §7.2 fix it would sit at `Status = 9` forever.
+**Expected:** the orphan is reclaimed â€” `StatusMessage` mentions the reclaim, and it then
+runs to `Completed`. Without the Â§7.2 fix it would sit at `Status = 9` forever.
 
-## Check 7 — The concurrency cap (analysis §7.1)
+## Check 7 â€” The concurrency cap (analysis Â§7.1)
 
 Set `backgroundTasks:maxConcurrentTasks` to `1` in `appsettings.development.json`, restart,
 and create three word-count tasks quickly.
 
 **Expected:** exactly one is `Running` (`Status = 9`) at a time; the others wait at
-`Status = 1` and run in sequence. Before the §7.1 fix all three would start at once.
+`Status = 1` and run in sequence. Before the Â§7.1 fix all three would start at once.
 
 Restore the value to `4` afterwards.
 
-## Check 8 — Default-deny authorization (analysis §6)
+## Check 8 â€” Default-deny authorization (analysis Â§6)
 
 Auth is disabled in the sample's config, so enable it temporarily. Add to
 `appsettings.development.json`:
@@ -214,8 +214,8 @@ curl.exe -i -X OPTIONS -H "Origin: http://localhost:4200" http://localhost:7071/
 | Request | Result |
 |---|---|
 | `/api/tasks/notifications` with no token | **401** with `WWW-Authenticate: Bearer` |
-| `/api/health` | 200 — `[AllowAnonymous]` |
-| `/configuration.json` | 200 — `[AllowAnonymous]` |
+| `/api/health` | 200 â€” `[AllowAnonymous]` |
+| `/configuration.json` | 200 â€” `[AllowAnonymous]` |
 | `OPTIONS` preflight | 204 with `Access-Control-Allow-Origin`, **without** reaching auth |
 
 And the CORS-ordering fix:
@@ -228,9 +228,9 @@ curl.exe -i -H "Origin: http://localhost:4200" http://localhost:7071/api/tasks/n
 with no CORS header means the ordering regressed to the source's arrangement.
 
 Then set `tenantId` equal to `clientId` and restart.
-**Expected:** startup fails with a message naming both keys — the §6 copy-paste guard.
+**Expected:** startup fails with a message naming both keys â€” the Â§6 copy-paste guard.
 
-**Confirm the security model** — the SPA is public, the API is not. With auth still enabled,
+**Confirm the security model** â€” the SPA is public, the API is not. With auth still enabled,
 browse to `http://localhost:7071/` in a normal browser tab with no token anywhere:
 
 ```powershell
@@ -242,15 +242,15 @@ curl.exe -i http://localhost:7071/api/notes
 **Expected:**
 | Request | Result |
 |---|---|
-| `/` | **200, `index.html`** — the shell is `[AllowAnonymous]` |
-| `/dashboard` | **200, `index.html`** — deep links are public too |
-| `/api/notes` | **401** — the data is not |
+| `/` | **200, `index.html`** â€” the shell is `[AllowAnonymous]` |
+| `/dashboard` | **200, `index.html`** â€” deep links are public too |
+| `/api/notes` | **401** â€” the data is not |
 
 The shell loading while every data endpoint refuses is exactly the intended arrangement, not
 a gap. If `/` returns 401, `StaticContentFunctions` still carries `[Authorize]` and Step 13
 was not applied.
 
-Then prove the boundary actually holds — walk the whole route table with no token and confirm
+Then prove the boundary actually holds â€” walk the whole route table with no token and confirm
 **nothing returns data**:
 
 ```powershell
@@ -262,11 +262,11 @@ Then prove the boundary actually holds — walk the whole route table with no to
 ```
 
 **Expected:** every line is `401`. Any `200` here is a real vulnerability, not a cosmetic
-issue — that is the one check in this gate where a failure blocks everything downstream.
+issue â€” that is the one check in this gate where a failure blocks everything downstream.
 
 Remove the temporary `authentication` block when done.
 
-## Check 9 — Full suite still green
+## Check 9 â€” Full suite still green
 
 ```powershell
 cd C:\Dev\AppPlatform
@@ -304,3 +304,4 @@ the platform works, which matters more than any of the prose documentation.
 git add -A
 git commit -m "Step 15: Gate A passed - shims visible, migrations tracked, deep links, tasks, auth"
 ```
+

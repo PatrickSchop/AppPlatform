@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Tasks;
+﻿namespace PS.AppPlatform.Tasks;
 
 public class TaskHandlerContext
 {
@@ -51,3 +51,4 @@ public class TaskHandlerContext
         return _endedWithoutCompleting;
     }
 }
+

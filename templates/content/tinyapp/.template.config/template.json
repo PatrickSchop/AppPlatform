@@ -1,11 +1,11 @@
-{
+﻿{
   "$schema": "http://json.schemastore.org/template",
-  "author": "Wisdi",
+  "author": "PS",
   "classifications": ["Cloud", "Serverless", "Web", "Azure Functions"],
-  "identity": "Wisdi.AppPlatform.TinyApp",
-  "name": "Wisdi tiny app",
+  "identity": "PS.AppPlatform.TinyApp",
+  "name": "PS tiny app",
   "shortName": "tinyapp",
-  "description": "An Azure Functions app on Wisdi.AppPlatform: SPA hosting, background tasks, Entra auth and script migrations.",
+  "description": "An Azure Functions app on PS.AppPlatform: SPA hosting, background tasks, Entra auth and script migrations.",
   "tags": { "language": "C#", "type": "project" },
   "sourceName": "TinyApp",
   "preferNameDirectory": true,
@@ -15,7 +15,7 @@
       "datatype": "string",
       "defaultValue": "0.1.0",
       "replaces": "0.0.0-PLATFORM-VERSION",
-      "description": "Wisdi.AppPlatform package version."
+      "description": "PS.AppPlatform package version."
     },
     "AppRole": {
       "type": "parameter",
@@ -67,3 +67,4 @@
     }
   ]
 }
+

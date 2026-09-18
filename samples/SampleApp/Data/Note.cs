@@ -1,4 +1,4 @@
-using Wisdi.AppPlatform.Data;
+﻿using PS.AppPlatform.Data;
 
 namespace SampleApp.Data;
 
@@ -9,3 +9,4 @@ public class Note : Entity
     public int? WordCount { get; set; }
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 }
+

@@ -1,6 +1,6 @@
-# Step 23 — `@wisdi/app-client`
+﻿# Step 23 â€” `@PS/app-client`
 
-**Phase:** 5 — Front-end
+**Phase:** 5 â€” Front-end
 **Depends on:** Step 22
 **Working directory:** `C:\Dev\AppPlatform\clients`
 
@@ -8,11 +8,11 @@
 
 Build the zero-dependency TypeScript SDK that every front-end framework then wraps thinly.
 
-## Why this is a small job (analysis §4)
+## Why this is a small job (analysis Â§4)
 
 The worry was that background tasks would tie the platform to Angular. They do not. The
 backend has **zero** Angular coupling, and the task mechanism is plain REST polling, not
-SignalR — `@microsoft/signalr` has zero imports anywhere in `WebApp/src`, and the hub was
+SignalR â€” `@microsoft/signalr` has zero imports anywhere in `WebApp/src`, and the hub was
 never implemented.
 
 The entire front-end contract is four things: `GET /configuration.json`, `GET /api/tasks/*`,
@@ -20,7 +20,7 @@ the catch-all static route, and an `Authorization` header. Nothing framework-spe
 
 ## Reference material (read-only)
 
-`C:\Dev\StockAnalysis\WebApp\src\app\services\background-task.service.ts` — ~150 lines. The
+`C:\Dev\StockAnalysis\WebApp\src\app\services\background-task.service.ts` â€” ~150 lines. The
 adaptive polling logic is the part worth porting; `rxjs` is used only as a `setTimeout`
 wrapper and goes away entirely.
 
@@ -32,7 +32,7 @@ wrapper and goes away entirely.
 
 ```json
 {
-  "name": "@wisdi/app-client",
+  "name": "@PS/app-client",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -108,7 +108,7 @@ Behaviour:
 - `getAccessToken` result, when non-null, becomes `Authorization: Bearer <token>`
 - JSON request and response by default; a 204 resolves to `undefined`
 - non-2xx throws `ApiError` with the parsed body when it is JSON, the text otherwise
-- **401 invokes `onUnauthorized` before throwing** — this is what lets an app redirect to
+- **401 invokes `onUnauthorized` before throwing** â€” this is what lets an app redirect to
   sign-in from one place
 - `fetch` is injectable so tests need no network and no mocking library
 - `AbortSignal` passes through via `init`
@@ -161,7 +161,7 @@ Port the interval logic exactly: 1s while any task is `Running`, 30s idle, with 
 source does.
 
 `EventTarget` is the DOM-native observable, dispatching a `CustomEvent<readonly BackgroundTask[]>`
-named `"tasks"`. `subscribe` is a thin wrapper returning an unsubscribe function — that is
+named `"tasks"`. `subscribe` is a thin wrapper returning an unsubscribe function â€” that is
 what both framework adapters use.
 
 Improve on the source in three ways:
@@ -172,7 +172,7 @@ Improve on the source in three ways:
   outage into a request flood.
 - **Never overlap requests**: if a poll is in flight, skip the tick.
 
-`createTask` POSTs to `/api/tasks` — which exists as of Step 12, closing the analysis §7.4
+`createTask` POSTs to `/api/tasks` â€” which exists as of Step 12, closing the analysis Â§7.4
 contract drift where the Angular client called an endpoint with no server-side creator.
 
 ### 5. `src/auth-client.ts`
@@ -195,7 +195,7 @@ export class AuthClient {
 }
 ```
 
-Wraps `@azure/msal-browser`, which is itself framework-agnostic — so auth needs no
+Wraps `@azure/msal-browser`, which is itself framework-agnostic â€” so auth needs no
 per-framework work either.
 
 - `import()` MSAL dynamically so it is not in the bundle when unused
@@ -223,7 +223,7 @@ This is the function both starters call. If it is more than ~30 lines, the piece
 
 ### 7. Tests
 
-`vitest`, with an injected `fetch` stub — **no network, no jsdom-dependent timing**. Use
+`vitest`, with an injected `fetch` stub â€” **no network, no jsdom-dependent timing**. Use
 `vi.useFakeTimers()`.
 
 1. `loadConfig` fetches once for two concurrent callers.
@@ -275,5 +275,6 @@ node -e "const p=require('./package.json'); const d=Object.keys(p.dependencies||
 
 ```powershell
 git add -A
-git commit -m "Step 23: @wisdi/app-client zero-dependency TypeScript SDK"
+git commit -m "Step 23: @PS/app-client zero-dependency TypeScript SDK"
 ```
+

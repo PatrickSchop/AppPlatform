@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SampleApp.Data;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Hosting;
 
 namespace SampleApp.Data;
 
@@ -10,3 +10,4 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, PlatformAssemb
 {
     public DbSet<Note> Notes { get; set; } = null!;
 }
+

@@ -1,12 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text.Json;
-using Wisdi.AppPlatform.Data;
+using PS.AppPlatform.Data;
 
-namespace Wisdi.AppPlatform.Tasks;
+namespace PS.AppPlatform.Tasks;
 
 public class TaskExecutionManager<TContext> : ITaskExecutionManager
     where TContext : PlatformDbContext
@@ -275,3 +275,4 @@ END;";
         }
     }
 }
+

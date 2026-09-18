@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Hosting;
 
-namespace Wisdi.AppPlatform.Endpoints;
+namespace PS.AppPlatform.Endpoints;
 
 public sealed class HealthEndpoints : IHealthEndpoints
 {
@@ -86,3 +86,4 @@ public sealed class HealthEndpoints : IHealthEndpoints
         return versionAttribute?.ToString() ?? "unknown";
     }
 }
+

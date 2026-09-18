@@ -1,6 +1,6 @@
-using System.Reflection;
+﻿using System.Reflection;
 
-namespace Wisdi.AppPlatform.Data;
+namespace PS.AppPlatform.Data;
 
 /// <summary>
 /// Provides migration scripts from a directory on disk.
@@ -66,3 +66,4 @@ public class DirectoryMigrationScriptProvider : IMigrationScriptProvider
         return await File.ReadAllTextAsync(path, ct);
     }
 }
+

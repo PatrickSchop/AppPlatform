@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>Wisdi.AppPlatform</RootNamespace>
-    <AssemblyName>Wisdi.AppPlatform</AssemblyName>
-    <PackageId>Wisdi.AppPlatform</PackageId>
+    <RootNamespace>PS.AppPlatform</RootNamespace>
+    <AssemblyName>PS.AppPlatform</AssemblyName>
+    <PackageId>PS.AppPlatform</PackageId>
     <Description>Reusable engine for small Azure Functions apps: hosting, data, background tasks, static SPA hosting and auth.</Description>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
@@ -34,3 +34,4 @@
   </ItemGroup>
 
 </Project>
+

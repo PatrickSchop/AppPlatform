@@ -1,6 +1,6 @@
-# Step 06 — Background task contracts
+﻿# Step 06 â€” Background task contracts
 
-**Phase:** 1 — Core engine
+**Phase:** 1 â€” Core engine
 **Depends on:** Step 05
 **Working directory:** `C:\Dev\AppPlatform`
 
@@ -8,7 +8,7 @@
 
 Port the pure-contract half of the background task system: the entity, the status enum, the
 service interfaces, the handler interface, the registry and the handler context. No
-execution logic — that is Steps 07 and 08.
+execution logic â€” that is Steps 07 and 08.
 
 This step also fills in the two stubs left behind in Steps 03 and 04
 (`IBackgroundTaskCollection`, `BackgroundTask`).
@@ -23,15 +23,15 @@ All under `C:\Dev\StockAnalysis\App\`:
 `BackgroundTasks\IBackgroundTaskService.cs`, `BackgroundTasks\IBackgroundTaskManagementService.cs`.
 
 **Do not port** `BackgroundTasks\TaskNotificationHub.cs`. It is a dead SignalR stub
-(analysis §1).
+(analysis Â§1).
 
 ## Tasks
 
-All files go in `src/Wisdi.AppPlatform/Tasks/`, namespace `Wisdi.AppPlatform.Tasks`.
+All files go in `src/PS.AppPlatform/Tasks/`, namespace `PS.AppPlatform.Tasks`.
 
 ### 1. `BackgroundTaskStatus.cs`
 
-Port verbatim — the flag values are load-bearing in the claim SQL and in
+Port verbatim â€” the flag values are load-bearing in the claim SQL and in
 `UpdateStatusAsync`, so do not renumber them.
 
 ```csharp
@@ -57,7 +57,7 @@ Add an XML comment explaining the scheme, because it is not obvious: `ExecutingF
 ### 2. `BackgroundTask.cs`
 
 Replace the Step 04 stub. Port from `App\Models\BackgroundTask.cs`, deriving from
-`Wisdi.AppPlatform.Data.Entity`, and **add one property** for Step 08:
+`PS.AppPlatform.Data.Entity`, and **add one property** for Step 08:
 
 ```csharp
 public DateTime? LeaseExpiresUtc { get; set; }
@@ -104,7 +104,7 @@ only shows up as the wrong handler running.
 
 ### 6. `IBackgroundTaskService.cs` / `IBackgroundTaskManagementService.cs`
 
-Port both verbatim. Keep the two-interface split — the narrow `IBackgroundTaskService` for
+Port both verbatim. Keep the two-interface split â€” the narrow `IBackgroundTaskService` for
 app code, the wider `IBackgroundTaskManagementService : IBackgroundTaskService` adding
 `UpdateProgressAsync` and the two `UpdateStatusAsync` overloads for the execution machinery.
 
@@ -117,7 +117,7 @@ Task RenewLeaseAsync(Guid taskId, CancellationToken ct = default);
 
 ### 7. `TaskHandlerContext.cs`
 
-Port from the source and **remove the stray `using Grpc.Core;`** — it is an unused import
+Port from the source and **remove the stray `using Grpc.Core;`** â€” it is an unused import
 that would drag a package reference in for nothing.
 
 Keep `GetTaskId()`, `UpdateProgressAsync(int)`, `FailAsync(string)`, `CompleteAsync()`,
@@ -141,7 +141,7 @@ expires, and that such handlers should call `UpdateProgressAsync` periodically.
 
 ## Tests to add
 
-`tests/Wisdi.AppPlatform.Tests/TaskContractTests.cs`:
+`tests/PS.AppPlatform.Tests/TaskContractTests.cs`:
 
 1. `BackgroundTaskStatus.Running & BackgroundTaskStatus.ExecutingFlag` is non-zero;
    `Completed & ExecutingFlag` is zero; `Failed & CompletedFlag` is non-zero. These encode
@@ -182,3 +182,4 @@ dotnet test
 git add -A
 git commit -m "Step 06: background task contracts, model, registry and handler context"
 ```
+

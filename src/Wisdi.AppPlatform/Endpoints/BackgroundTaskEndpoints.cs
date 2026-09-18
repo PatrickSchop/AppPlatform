@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Tasks;
 
-namespace Wisdi.AppPlatform.Endpoints;
+namespace PS.AppPlatform.Endpoints;
 
 public sealed class BackgroundTaskEndpoints : IBackgroundTaskEndpoints
 {
@@ -201,3 +201,4 @@ public sealed class BackgroundTaskEndpoints : IBackgroundTaskEndpoints
         public bool RequiresNotification { get; set; }
     }
 }
+

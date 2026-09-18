@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Hosting;
+﻿using Microsoft.EntityFrameworkCore;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Hosting;
 
 namespace TinyApp.Data;
 
@@ -10,3 +10,4 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, PlatformAssemb
     // Add your entity DbSets here.
     // Example: public DbSet<YourEntity> YourEntities { get; set; } = null!;
 }
+

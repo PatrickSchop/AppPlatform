@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Data;
+﻿namespace PS.AppPlatform.Data;
 
 public class DatabaseConfiguration
 {
@@ -12,3 +12,4 @@ public class ApiMigrationConfiguration
 {
     public bool Enable { get; set; } = false;
 }
+

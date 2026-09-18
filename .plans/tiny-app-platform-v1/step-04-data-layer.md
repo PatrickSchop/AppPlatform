@@ -1,12 +1,12 @@
-# Step 04 — Data layer
+﻿# Step 04 â€” Data layer
 
-**Phase:** 1 — Core engine
+**Phase:** 1 â€” Core engine
 **Depends on:** Step 03
 **Working directory:** `C:\Dev\AppPlatform`
 
 ## Goal
 
-Build the generic data layer that fixes analysis §2.2: a `PlatformDbContext` base class
+Build the generic data layer that fixes analysis Â§2.2: a `PlatformDbContext` base class
 apps derive from, generic registration `AddPlatformData<TContext>`, and managed-identity
 SQL token acquisition.
 
@@ -21,7 +21,7 @@ injected in Step 03.
 
 | Source | Use |
 |---|---|
-| `App\Database\AppDbContext.cs` | `DiscoverEntityTypes` + the `NEWID()` Id convention only — **not** the eleven DbSets, **not** the Stock/Investment relationship config |
+| `App\Database\AppDbContext.cs` | `DiscoverEntityTypes` + the `NEWID()` Id convention only â€” **not** the eleven DbSets, **not** the Stock/Investment relationship config |
 | `App\Database\DatabaseConfiguration.cs` | Port verbatim |
 | `App\Database\AzureSqlTokenInterceptor.cs` | Port verbatim, namespace change only |
 | `App\Database\ServiceBuilder.cs` | The registration shape, made generic |
@@ -31,7 +31,7 @@ injected in Step 03.
 ### 1. `Data/DatabaseConfiguration.cs`
 
 Port verbatim from the source (both `DatabaseConfiguration` and `ApiMigrationConfiguration`),
-into namespace `Wisdi.AppPlatform.Data`.
+into namespace `PS.AppPlatform.Data`.
 
 ```csharp
 public class DatabaseConfiguration
@@ -52,7 +52,7 @@ public class ApiMigrationConfiguration
 Port verbatim. Only the namespace and the `IAzureIdentityProvider` using change.
 
 It acquires a `https://database.windows.net/.default` token from the credential and sets
-`SqlConnection.AccessToken`. Keep **both** the sync and async overrides — EF calls the sync
+`SqlConnection.AccessToken`. Keep **both** the sync and async overrides â€” EF calls the sync
 one in some paths and a missing token there is a confusing runtime failure.
 
 ### 3. `Data/PlatformDbContext.cs`
@@ -60,10 +60,10 @@ one in some paths and a missing token there is a confusing runtime failure.
 ```csharp
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
-using Wisdi.AppPlatform.Hosting;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Hosting;
+using PS.AppPlatform.Tasks;
 
-namespace Wisdi.AppPlatform.Data;
+namespace PS.AppPlatform.Data;
 
 /// <summary>
 /// Base DbContext for platform apps. Holds only the platform's own entities; apps derive
@@ -165,7 +165,7 @@ Port the body from the source `ServiceBuilder.BuildServices`, with these changes
 - Keep `AddDbContext<TContext>` **and** `AddDbContextFactory<TContext>(..., ServiceLifetime.Scoped)`.
   Background task code uses the factory because it outlives the request scope.
 - **Drop** the source's redundant third registration (`services.AddScoped<AppDbContext>()`)
-  — `AddDbContext` already does this.
+  â€” `AddDbContext` already does this.
 - Throw `InvalidOperationException` with a clear message if the `database` section or
   `connectionString` is missing, as the source does.
 - `DatabaseMigrator` registration moves to Step 05; leave it out for now.
@@ -175,25 +175,25 @@ Port the body from the source `ServiceBuilder.BuildServices`, with these changes
 Do **not** create one. The app calls `AddPlatformData<TContext>` explicitly from its
 `Program.cs`, because the platform cannot know the app's context type. This is the single
 place where the platform requires one line of per-app wiring, and it is the direct
-consequence of analysis §2.2.
+consequence of analysis Â§2.2.
 
 Record that in a comment at the top of `PlatformDataExtensions.cs`.
 
 ## Tests to add
 
-`tests/Wisdi.AppPlatform.Tests/DataTests.cs`:
+`tests/PS.AppPlatform.Tests/DataTests.cs`:
 
 1. A test-local `TestDbContext : PlatformDbContext` with one extra entity builds a model
    via the in-memory provider, and `Model.FindEntityType(typeof(TestEntity))` is not null.
    This proves `DiscoverEntityTypes` picks up entities from the **test** assembly, not the
-   platform assembly — i.e. the §2.2 fix works.
+   platform assembly â€” i.e. the Â§2.2 fix works.
 2. `Model.FindEntityType(typeof(BackgroundTask))` is not null on that same derived context
-   — the platform entity comes along for free.
+   â€” the platform entity comes along for free.
 3. `AddPlatformData<TestDbContext>` throws `InvalidOperationException` when the `database`
    section is absent, and the message mentions `database`.
 
 The in-memory provider ignores `HasDefaultValueSql`, so do not assert on the `NEWID()`
-default here — it is covered by the real migration run in Step 15.
+default here â€” it is covered by the real migration run in Step 15.
 
 ## Verification
 
@@ -219,3 +219,4 @@ dotnet test
 git add -A
 git commit -m "Step 04: generic PlatformDbContext, AddPlatformData<TContext>, SQL token interceptor"
 ```
+

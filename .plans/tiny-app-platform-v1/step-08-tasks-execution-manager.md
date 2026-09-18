@@ -1,17 +1,17 @@
-# Step 08 — Task execution manager
+﻿# Step 08 â€” Task execution manager
 
-**Phase:** 1 — Core engine
+**Phase:** 1 â€” Core engine
 **Depends on:** Step 07
 **Working directory:** `C:\Dev\AppPlatform`
 
 ## Goal
 
-Port `TaskExecutionManager` — the SQL claim queue and reflection dispatch — using the
-singletons from Step 07, and add orphan lease recovery (analysis §7.2).
+Port `TaskExecutionManager` â€” the SQL claim queue and reflection dispatch â€” using the
+singletons from Step 07, and add orphan lease recovery (analysis Â§7.2).
 
 ## Reference material (read-only)
 
-`C:\Dev\StockAnalysis\App\BackgroundTasks\TaskExecutionManager.cs` — read it in full before
+`C:\Dev\StockAnalysis\App\BackgroundTasks\TaskExecutionManager.cs` â€” read it in full before
 starting. The claim SQL at lines 102-145 and the dispatch logic in `ExecuteTaskAsync` are
 both subtle and should be ported with care rather than rewritten.
 
@@ -50,18 +50,18 @@ public interface ITaskExecutionManager
 
 | Source | Here | Why |
 |---|---|---|
-| `_executionManagerId = Guid.NewGuid()` in ctor | `identity.Id` | §7.1 — the id must be host-lifetime |
-| `_checkLock = new SemaphoreSlim(1,1)` in ctor | injected `TaskCheckGate` | §7.1 — a per-scope semaphore serialises nothing |
-| `IDbContextFactory<AppDbContext>` | `IDbContextFactory<TContext>` | §2.2 |
-| no lease | reclaim + set `LeaseExpiresUtc` | §7.2 |
+| `_executionManagerId = Guid.NewGuid()` in ctor | `identity.Id` | Â§7.1 â€” the id must be host-lifetime |
+| `_checkLock = new SemaphoreSlim(1,1)` in ctor | injected `TaskCheckGate` | Â§7.1 â€” a per-scope semaphore serialises nothing |
+| `IDbContextFactory<AppDbContext>` | `IDbContextFactory<TContext>` | Â§2.2 |
+| no lease | reclaim + set `LeaseExpiresUtc` | Â§7.2 |
 
 Keep `maxConcurrentTasks` from `backgroundTasks:maxConcurrentTasks`, default `4`.
 Add `leaseSeconds` from `backgroundTasks:leaseSeconds`, default `300`.
 
-Keep the startup log line reporting the manager id — with the §7.1 fix it should now appear
+Keep the startup log line reporting the manager id â€” with the Â§7.1 fix it should now appear
 **once per process**, not once per request, which is itself a useful signal.
 
-### 2. Orphan recovery (§7.2)
+### 2. Orphan recovery (Â§7.2)
 
 `CheckAndStartTasksAsync` acquires the gate, then does **reclaim first, claim second**,
 inside the existing `CreateExecutionStrategy()` wrapper.
@@ -82,7 +82,7 @@ WHERE [Status] IN (@NotStartedStatus, @RunningStatus)
 
 Use `ExecuteSqlInterpolatedAsync` with the `(int)BackgroundTaskStatus.X` values interpolated,
 matching the style already used by the claim SQL. Log at Information with the affected row
-count when it is greater than zero, and say nothing when it is zero — this runs often.
+count when it is greater than zero, and say nothing when it is zero â€” this runs often.
 
 Reclaimed tasks go to `Resumed` rather than `New`, so the claim SQL prioritises them ahead
 of fresh work. That is the existing ordering and it is the behaviour you want here.
@@ -91,8 +91,8 @@ of fresh work. That is the existing ordering and it is the behaviour you want he
 its lease expire and be reclaimed while still running, producing a duplicate execution.
 Document this on `ITaskHandler<T>` and in `docs/background-tasks.md` (Step 14): handlers
 that run longer than `leaseSeconds` **must** call `context.UpdateProgressAsync` periodically.
-`leaseSeconds` defaulting to 300 is generous enough that this is rare, and the alternative —
-never reclaiming — is the bug being fixed.
+`leaseSeconds` defaulting to 300 is generous enough that this is rare, and the alternative â€”
+never reclaiming â€” is the bug being fixed.
 
 ### 3. The claim SQL
 
@@ -100,7 +100,7 @@ Port `ClaimAndUpdateTasksAsync` almost verbatim. It is a single atomic
 count-slots / `UPDATE ... OUTPUT INSERTED.*` statement with `WITH (UPDLOCK, ROWLOCK)` and
 the `Resumed`-before-`New` ordering. Preserve all of that.
 
-**One addition** — set the lease when claiming:
+**One addition** â€” set the lease when claiming:
 
 ```sql
 SET [Status]             = {(int)BackgroundTaskStatus.NotStarted},
@@ -110,14 +110,14 @@ SET [Status]             = {(int)BackgroundTaskStatus.NotStarted},
     [StartedDate]        = CASE WHEN [Status] = {(int)BackgroundTaskStatus.New} THEN @UtcNow ELSE [StartedDate] END
 ```
 
-`[dbo].[BackgroundTasks]` stays hard-coded. Per analysis §2.2 this is fine under the
-per-app-database model chosen in §5; schema parameterisation is explicitly out of scope.
+`[dbo].[BackgroundTasks]` stays hard-coded. Per analysis Â§2.2 this is fine under the
+per-app-database model chosen in Â§5; schema parameterisation is explicitly out of scope.
 
 ### 4. `ExecuteTaskAsync`
 
 Port verbatim. It is the reflection dispatch:
-`GetHandlerType` → `GetInterface("ITaskHandler`1")` → generic argument → `JsonSerializer.Deserialize`
-→ resolve handler from DI → build `TaskHandlerContext` → invoke `HandleAsync` → inspect the
+`GetHandlerType` â†’ `GetInterface("ITaskHandler`1")` â†’ generic argument â†’ `JsonSerializer.Deserialize`
+â†’ resolve handler from DI â†’ build `TaskHandlerContext` â†’ invoke `HandleAsync` â†’ inspect the
 final status.
 
 Two required changes and one fix:
@@ -136,7 +136,7 @@ Register `IServiceScopeFactory` usage rather than capturing `IServiceProvider` i
 more clearly; either is fine as long as the handler gets its own scope for the whole
 execution.
 
-**b. Fix the three typos in the status messages** — `"Unable to execute the tasl"`,
+**b. Fix the three typos in the status messages** â€” `"Unable to execute the tasl"`,
 `"An error occured"`, and the misleading `// Transition back to Paused on failure` comment
 above a `Failed` transition. These strings reach the UI.
 
@@ -161,7 +161,7 @@ services.AddScoped<ITaskExecutionManager>(sp => sp.GetRequiredService<TaskExecut
 
 ## Tests to add
 
-`tests/Wisdi.AppPlatform.Tests/TaskExecutionManagerTests.cs`.
+`tests/PS.AppPlatform.Tests/TaskExecutionManagerTests.cs`.
 
 The claim and reclaim SQL are raw T-SQL and cannot run on the in-memory provider, so this
 step's unit tests cover the dispatch half only; the SQL is covered at Step 15.
@@ -174,12 +174,12 @@ step's unit tests cover the dispatch half only; the SQL is covered at Step 15.
 5. A handler calling `context.EndWithoutCompletingAsync()` leaves the task `Paused` and is
    **not** marked `Failed`.
 6. A handler calling `context.CompleteAsync()` leaves the task `Completed`.
-7. The handler is resolved from a scope that is still alive during `HandleAsync` — assert a
+7. The handler is resolved from a scope that is still alive during `HandleAsync` â€” assert a
    scoped dependency injected into the handler is not disposed when `HandleAsync` runs.
 
 Structure the manager so these are reachable: extract dispatch into an internal method that
 takes a `BackgroundTask` directly, so tests bypass the claim SQL. Mark it `internal` and add
-`[assembly: InternalsVisibleTo("Wisdi.AppPlatform.Tests")]` in the platform project.
+`[assembly: InternalsVisibleTo("PS.AppPlatform.Tests")]` in the platform project.
 
 ## Verification
 
@@ -207,3 +207,4 @@ dotnet test
 git add -A
 git commit -m "Step 08: task execution manager with shared identity, claim SQL and orphan lease recovery (fixes 7.2)"
 ```
+

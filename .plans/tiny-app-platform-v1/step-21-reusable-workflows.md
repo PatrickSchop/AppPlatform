@@ -1,16 +1,16 @@
-# Step 21 — Reusable GitHub Actions workflows
+﻿# Step 21 â€” Reusable GitHub Actions workflows
 
-**Phase:** 4 — Template and infrastructure
+**Phase:** 4 â€” Template and infrastructure
 **Depends on:** Step 20
 **Working directory:** `C:\Dev\AppPlatform`
 
 ## Goal
 
 Move the build and deploy pipelines into the platform repo as `workflow_call` workflows
-parameterised by app name, so each app keeps a ~15-line `deploy.yaml` — and fix the two bugs
+parameterised by app name, so each app keeps a ~15-line `deploy.yaml` â€” and fix the two bugs
 in the originals while porting.
 
-## The two bugs to fix (analysis §5)
+## The two bugs to fix (analysis Â§5)
 
 Both are in `C:\Dev\StockAnalysis\.github\workflows\build.yaml`:
 
@@ -58,16 +58,16 @@ on:
 
 Two jobs:
 
-**`dotnet-build`** — checkout, `setup-dotnet` with `inputs.dotnet_version`, `dotnet publish`
+**`dotnet-build`** â€” checkout, `setup-dotnet` with `inputs.dotnet_version`, `dotnet publish`
 into `output/App`, upload the `App` artifact with `include-hidden-files: true`.
 
 Use `dotnet publish`, not the source's `dotnet build --output`. `build --output` copies the
 whole build tree; `publish` produces what actually deploys and is what the Functions action
 expects.
 
-**`frontend-build`** — `if: inputs.frontend_path != ''`, `setup-node` with `node_version`,
+**`frontend-build`** â€” `if: inputs.frontend_path != ''`, `setup-node` with `node_version`,
 npm cache keyed on `${{ inputs.frontend_path }}/package-lock.json`, `npm ci` (not
-`npm install` — the source uses `install`, which ignores the lockfile in CI), `npm run build`,
+`npm install` â€” the source uses `install`, which ignores the lockfile in CI), `npm run build`,
 upload the `frontend` artifact from `frontend_dist_path`.
 
 Add a NuGet auth step so apps can restore the platform packages:
@@ -76,7 +76,7 @@ Add a NuGet auth step so apps can restore the platform packages:
 - name: Authenticate to GitHub Packages
   run: |
     dotnet nuget add source https://nuget.pkg.github.com/PatrickSchop/index.json \
-      --name wisdi --username ${{ github.actor }} \
+      --name PS --username ${{ github.actor }} \
       --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
 ```
 
@@ -105,14 +105,14 @@ Port from `C:\Dev\StockAnalysis\.github\workflows\deploy.yaml`, parameterised. K
 parts:
 
 - the SQL firewall dance: get the runner IP from `api.ipify.org`, add a rule, migrate, and
-  **remove it in an `if: always()` step**. That `always()` is important — without it a failed
+  **remove it in an `if: always()` step**. That `always()` is important â€” without it a failed
   migration leaves the firewall open.
 - `rm ./App/appsettings.development.json` before deploying, so dev settings never ship.
 
 Fix these while porting:
 
 - **`continue-on-error: true` on the migration step must go.** In the source a failed
-  migration is reported as a successful deploy, leaving code running against an old schema —
+  migration is reported as a successful deploy, leaving code running against an old schema â€”
   the worst possible outcome. Make it fail the workflow.
 - **Use a unique firewall rule name per run**: `gh-<run_id>` instead of the fixed
   `GitHubActionsRunnerIP`. Concurrent deploys of two apps currently fight over one rule and
@@ -120,14 +120,14 @@ Fix these while porting:
 - **Deploy the front-end before the backend.** The source's blob delete-batch plus
   upload-batch leaves a window where the SPA is partially uploaded; doing it first means the
   backend cut-over is the last visible change. Better still, upload first and delete stale
-  blobs afterwards — note that as a future improvement rather than doing a full atomic swap now.
+  blobs afterwards â€” note that as a future improvement rather than doing a full atomic swap now.
 - **Use OIDC federated credentials** if available (`azure/login` with `client-id`,
   `tenant-id`, `subscription-id` and `permissions: id-token: write`) instead of the source's
   long-lived `AZURE_RBAC_CREDENTIALS` secret. Support both; prefer OIDC in the docs.
 
 ### 3. The caller's `deploy.yaml` in the template
 
-This is the deliverable — what a new app actually contains:
+This is the deliverable â€” what a new app actually contains:
 
 ```yaml
 name: Deploy
@@ -155,7 +155,7 @@ jobs:
 
 Pin to a **tag**, not `@main`. A reusable workflow referenced at `@main` means a platform
 change can break every app's deploy without any app changing. Note that explicitly in
-`docs/deployment.md` — it is exactly the kind of coupling that makes shared CI unpleasant.
+`docs/deployment.md` â€” it is exactly the kind of coupling that makes shared CI unpleasant.
 
 ### 4. `docs/deployment.md`
 
@@ -164,9 +164,9 @@ the required repository secrets, why the workflow is pinned to a tag, and how to
 pin.
 
 Include a troubleshooting section for the three failures that will actually happen:
-- `401` restoring platform packages → `secrets: inherit` is missing
-- migration fails with a login error → `infra/sql-user.sql` was never run (Step 20)
-- the deployed app returns 500 on every request → `database__connectionString` app setting
+- `401` restoring platform packages â†’ `secrets: inherit` is missing
+- migration fails with a login error â†’ `infra/sql-user.sql` was never run (Step 20)
+- the deployed app returns 500 on every request â†’ `database__connectionString` app setting
   uses `:` instead of `__`
 
 ### 5. Update the platform's own CI
@@ -183,7 +183,7 @@ Get-ChildItem .github\workflows\*.yaml | ForEach-Object {
 }
 ```
 
-Then the real check — grep for the bug that was fixed:
+Then the real check â€” grep for the bug that was fixed:
 
 ```powershell
 Select-String -Path .github\workflows\*.yaml -Pattern 'dotnetversion|9\.0\.x'
@@ -205,8 +205,8 @@ End-to-end verification is Step 19 Check 7.
 
 ## Done when
 
-- [ ] Input names are consistent between declaration and use — bug 1 fixed
-- [ ] `10.0.x` default — bug 2 fixed
+- [ ] Input names are consistent between declaration and use â€” bug 1 fixed
+- [ ] `10.0.x` default â€” bug 2 fixed
 - [ ] `dotnet publish` replaces `dotnet build --output`
 - [ ] `npm ci` replaces `npm install`
 - [ ] The migration step fails the workflow rather than continuing on error
@@ -220,3 +220,4 @@ End-to-end verification is Step 19 Check 7.
 git add -A
 git commit -m "Step 21: reusable build and deploy workflows; fixed input naming and stale SDK version"
 ```
+

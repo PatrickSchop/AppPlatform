@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Wisdi.AppPlatform.StaticContent;
+using PS.AppPlatform.StaticContent;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class StaticContentTests
 {
@@ -318,3 +318,4 @@ public class StaticContentTests
         Assert.Equal("application/octet-stream", contentType);
     }
 }
+

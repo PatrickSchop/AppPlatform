@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Wisdi.AppPlatform.Endpoints;
+using PS.AppPlatform.Endpoints;
 
-namespace Wisdi.AppPlatform.Generated;
+namespace PS.AppPlatform.Generated;
 
 public class DatabaseFunctions(IDatabaseEndpoints inner)
 {
@@ -14,3 +14,4 @@ public class DatabaseFunctions(IDatabaseEndpoints inner)
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/initializeDatabase")] HttpRequest req)
         => inner.InitializeAsync(req, req.HttpContext.RequestAborted);
 }
+

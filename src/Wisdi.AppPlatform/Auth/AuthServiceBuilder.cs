@@ -1,8 +1,8 @@
-using Microsoft.Azure.Functions.Worker.Middleware;
+﻿using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Wisdi.AppPlatform.Auth;
+namespace PS.AppPlatform.Auth;
 
 public static class AuthServiceBuilder
 {
@@ -21,3 +21,4 @@ public static class AuthServiceBuilder
         return services;
     }
 }
+

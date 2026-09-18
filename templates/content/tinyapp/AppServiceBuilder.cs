@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Wisdi.AppPlatform.Hosting;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Hosting;
+using PS.AppPlatform.Tasks;
 
 namespace TinyApp;
 
@@ -19,3 +19,4 @@ public sealed class AppServiceBuilder : ServiceBuilder
         // Example: tasks.AddBackgroundTask<YourTaskHandler>("your-task-name");
     }
 }
+

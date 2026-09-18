@@ -1,8 +1,8 @@
-using Microsoft.Azure.Functions.Worker;
+﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.Configuration;
 
-namespace Wisdi.AppPlatform.Auth;
+namespace PS.AppPlatform.Auth;
 
 public sealed class CorsMiddleware : IFunctionsWorkerMiddleware
 {
@@ -87,3 +87,4 @@ public sealed class CorsMiddleware : IFunctionsWorkerMiddleware
         public string AllowHeaders { get; set; } = "";
     }
 }
+

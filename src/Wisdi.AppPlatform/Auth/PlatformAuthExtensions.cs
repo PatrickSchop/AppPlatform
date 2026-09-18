@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 
-namespace Wisdi.AppPlatform.Auth;
+namespace PS.AppPlatform.Auth;
 
 public static class PlatformAuthExtensions
 {
@@ -22,7 +22,7 @@ public static class PlatformAuthExtensions
         if (!enabled)
         {
             // Log at startup via IHostApplicationLifetime notification
-            var logger = LoggerFactory.Create(b => b.AddConsole()).CreateLogger("Wisdi.AppPlatform.Auth");
+            var logger = LoggerFactory.Create(b => b.AddConsole()).CreateLogger("PS.AppPlatform.Auth");
             logger.LogWarning(
                 "Platform authentication is DISABLED. Every endpoint is publicly reachable. " +
                 "Set authentication:azureEntraId to enable.");
@@ -104,3 +104,4 @@ public static class PlatformPolicies
 {
     public const string Default = "";
 }
+

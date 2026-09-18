@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Wisdi.AppPlatform.Data;
+using PS.AppPlatform.Data;
 
-namespace Wisdi.AppPlatform.Tasks;
+namespace PS.AppPlatform.Tasks;
 
 public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
     where TContext : PlatformDbContext
@@ -209,3 +209,4 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
         });
     }
 }
+

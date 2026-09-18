@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Wisdi.AppPlatform.Endpoints;
+namespace PS.AppPlatform.Endpoints;
 
 /// <summary>
 /// Interface for database management endpoints.
@@ -17,3 +17,4 @@ public interface IDatabaseEndpoints
     /// </summary>
     Task<IActionResult> InitializeAsync(HttpRequest request, CancellationToken ct = default);
 }
+

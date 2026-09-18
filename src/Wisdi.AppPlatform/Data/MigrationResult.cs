@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Data;
+﻿namespace PS.AppPlatform.Data;
 
 public class MigrationResult
 {
@@ -8,3 +8,4 @@ public class MigrationResult
     public bool CanConnect { get; set; }
     public string? Error { get; set; }
 }
+

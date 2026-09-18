@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Tasks;
+﻿namespace PS.AppPlatform.Tasks;
 
 /// <summary>
 /// Represents the lifecycle status of a background task.
@@ -20,3 +20,4 @@ public enum BackgroundTaskStatus
     ExecutingFlag = 8,
     CompletedFlag = 32
 }
+

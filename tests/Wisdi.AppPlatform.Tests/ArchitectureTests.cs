@@ -1,8 +1,8 @@
-using System.Reflection;
-using Wisdi.AppPlatform.Data;
+﻿using System.Reflection;
+using PS.AppPlatform.Data;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class ArchitectureTests
 {
@@ -26,3 +26,4 @@ public class ArchitectureTests
             + string.Join(", ", offenders));
     }
 }
+

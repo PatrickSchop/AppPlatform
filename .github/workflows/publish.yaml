@@ -1,4 +1,4 @@
-name: Publish packages
+﻿name: Publish packages
 
 on:
   release:
@@ -36,9 +36,9 @@ jobs:
           echo "version=$V" >> "$GITHUB_OUTPUT"
 
       - run: |
-          dotnet pack src/Wisdi.AppPlatform/Wisdi.AppPlatform.csproj --configuration Release -p:Version=${{ steps.v.outputs.version }} -o artifacts
-          dotnet pack src/Wisdi.AppPlatform.Functions/Wisdi.AppPlatform.Functions.csproj --configuration Release -p:Version=${{ steps.v.outputs.version }} -o artifacts
-          dotnet pack templates/Wisdi.AppPlatform.Templates.csproj --configuration Release -p:Version=${{ steps.v.outputs.version }} -o artifacts
+          dotnet pack src/PS.AppPlatform/PS.AppPlatform.csproj --configuration Release -p:Version=${{ steps.v.outputs.version }} -o artifacts
+          dotnet pack src/PS.AppPlatform.Functions/PS.AppPlatform.Functions.csproj --configuration Release -p:Version=${{ steps.v.outputs.version }} -o artifacts
+          dotnet pack templates/PS.AppPlatform.Templates.csproj --configuration Release -p:Version=${{ steps.v.outputs.version }} -o artifacts
 
       - name: Push to GitHub Packages
         run: |
@@ -46,3 +46,4 @@ jobs:
             --source https://nuget.pkg.github.com/PatrickSchop/index.json \
             --api-key ${{ secrets.GITHUB_TOKEN }} \
             --skip-duplicate
+

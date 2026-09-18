@@ -1,6 +1,6 @@
-# Step 01 — Repository skeleton
+﻿# Step 01 â€” Repository skeleton
 
-**Phase:** 0 — Foundation
+**Phase:** 0 â€” Foundation
 **Depends on:** nothing
 **Working directory:** `C:\Dev\AppPlatform`
 
@@ -13,7 +13,7 @@ No platform code yet.
 ## Rules for this step
 
 - Do **not** read or write anything under `C:\Dev\StockAnalysis` in this step.
-- Do not create any `.csproj` yet — that is Step 02.
+- Do not create any `.csproj` yet â€” that is Step 02.
 
 ## Tasks
 
@@ -63,7 +63,7 @@ Create `C:\Dev\AppPlatform\Directory.Build.props`:
 
   <PropertyGroup Label="Package identity">
     <Authors>Patrick Schop</Authors>
-    <Company>Wisdi</Company>
+    <Company>PS</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/PatrickSchop/AppPlatform</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -132,7 +132,7 @@ dotnet new sln --name AppPlatform --format slnx
 ```
 
 If `--format slnx` is rejected by this SDK, fall back to `dotnet new sln --name AppPlatform`
-and keep the `.sln` — nothing downstream depends on the format.
+and keep the `.sln` â€” nothing downstream depends on the format.
 
 ### 6. Create the empty directory structure
 
@@ -156,7 +156,7 @@ If npm installation fails, use winget instead:
 
 ### 8. Create `README.md`
 
-A short one — name, one-sentence purpose, a pointer to `.plans/tiny-app-platform-v1.md`,
+A short one â€” name, one-sentence purpose, a pointer to `.plans/tiny-app-platform-v1.md`,
 and the prerequisite list (.NET 10 SDK, Node 24, Azure Functions Core Tools v4, Azure CLI).
 Do not generate a long feature document.
 
@@ -189,3 +189,4 @@ func --version
 git add -A
 git commit -m "Step 01: repository skeleton, build props, central package versions"
 ```
+

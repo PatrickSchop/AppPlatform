@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Hosting;
 
-namespace Wisdi.AppPlatform.StaticContent;
+namespace PS.AppPlatform.StaticContent;
 
 public sealed class StaticContentServiceBuilder : ServiceBuilder
 {
@@ -41,3 +41,4 @@ public sealed class StaticContentServiceBuilder : ServiceBuilder
         services.AddScoped<StaticContentHandler>();
     }
 }
+

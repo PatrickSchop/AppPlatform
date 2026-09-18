@@ -1,11 +1,11 @@
-using Azure.Core;
+﻿using Azure.Core;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Wisdi.AppPlatform.Hosting;
+using PS.AppPlatform.Hosting;
 using System.Data.Common;
 
-namespace Wisdi.AppPlatform.Data;
+namespace PS.AppPlatform.Data;
 
 public class AzureSqlTokenInterceptor : DbConnectionInterceptor
 {
@@ -51,3 +51,4 @@ public class AzureSqlTokenInterceptor : DbConnectionInterceptor
         return result;
     }
 }
+

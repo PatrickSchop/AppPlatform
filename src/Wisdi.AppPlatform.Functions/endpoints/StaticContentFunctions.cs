@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Wisdi.AppPlatform.Endpoints;
+using PS.AppPlatform.Endpoints;
 
-namespace Wisdi.AppPlatform.Generated;
+namespace PS.AppPlatform.Generated;
 
 /// <summary>
 /// The SPA shell is public by design. Security is enforced by the API, not by withholding
@@ -27,3 +27,4 @@ public class StaticContentFunctions(IStaticContentEndpoints inner)
         string path = "")
         => inner.HandleAsync(req, path, req.HttpContext.RequestAborted);
 }
+

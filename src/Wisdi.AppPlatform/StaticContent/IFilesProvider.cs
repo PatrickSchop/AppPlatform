@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.StaticContent;
+﻿namespace PS.AppPlatform.StaticContent;
 
 /// <summary>
 /// Provides static files with metadata for caching and content negotiation.
@@ -12,3 +12,4 @@ public interface IFilesProvider
 }
 
 public sealed record StaticFile(Stream Content, string? ETag, DateTimeOffset? LastModified, long? Length);
+

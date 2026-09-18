@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Wisdi.AppPlatform.Endpoints;
+namespace PS.AppPlatform.Endpoints;
 
 public sealed class ConfigurationEndpoints : IConfigurationEndpoints
 {
@@ -94,3 +94,4 @@ public sealed class ConfigurationEndpoints : IConfigurationEndpoints
         return true;
     }
 }
+

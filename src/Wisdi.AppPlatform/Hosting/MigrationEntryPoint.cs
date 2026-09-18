@@ -1,10 +1,10 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Wisdi.AppPlatform.Data;
+using PS.AppPlatform.Data;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 /// <summary>
 /// Entry point for database migration operations via CLI (--migrate flag).
@@ -98,3 +98,4 @@ public static class MigrationEntryPoint
         return null;
     }
 }
+

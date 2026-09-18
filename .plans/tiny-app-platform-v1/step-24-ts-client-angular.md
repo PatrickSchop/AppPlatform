@@ -1,12 +1,12 @@
-# Step 24 — `@wisdi/app-client-angular`
+﻿# Step 24 â€” `@PS/app-client-angular`
 
-**Phase:** 5 — Front-end
+**Phase:** 5 â€” Front-end
 **Depends on:** Step 23
 **Working directory:** `C:\Dev\AppPlatform\clients\app-client-angular`
 
 ## Goal
 
-A thin Angular adapter over `@wisdi/app-client`. **Thin is the requirement** — if this package
+A thin Angular adapter over `@PS/app-client`. **Thin is the requirement** â€” if this package
 grows past ~300 lines of source, logic has leaked out of the core and belongs back in Step 23.
 
 ## Tasks
@@ -15,21 +15,21 @@ grows past ~300 lines of source, logic has leaked out of the core and belongs ba
 
 ```json
 {
-  "name": "@wisdi/app-client-angular",
+  "name": "@PS/app-client-angular",
   "version": "0.1.0",
   "peerDependencies": {
     "@angular/core": ">=19.0.0",
     "@angular/common": ">=19.0.0",
-    "@wisdi/app-client": "^0.1.0"
+    "@PS/app-client": "^0.1.0"
   }
 }
 ```
 
 Build with `ng-packagr` so it ships as an Angular Package Format library. Target Angular 19+
-as the peer range even though the reference app is on 21 — there is no reason to exclude 19
+as the peer range even though the reference app is on 21 â€” there is no reason to exclude 19
 or 20 consumers.
 
-During development, resolve `@wisdi/app-client` via an npm workspace at `clients/package.json`
+During development, resolve `@PS/app-client` via an npm workspace at `clients/package.json`
 rather than publishing on every change.
 
 ### 2. `provideAppPlatform`
@@ -76,7 +76,7 @@ export class BackgroundTaskService implements OnDestroy {
 Signals are the primary surface; `tasks$` exists for migration. Bridge with `toObservable`
 from `@angular/core/rxjs-interop` rather than hand-rolling a `BehaviorSubject`.
 
-`ngOnDestroy` must call `poller.stop()` — the source service leaks its polling subscription in
+`ngOnDestroy` must call `poller.stop()` â€” the source service leaks its polling subscription in
 some teardown paths, and a root-provided service outliving a test is a real source of flaky
 specs.
 
@@ -89,7 +89,7 @@ A functional `HttpInterceptorFn`:
 
 - attaches the bearer token from `AuthClient` to requests whose URL starts with the configured
   API root
-- **never** attaches it to `/configuration.json` or cross-origin URLs — leaking a token to a
+- **never** attaches it to `/configuration.json` or cross-origin URLs â€” leaking a token to a
   third-party host is the failure mode to prevent
 - on a 401, calls the configured `onUnauthorized`
 - passes through untouched when auth is not configured
@@ -109,7 +109,7 @@ services doing one thing.
 
 ### 6. An optional progress component
 
-`<wisdi-task-progress>` — an unstyled standalone component showing running tasks and their
+`<PS-task-progress>` â€” an unstyled standalone component showing running tasks and their
 percentages, with the markup structured for the consumer to style.
 
 Keep it genuinely unstyled: `class` hooks only, no CSS shipped. A starter's design system
@@ -161,5 +161,6 @@ Then check the thinness claim:
 
 ```powershell
 git add -A
-git commit -m "Step 24: @wisdi/app-client-angular adapter"
+git commit -m "Step 24: @PS/app-client-angular adapter"
 ```
+

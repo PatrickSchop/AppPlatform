@@ -1,6 +1,6 @@
-# Step 03 — Hosting and Azure identity
+﻿# Step 03 â€” Hosting and Azure identity
 
-**Phase:** 1 — Core engine
+**Phase:** 1 â€” Core engine
 **Depends on:** Step 02
 **Working directory:** `C:\Dev\AppPlatform`
 
@@ -9,7 +9,7 @@
 Port the bootstrap layer: the `ServiceBuilder` DI-module convention, the **explicit
 assembly list** that replaces `Assembly.GetExecutingAssembly()`, assembly-relative config
 layering, the hosting environment, and `AzureIdentityProvider` (the four-mode credential
-switch — the single most reusable file in the source repo).
+switch â€” the single most reusable file in the source repo).
 
 ## Reference material (read-only)
 
@@ -25,7 +25,7 @@ switch — the single most reusable file in the source repo).
 ### 1. `Hosting/EnvironmentType.cs`
 
 ```csharp
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 public enum EnvironmentType
 {
@@ -36,7 +36,7 @@ public enum EnvironmentType
 
 ### 2. `Hosting/IHostingEnvironment.cs` and `Hosting/HostingEnvironment.cs`
 
-Port from the source. **Change `internal` to `public`** on both — the source marks
+Port from the source. **Change `internal` to `public`** on both â€” the source marks
 `IHostingEnvironment` internal, which would make it unusable from a consuming app.
 
 `HostingEnvironment` reads the `DEV_ENVIRONMENT` configuration value; `"development"`
@@ -46,7 +46,7 @@ Port from the source. **Change `internal` to `public`** on both — the source m
 
 Port from `App\Host\AzureIdentityProvider.cs`. Make the class `public`.
 
-Behaviour to preserve exactly — it reads the `azureIdentity` config section and switches
+Behaviour to preserve exactly â€” it reads the `azureIdentity` config section and switches
 on `type`:
 
 | `type` | Credential |
@@ -57,7 +57,7 @@ on `type`:
 | absent/empty, and environment is Development | `new DefaultAzureCredential()` |
 | anything else | throw `InvalidOperationException` |
 
-Keep the log line for each branch — it is how you diagnose a credential problem in
+Keep the log line for each branch â€” it is how you diagnose a credential problem in
 production.
 
 ### 4. `Hosting/ServiceBuilder.cs`
@@ -65,9 +65,9 @@ production.
 ```csharp
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Tasks;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 /// <summary>
 /// A DI module. Subclasses are discovered by reflection across the assemblies
@@ -88,7 +88,7 @@ public abstract class ServiceBuilder
 }
 ```
 
-**Two deliberate changes from the source** (analysis §7.5, §7.6):
+**Two deliberate changes from the source** (analysis Â§7.5, Â§7.6):
 - The non-determinism is now documented as a contract in the XML remarks.
 - The dead `BuildConfiguration` hook is **dropped**, not ported. It was never called.
 
@@ -99,12 +99,12 @@ so this file is never edited again.
 
 ### 5. `Hosting/PlatformAssemblies.cs`
 
-This is the fix for analysis §2.2 — every reflection scan takes an explicit list.
+This is the fix for analysis Â§2.2 â€” every reflection scan takes an explicit list.
 
 ```csharp
 using System.Reflection;
 
-namespace Wisdi.AppPlatform.Hosting;
+namespace PS.AppPlatform.Hosting;
 
 /// <summary>
 /// The set of assemblies scanned for ServiceBuilder modules and Entity subclasses.
@@ -162,7 +162,7 @@ Behaviour:
 1. Remove every existing `JsonConfigurationSource` from `builder.Sources`.
 2. `basePath = Path.GetDirectoryName(anchorAssembly.Location)`.
 3. Add `appsettings.json` (optional) then `appsettings.{environment}.json` (optional).
-4. If `extraSettingsFile` is given, add it as **required** — resolve it against `basePath`
+4. If `extraSettingsFile` is given, add it as **required** â€” resolve it against `basePath`
    when it is a relative path. This is the `--settingsFile` path used by `--migrate`.
 5. Add environment variables last.
 
@@ -197,7 +197,7 @@ Implementation notes:
   `ex.Types.Where(t => t is not null)`. A consuming app may reference an assembly whose
   dependencies are not all present.
 
-Until Step 06 exists, the background-task half can be a no-op — but leave the two-pass
+Until Step 06 exists, the background-task half can be a no-op â€” but leave the two-pass
 structure in place so Step 06 only fills in a body.
 
 ### 8. `Hosting/HostingServiceBuilder.cs`
@@ -217,11 +217,11 @@ public sealed class HostingServiceBuilder : ServiceBuilder
 ```
 
 **Do not port the `AzureOpenAIClient` registration here.** In the source it lives in
-`Host/ServiceBuilder.cs`, but it belongs with the LLM module — Step 11.
+`Host/ServiceBuilder.cs`, but it belongs with the LLM module â€” Step 11.
 
 ## Tests to add
 
-In `tests/Wisdi.AppPlatform.Tests/HostingTests.cs`:
+In `tests/PS.AppPlatform.Tests/HostingTests.cs`:
 
 1. `HostingEnvironment` maps `"development"`, `"Development"`, `"production"`, `null` and
    `"nonsense"` correctly.
@@ -257,3 +257,4 @@ dotnet test
 git add -A
 git commit -m "Step 03: hosting, config layering, explicit assembly scanning, Azure identity"
 ```
+

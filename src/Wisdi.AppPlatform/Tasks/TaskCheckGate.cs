@@ -1,4 +1,4 @@
-namespace Wisdi.AppPlatform.Tasks;
+﻿namespace PS.AppPlatform.Tasks;
 
 /// <summary>
 /// Process-wide gate serialising CheckAndStartTasksAsync. Singleton for the same reason
@@ -43,3 +43,4 @@ public sealed class TaskCheckGate : IDisposable
         }
     }
 }
+

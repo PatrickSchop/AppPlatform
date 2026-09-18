@@ -1,13 +1,13 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Wisdi.AppPlatform.Data;
-using Wisdi.AppPlatform.Hosting;
-using Wisdi.AppPlatform.Tasks;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Hosting;
+using PS.AppPlatform.Tasks;
 using Xunit;
 
-namespace Wisdi.AppPlatform.Tests;
+namespace PS.AppPlatform.Tests;
 
 public class BackgroundTaskServiceTests
 {
@@ -348,3 +348,4 @@ public class BackgroundTaskServiceTests
         public HttpClient CreateClient(string name) => new();
     }
 }
+

@@ -1,7 +1,8 @@
-namespace Wisdi.AppPlatform.Hosting;
+﻿namespace PS.AppPlatform.Hosting;
 
 public enum EnvironmentType
 {
     Development,
     Production
 }
+
