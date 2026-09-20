@@ -1,0 +1,82 @@
+name: Build a platform app
+
+on:
+  workflow_call:
+    inputs:
+      dotnet_version:
+        required: false
+        type: string
+        default: '10.0.x'
+      node_version:
+        required: false
+        type: string
+        default: '24'
+      app_project_path:
+        required: false
+        type: string
+        default: './App'
+      frontend_path:
+        required: false
+        type: string
+        default: ''
+        description: 'Front-end folder. Empty means backend only.'
+      frontend_dist_path:
+        required: false
+        type: string
+        default: ''
+        description: 'Build output relative to frontend_path, e.g. dist/WebApp/browser'
+
+jobs:
+  dotnet-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet_version }}
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          dotnet nuget add source https://nuget.pkg.github.com/PatrickSchop/index.json \
+            --name PS --username ${{ github.actor }} \
+            --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build and publish
+        run: dotnet publish ${{ inputs.app_project_path }} -c Release -o output/App
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: output/App
+          include-hidden-files: true
+
+  frontend-build:
+    if: ${{ inputs.frontend_path != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      - name: Install dependencies
+        working-directory: ${{ inputs.frontend_path }}
+        run: npm ci
+
+      - name: Build
+        working-directory: ${{ inputs.frontend_path }}
+        run: npm run build
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend
+          path: ${{ inputs.frontend_path }}/${{ inputs.frontend_dist_path }}

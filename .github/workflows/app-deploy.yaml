@@ -1,0 +1,133 @@
+name: Deploy a platform app
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: true
+        type: string
+        description: 'Short app name, e.g. recipes'
+      function_app_name:
+        required: false
+        type: string
+        default: ''
+        description: 'Function App name. Defaults to <app_name>-api'
+      storage_account:
+        required: false
+        type: string
+        default: ''
+        description: 'Storage account name. Defaults to <app_name>storage'
+      blob_container:
+        required: false
+        type: string
+        default: ''
+        description: 'Blob container name. Defaults to web-<app_name>'
+      sql_server_name:
+        required: false
+        type: string
+        default: 'pschop-db'
+        description: 'Shared SQL server name in ApplicationsShared resource group'
+      resource_group:
+        required: true
+        type: string
+        description: 'Per-app resource group name'
+      environment:
+        required: false
+        type: string
+        default: 'prod'
+      deploy_frontend:
+        required: false
+        type: boolean
+        default: false
+      run_migrations:
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      AZURE_RBAC_CREDENTIALS:
+        required: false
+        description: 'Azure credentials for RBAC authentication (legacy)'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download app artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app
+          path: app-output
+
+      - name: Get runner IP
+        id: runner-ip
+        run: echo "ip=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
+
+      - name: Azure login (OIDC)
+        if: ${{ github.event.repository.private == false }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure login (RBAC fallback)
+        if: ${{ failure() && env.AZURE_RBAC_CREDENTIALS != '' }}
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
+
+      - name: Add SQL firewall rule
+        run: |
+          az sql server firewall-rule create \
+            --resource-group ApplicationsShared \
+            --server ${{ inputs.sql_server_name }} \
+            --name gh-${{ github.run_id }} \
+            --start-ip-address ${{ steps.runner-ip.outputs.ip }} \
+            --end-ip-address ${{ steps.runner-ip.outputs.ip }}
+
+      - name: Run migrations
+        if: ${{ inputs.run_migrations }}
+        run: |
+          cd app-output
+          dotnet App.dll --migrate
+
+      - name: Remove SQL firewall rule
+        if: always()
+        run: |
+          az sql server firewall-rule delete \
+            --resource-group ApplicationsShared \
+            --server ${{ inputs.sql_server_name }} \
+            --name gh-${{ github.run_id }} \
+            --yes
+
+      - name: Clean dev settings
+        run: |
+          rm -f app-output/appsettings.development.json
+
+      - name: Deploy Function App
+        uses: azure/functions-action@v1
+        with:
+          app-name: ${{ inputs.function_app_name || format('{0}-api', inputs.app_name) }}
+          package: app-output
+          resource-group: ${{ inputs.resource_group }}
+
+      - name: Download frontend artifact
+        if: ${{ inputs.deploy_frontend }}
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend-output
+
+      - name: Deploy frontend
+        if: ${{ inputs.deploy_frontend }}
+        run: |
+          STORAGE="${{ inputs.storage_account || format('{0}storage', inputs.app_name) }}"
+          CONTAINER="${{ inputs.blob_container || format('web-{0}', inputs.app_name) }}"
+          az storage blob upload-batch \
+            --destination "$CONTAINER" \
+            --source frontend-output \
+            --account-name "$STORAGE" \
+            --overwrite

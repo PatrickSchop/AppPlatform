@@ -1,4 +1,4 @@
-name: Deploy TinyApp
+name: Deploy
 
 on:
   push:
@@ -6,47 +6,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  build:
+    uses: PatrickSchop/AppPlatform/.github/workflows/app-build.yaml@main
+    secrets: inherit
+
   deploy:
-    runs-on: ubuntu-latest
-    env:
-      DOTNET_VERSION: "10.0.x"
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - run: dotnet restore
-
-      - run: dotnet build -c Release --no-restore
-
-      - run: dotnet test -c Release --no-build
-
-      - run: |
-          dotnet publish TinyApp.csproj \
-            -c Release \
-            -o ${{ runner.temp }}/publish
-
-      # Dev-only settings must never ship; production config comes from Function App
-      # settings (see infra/app.bicep in the AppPlatform repo), not this file.
-      - run: rm -f ${{ runner.temp }}/publish/appsettings.development.json
-
-      # Azure resources (Function App, database, storage, managed identity) are provisioned
-      # separately via infra/app.bicep in the AppPlatform repo — see docs/provisioning.md.
-      # This workflow only builds and deploys application code.
-      - uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - uses: Azure/functions-action@v1
-        with:
-          app-name: AZURE-APP-NAME-PLACEHOLDER-api
-          package: ${{ runner.temp }}/publish
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-
-      # TODO (Step 21): add a migration step here (`dotnet run -- --migrate`), with the SQL
-      # firewall dance (open the runner's IP, migrate, remove the rule in an `if: always()`
-      # step) and a decision on OIDC vs long-lived credentials. Not done yet — see
-      # step-21-reusable-workflows.md. Until then, run migrations manually after deploy.
+    needs: build
+    uses: PatrickSchop/AppPlatform/.github/workflows/app-deploy.yaml@main
+    secrets: inherit
+    with:
+      app_name: TINYAPP-NAME
+      resource_group: TINYAPP-RESOURCE-GROUP

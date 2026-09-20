@@ -40,6 +40,11 @@ jobs:
           az bicep build --file infra/app.bicep --stdout > /dev/null
           az bicep build --file infra/shared.bicep --stdout > /dev/null
 
+      - name: Lint workflows
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@latest
+          actionlint -color .github/workflows/
+
       - run: dotnet pack AppPlatform.slnx --configuration Release --no-build -o artifacts
 
       - name: Assert the Functions package ships no assembly
