@@ -44,8 +44,14 @@ templates/
       .gitignore
       README.md
       .github/workflows/deploy.yaml
-      infra/main.bicepparam
 ```
+
+**Post-Step-20 revision:** no `infra/` folder ships in the generated app. Provisioning
+(`infra/app.bicep`) turned out to be a one-time operation run from the `PS.AppPlatform` repo
+itself (see `docs/provisioning.md`), not something the generated app's own CI/CD invokes on
+every push â€” so `infra/main.bicepparam`, and the `SqlServer`/`StorageAccount` symbols that only
+existed to populate it, were dropped. `deploy.yaml` only builds and deploys application code
+against Azure resources provisioned separately.
 
 ### 2. `templates/content/tinyapp/.template.config/template.json`
 
@@ -76,17 +82,12 @@ templates/
       "replaces": "APP-ROLE-PLACEHOLDER",
       "description": "Entra App Role required to use this app, e.g. recipes.user. Leave empty to require authentication only."
     },
-    "SqlServer": {
+    "AppName": {
       "type": "parameter",
       "datatype": "string",
-      "defaultValue": "pschop-db",
-      "replaces": "SQL-SERVER-PLACEHOLDER"
-    },
-    "StorageAccount": {
-      "type": "parameter",
-      "datatype": "string",
-      "defaultValue": "stockinfostorage",
-      "replaces": "STORAGE-ACCOUNT-PLACEHOLDER"
+      "defaultValue": "tinyapp",
+      "replaces": "AZURE-APP-NAME-PLACEHOLDER",
+      "description": "Lowercase Azure resource name id used by infra/app.bicep's appName param when this app was provisioned (e.g. 'scratchapp'). Must match what was actually deployed."
     },
     "Frontend": {
       "type": "parameter",

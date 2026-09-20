@@ -33,8 +33,8 @@ dotnet new tinyapp -n MyApp --PlatformVersion 0.1.0 --Frontend react
 - `--PlatformVersion` â€” Version of PS.AppPlatform packages to reference (default: 0.1.0)
 - `--AppRole` â€” Entra app role required for authentication (default: none, auth only)
 - `--Frontend` â€” Front-end starter to include: none, angular, or react (default: none)
-- `--SqlServer` â€” SQL Server logical server name (default: pschop-db)
-- `--StorageAccount` â€” Storage account for background job coordination (default: stockinfostorage)
+- `--AppName` (`-aa`) â€” Lowercase Azure resource name id this app is provisioned under
+  (matches `appName` in `infra/app.bicep`, e.g. `scratchapp`; default: tinyapp)
 
 ## See also
 

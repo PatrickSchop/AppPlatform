@@ -11,15 +11,10 @@
       "shortName": "ar",
       "description": "Entra app role required to access this app"
     },
-    "SqlServer": {
-      "longName": "sql-server",
-      "shortName": "sql",
-      "description": "SQL Server logical server name (without .database.windows.net)"
-    },
-    "StorageAccount": {
-      "longName": "storage-account",
-      "shortName": "st",
-      "description": "Storage account name for background job coordination"
+    "AppName": {
+      "longName": "azure-app-name",
+      "shortName": "aa",
+      "description": "Lowercase Azure resource name id this app was provisioned with (matches appName in infra/app.bicep, e.g. 'scratchapp')"
     },
     "Frontend": {
       "longName": "frontend",

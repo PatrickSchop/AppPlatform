@@ -24,17 +24,12 @@
       "replaces": "APP-ROLE-PLACEHOLDER",
       "description": "Entra App Role required to use this app, e.g. recipes.user. Leave empty to require authentication only."
     },
-    "SqlServer": {
+    "AppName": {
       "type": "parameter",
       "datatype": "string",
-      "defaultValue": "pschop-db",
-      "replaces": "SQL-SERVER-PLACEHOLDER"
-    },
-    "StorageAccount": {
-      "type": "parameter",
-      "datatype": "string",
-      "defaultValue": "stockinfostorage",
-      "replaces": "STORAGE-ACCOUNT-PLACEHOLDER"
+      "defaultValue": "tinyapp",
+      "replaces": "AZURE-APP-NAME-PLACEHOLDER",
+      "description": "Lowercase Azure resource name id used by infra/app.bicep's appName param when this app was provisioned (e.g. 'scratchapp' for a Function App named scratchapp-api). Must match what was actually deployed."
     },
     "Frontend": {
       "type": "parameter",

@@ -177,13 +177,21 @@ In `appsettings.json`, set:
 
 ### 8. Deploy to Azure
 
-Deployment uses bicep templates and GitHub Actions. See `infra/main.bicepparam` for infrastructure parameters, and `.github/workflows/deploy.yaml` for the workflow.
+Provisioning and code deployment are separate steps:
+
+1. **Provision Azure resources once**, from your `PS.AppPlatform` clone (not this repo) — see
+   `docs/provisioning.md` there. This creates the app's own resource group, Function App,
+   database, storage account and managed identity via `infra/app.bicep`.
+2. **Deploy code** via `.github/workflows/deploy.yaml` in this repo, which builds, tests,
+   publishes and deploys to the Function App provisioned in step 1:
 
 ```powershell
 git push
 ```
 
-The workflow builds, tests, packages, and deploys the app.
+The workflow does not run database migrations yet (see the `TODO (Step 21)` note in
+`deploy.yaml`) — run `dotnet run -- --migrate` against the deployed database manually after
+each schema change until that lands.
 
 ## Project layout
 
@@ -210,10 +218,7 @@ TinyApp/
       100_InitialSchema.sql     # Your migrations (core: 000-099, app: 100+)
   
   .github/workflows/
-    deploy.yaml                 # CI/CD pipeline
-  
-  infra/
-    main.bicepparam             # Azure infrastructure parameters
+    deploy.yaml                 # CI/CD pipeline (code only — infra is provisioned separately)
 ```
 
 ## See also
