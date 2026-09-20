@@ -125,9 +125,15 @@ Note the app has no `wwwroot` yet, so static routes 404 — correct for a backen
 
 ## Check 7 — Deploy (needs Step 20)
 
+Each app gets its own resource group (Azure was reorganized post-Step-20: apps no longer share
+`Applications` — the SQL server alone lives in `ApplicationsShared`, and every app, including
+this one, gets its own per-app resource group). Create it first:
+
 ```powershell
+az group create --name ScratchApp --location westeurope
+
 az deployment group create `
-  --resource-group Applications `
+  --resource-group ScratchApp `
   --template-file C:\Dev\AppPlatform\infra\app.bicep `
   --parameters appName=scratchapp
 ```
@@ -146,7 +152,7 @@ App Service Authentication would intercept requests before any platform code run
 assertion took effect:
 
 ```powershell
-az webapp auth show --resource-group Applications --name scratchapp-api `
+az webapp auth show --resource-group ScratchApp --name scratchapp-api `
   --query "{enabled:enabled, action:unauthenticatedClientAction}" -o json
 
 # And the behavioural check, which is the one that actually matters:
@@ -210,8 +216,9 @@ is the roadmap for v1.1.
 Delete the scratch Azure resources so they do not accrue cost:
 
 ```powershell
-az sql db delete --resource-group Applications --server pschop-db --name scratchapp --yes
-az functionapp delete --resource-group Applications --name scratchapp-api
+# The database is the one resource outside the app's own resource group.
+az sql db delete --resource-group ApplicationsShared --server pschop-db --name scratchapp --yes
+az group delete --name ScratchApp --yes
 ```
 
 ## Commit

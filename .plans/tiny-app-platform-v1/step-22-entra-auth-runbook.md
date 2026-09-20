@@ -120,8 +120,12 @@ why it is worth writing down.
 
 **Verify on every app, at provisioning and after each deploy:**
 
+Each app deploys into its own resource group (named after the app, e.g. `ScratchApp`), not a
+shared `Applications` group â€” the only resource still shared across apps is the SQL server in
+`ApplicationsShared`.
+
 ```powershell
-az webapp auth show --resource-group Applications --name <app>-api `
+az webapp auth show --resource-group <app-rg> --name <app>-api `
   --query "{enabled:enabled, action:unauthenticatedClientAction}" -o json
 ```
 
@@ -129,7 +133,7 @@ az webapp auth show --resource-group Applications --name <app>-api `
 Anything else â€” fix it before going further:
 
 ```powershell
-az webapp auth update --resource-group Applications --name <app>-api --enabled false
+az webapp auth update --resource-group <app-rg> --name <app>-api --enabled false
 ```
 
 **Separately: explain the StockAnalysis redirect.**

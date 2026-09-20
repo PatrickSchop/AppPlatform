@@ -12,33 +12,49 @@ That is precisely the "shortcuts get taken" risk this whole exercise exists to r
 
 ## The topology (analysis Â§5)
 
-| Shared â€” created once, referenced by id | Per app â€” created by `app.bicep` |
-|---|---|
-| Resource group `Applications` | Azure SQL **database** on the shared server |
-| SQL server `pschop-db` | Function App (consumption, Flex Consumption if available) |
-| Storage account `stockinfostorage` | Blob container `web-<app>` |
-| Entra tenant | User-assigned managed identity |
-| Azure OpenAI account | Custom domain `<app>.PS.nl` |
+**Post-Step-20 revision:** the original plan below put every app plus the shared SQL server
+and a shared storage account into one `Applications` resource group. That was reorganized once
+this ran for real: a shared `AzureWebJobsStorage` account across apps is a known anti-pattern
+(host lease/trigger state collides), and one flat resource group made per-app teardown and
+access scoping harder than it needed to be. The as-built topology:
 
-A new app is then `dotnet new tinyapp` plus one bicep deployment.
+| Shared â€” resource group `ApplicationsShared` | Per app â€” own resource group, created by `app.bicep` |
+|---|---|
+| SQL server `pschop-db` + its Entra admin | Azure SQL **database** on the shared server (deployed as a module scoped into `ApplicationsShared`, since a database must live in its server's resource group) |
+| Entra tenant | Storage account `<app>storage` (own account, not shared) with blob container `web-<app>` |
+| | Function App (consumption plan) |
+| | User-assigned managed identity |
+| | Custom domain `<app>.PS.nl` |
+
+Azure OpenAI is no longer treated as a shared platform resource â€” it's provisioned ad hoc per
+app when needed, via the existing `openAiAccountId` param.
+
+A new app is `az group create --name <AppName>` plus one bicep deployment into it (see
+`docs/provisioning.md`).
 
 ## Tasks
 
 ### 1. `infra/app.bicep`
 
+**As-built** (see `infra/app.bicep`) â€” the storage account is no longer an existing shared
+resource passed in by name; the template provisions its own per-app account, and the SQL
+server reference now also carries which resource group it lives in:
+
 ```bicep
 targetScope = 'resourceGroup'
 
-@description('Short app name, lowercase, used to derive every resource name.')
+@description('Short app name, lowercase, used to derive every resource name. Capped at 17
+chars because it also names a storage account (appName + "storage"), which must stay under
+Azure\'s 24-char storage account name limit.')
 @minLength(3)
-@maxLength(20)
+@maxLength(17)
 param appName string
 
 @description('Existing shared SQL server name.')
 param sqlServerName string = 'pschop-db'
 
-@description('Existing shared storage account name.')
-param storageAccountName string = 'stockinfostorage'
+@description('Resource group holding the shared SQL server.')
+param sharedResourceGroupName string = 'ApplicationsShared'
 
 param location string = resourceGroup().location
 
@@ -56,9 +72,13 @@ Resources to create:
 
 1. **User-assigned managed identity** `id-<appName>`. Everything else authenticates as this;
    creating it first is what makes the rest key-free.
-2. **SQL database** `<appName>` on the existing server, via an `existing` reference to
-   `sqlServerName`. Set `zoneRedundant: false` and the chosen SKU.
-3. **Blob container** `web-<appName>` on the existing storage account.
+2. **SQL database** `<appName>` on the existing server, deployed as a module
+   (`modules/database.bicep`) scoped into `sharedResourceGroupName` â€” the database is a child
+   resource of the server and must live in the server's resource group, which is no longer this
+   deployment's own resource group. Set `zoneRedundant: false` and the chosen SKU.
+3. **Storage account** `<appName>storage`, created fresh by this deployment (not shared with
+   other apps â€” a shared `AzureWebJobsStorage` account across apps is a known anti-pattern), plus
+   **blob container** `web-<appName>` on it.
 4. **Function App** `<appName>-api`, consumption plan, `dotnet-isolated`, `net10.0`,
    `FUNCTIONS_EXTENSION_VERSION ~4`, with the user-assigned identity attached and
    `httpsOnly: true`, `minTlsVersion: '1.2'`.
@@ -103,10 +123,16 @@ Resources to create:
    }
    ```
 
-7. **Role assignments** for the managed identity:
-   - `Storage Blob Data Reader` on the storage account (serving the SPA)
-   - `Storage Blob Data Owner` scoped to the app's own container (the `AzureWebJobsStorage`
-     identity-based connection needs write)
+7. **Role assignments** for the managed identity, all account-wide on the app's own storage
+   account (revised after a real deploy: account-scoped Reader plus container-scoped Owner
+   looked sufficient but a **fresh** storage account has none of the Functions host's
+   bookkeeping containers yet â€” `azure-webjobs-hosts`, `azure-webjobs-secrets` â€” so the host's
+   first-run write to create them failed with an opaque `InternalServerError`):
+   - `Storage Blob Data Owner` account-wide (covers the SPA container plus the host's own
+     bookkeeping containers)
+   - `Storage Queue Data Contributor` and `Storage Table Data Contributor` account-wide
+     (identity-based `AzureWebJobsStorage` needs queue/table access for internal bookkeeping,
+     e.g. timer trigger locking, even for apps with no queue/table bindings of their own)
    - `Cognitive Services OpenAI User` on `openAiAccountId`, conditional on it being non-empty
 8. **Custom domain binding** plus a managed certificate, conditional on `customDomain`.
    Note in a comment that the DNS `CNAME` and the `asuid` TXT record must exist **before**
@@ -138,19 +164,18 @@ rather than silently granting.
 
 ### 3. `infra/shared.bicep`
 
-The shared resources, for documentation and disaster recovery. It is **not** run routinely â€”
-these already exist and running it could disrupt StockAnalysis.
+**As-built:** this now covers only the SQL server and its Entra admin, deployed into
+`ApplicationsShared`. Storage and Azure OpenAI turned out not to be genuinely shared in
+practice (only one app used them) and are provisioned per-app instead â€” storage by `app.bicep`
+itself, OpenAI ad hoc per app when needed. Secrets (`sqlAdminLoginPassword`) are `@secure()`
+params, not hardcoded placeholders, since this is deployed for real, not documentation-only.
 
 Put a prominent header comment:
 
 ```bicep
 // DO NOT RUN against the live subscription without review.
-// The shared resources already exist and are used by StockAnalysis.
-// This file documents them and allows recreation in a new subscription.
+// Run `what-if` before any redeploy to confirm it matches reality with zero unexpected changes.
 ```
-
-Cover the resource group, SQL server with Entra admin, storage account with static website
-enabled, and the Azure OpenAI account.
 
 ### 4. `infra/main.bicepparam` template
 
@@ -161,15 +186,19 @@ using '../infra/app.bicep'
 
 param appName = 'TINYAPP-NAME'
 param sqlServerName = 'SQL-SERVER-PLACEHOLDER'
-param storageAccountName = 'STORAGE-ACCOUNT-PLACEHOLDER'
 param customDomain = ''
 ```
+
+There is no `storageAccountName` param â€” `app.bicep` provisions its own storage account, it no
+longer references an existing shared one.
 
 ### 5. `docs/provisioning.md`
 
 The runbook, in order, because the ordering has real dependencies:
 
-1. `az deployment group create --resource-group Applications --template-file infra/app.bicep --parameters appName=<app>`
+1. `az group create --name <AppName> --location westeurope`, then
+   `az deployment group create --resource-group <AppName> --template-file infra/app.bicep --parameters appName=<app>`
+   â€” each app gets its own resource group; only the SQL server lives in `ApplicationsShared`
 2. Run `infra/sql-user.sql` against the new database as the Entra SQL admin
 3. Add the App Role (Step 22)
 4. Push to GitHub; the deploy workflow does the rest
@@ -178,10 +207,9 @@ The runbook, in order, because the ordering has real dependencies:
 Include the teardown too:
 
 ```powershell
-az sql db delete --resource-group Applications --server pschop-db --name <app> --yes
-az functionapp delete --resource-group Applications --name <app>-api
-az storage container delete --account-name stockinfostorage --name web-<app>
-az identity delete --resource-group Applications --name id-<app>
+# The database is the one resource outside the app's own resource group.
+az sql db delete --resource-group ApplicationsShared --server pschop-db --name <app> --yes
+az group delete --name <AppName> --yes
 ```
 
 A documented teardown is what makes a throwaway app genuinely throwaway.
@@ -206,16 +234,19 @@ is worse than none.
 ```powershell
 cd C:\Dev\AppPlatform
 az bicep build --file infra\app.bicep --stdout > $null
+az group create --name biceptest --location westeurope
 az deployment group what-if `
-  --resource-group Applications `
+  --resource-group biceptest `
   --template-file infra\app.bicep `
   --parameters appName=biceptest
 ```
 
-**Expected:** compiles clean; the what-if lists **only** creates â€” the identity, database,
-container, function app, auth settings and role assignments. **If it shows a modify or delete
-on any shared resource, stop and fix `app.bicep`.** It must never touch the shared server,
-storage account or anything belonging to StockAnalysis.
+**Expected:** compiles clean; the what-if lists **only** creates in `biceptest` â€” the identity,
+storage account, container, function app, auth settings and role assignments â€” plus a database
+create inside the `ApplicationsShared` scope from the nested module. **If it shows a modify or
+delete on any resource in `ApplicationsShared` other than the new database, stop and fix
+`app.bicep`.** It must never touch the shared SQL server itself or anything belonging to
+another app.
 
 Confirm the Easy Auth assertion is actually in the compiled template:
 

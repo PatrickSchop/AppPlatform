@@ -90,10 +90,10 @@ on:
     inputs:
       app_name:          { required: true,  type: string }   # e.g. recipes
       function_app_name: { required: false, type: string, default: '' }  # defaults to <app_name>-api
-      storage_account:   { required: false, type: string, default: 'stockinfostorage' }
+      storage_account:   { required: false, type: string, default: '' }  # defaults to <app_name>storage — per-app account, not shared
       blob_container:    { required: false, type: string, default: '' }  # defaults to web-<app_name>
-      sql_server_name:   { required: false, type: string, default: 'pschop-db' }
-      resource_group:    { required: false, type: string, default: 'Applications' }
+      sql_server_name:   { required: false, type: string, default: 'pschop-db' }  # lives in the shared ApplicationsShared RG, not resource_group below
+      resource_group:    { required: true,  type: string }  # per-app RG (e.g. ScratchApp) — apps no longer share one "Applications" group
       environment:       { required: false, type: string, default: 'prod' }
       deploy_frontend:   { required: false, type: boolean, default: false }
       run_migrations:    { required: false, type: boolean, default: true }
@@ -106,7 +106,10 @@ parts:
 
 - the SQL firewall dance: get the runner IP from `api.ipify.org`, add a rule, migrate, and
   **remove it in an `if: always()` step**. That `always()` is important â€” without it a failed
-  migration leaves the firewall open.
+  migration leaves the firewall open. The `az sql server firewall-rule` commands target
+  `sql_server_name` in `ApplicationsShared`, **not** `resource_group` â€” the two are different
+  resource groups now, so pass `--resource-group ApplicationsShared` on those commands
+  specifically, while the function app / storage commands use `resource_group`.
 - `rm ./App/appsettings.development.json` before deploying, so dev settings never ship.
 
 Fix these while porting:
@@ -150,6 +153,7 @@ jobs:
     secrets: inherit
     with:
       app_name: TINYAPP-NAME
+      resource_group: TINYAPP-RESOURCE-GROUP
       deploy_frontend: true
 ```
 
