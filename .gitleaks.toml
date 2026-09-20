@@ -1,0 +1,12 @@
+# Gitleaks configuration for AppPlatform
+# Prevents false positives on template placeholder tokens
+
+[[allowlist]]
+description = "Allowlist template GUID placeholders"
+path = '''templates/.*\.json$'''
+regex = '''(TINYAPP-NAME|TINYAPP-RESOURCE-GROUP|PLACEHOLDER|SQL-SERVER-PLACEHOLDER)'''
+
+[[allowlist]]
+description = "Allowlist documented example GUIDs in auth-setup.md"
+path = '''docs/auth-setup\.md$'''
+regex = '''6d91dfaa-31e9-4a32-84b0-c85f830ecc5a'''

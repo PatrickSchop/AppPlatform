@@ -45,6 +45,11 @@ jobs:
           go install github.com/rhysd/actionlint/cmd/actionlint@latest
           actionlint -color .github/workflows/
 
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - run: dotnet pack AppPlatform.slnx --configuration Release --no-build -o artifacts
 
       - name: Assert the Functions package ships no assembly

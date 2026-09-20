@@ -48,10 +48,16 @@ Last updated: 2026-09-18 (Step 20 complete)
   - `docs/provisioning.md` — complete provisioning and teardown runbook
   - CI pipeline — bicep linting added
 
+### Phase 4 (continued)
+- ✅ **Step 21**: Reusable GitHub Actions workflows
+  - `app-build.yaml` and `app-deploy.yaml` created as workflow_call workflows
+  - Fixed input naming (dotnetversion → dotnet_version) and stale SDK version (9.0.x → 10.0.x)
+  - Template deploy.yaml simplified to 15-line caller
+  - Workflow linting added to CI
+
 ## Pending Steps
 
-### Phase 4 (continued)
-- ⏳ **Step 21**: Reusable GitHub Actions workflows
+### Phase 4 (final)
 - ⏳ **Step 22**: Entra auth runbook (required for Step 19 Check 8)
 
 ### Phase 5 — Front-End
