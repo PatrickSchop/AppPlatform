@@ -167,23 +167,42 @@ resource authSettings 'Microsoft.Web/sites/config@2023-12-01' = {
   }
 }
 
-// Role: Storage Blob Data Reader on storage account (for serving SPA)
-resource blobReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+// Role: Storage Blob Data Owner on the storage account (account-wide, not just the app's
+// own container). AzureWebJobsStorage needs to create and write its own bookkeeping
+// containers (azure-webjobs-hosts, azure-webjobs-secrets) at the account root the first
+// time the host starts — Reader-only looks like it works if those containers already
+// happen to exist, then fails with an opaque host InternalServerError the first time they
+// don't (e.g. a fresh storage account). Owner avoids that trap.
+resource blobOwnerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: storageAccount
   name: guid(storageAccount.id, identity.id, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1')
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
     principalId: identity.properties.principalId
     principalType: 'ServicePrincipal'
   }
 }
 
-// Role: Storage Blob Data Owner on app's container (for identity-based AzureWebJobsStorage)
-resource blobOwnerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: blobContainer
-  name: guid(blobContainer.id, identity.id, '0c867c2a-1d8c-454a-a3db-ab2ea1bdc13b')
+// Roles: Queue/Table Data Contributor on the storage account. Identity-based
+// AzureWebJobsStorage is not blob-only — the Functions host also needs queue and table
+// access for its internal bookkeeping (e.g. timer trigger locking), even for apps that
+// don't use queue/table bindings themselves. See Microsoft's identity-based connections
+// docs for AzureWebJobsStorage.
+resource queueDataRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: storageAccount
+  name: guid(storageAccount.id, identity.id, '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
+    principalId: identity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource tableDataRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: storageAccount
+  name: guid(storageAccount.id, identity.id, '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
     principalId: identity.properties.principalId
     principalType: 'ServicePrincipal'
   }
