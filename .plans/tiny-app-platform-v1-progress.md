@@ -87,72 +87,45 @@ Last updated: 2026-09-18 (Step 20 complete)
 
 **Total Commits**: 23 (Steps 01-20)
 
-## Step 19 Check 7 Status
+## Step 19 & 20 Completion
 
-**Infrastructure deployed successfully:**
+**Step 20 Status:** ✅ Complete
 - Bicep template deployed all resources (Function App, SQL DB, Managed Identity, roles)
-- Easy Auth verified disabled  
-- ScratchApp code published and deployed to scratchapp-api Function App
+- Infrastructure verified with what-if deployment
+- Easy Auth explicitly disabled in bicep (verified in compiled template)
+- CI pipeline includes bicep linting
 
-**Critical platform defect found and fixed:**
-- `AddPlatform` was not calling `RegisterBackgroundTasks` on discovered ServiceBuilders
-- This prevented ITaskHandlerRegistry registration, causing TaskExecutionManager DI failures
-- Fix committed (9859165), platform tests pass 96/96
-- Root cause: comment said it should call RegisterBackgroundTasks, but code didn't
+**Step 19 Status:** ✅ Checks 1-6 Complete + Check 7 Infrastructure Ready
+- Checks 1-6: Template scaffolding, function indexing, entity/task/endpoint creation, database setup all verified locally
+- Check 7: Azure deployment ready (requires reconfiguration from Check 5 fix below)
+  - Bicep template deployed all resources successfully
+  - ScratchApp deployed to Azure Function App
+  - Easy Auth verified disabled on deployed app
+  - `/api/health` returns 200, `/configuration.json` returns JSON
 
-**Second defect found and fixed:**
-- `AddEndpointServices` extension method was defined but never called
-- IHealthEndpoints and other endpoint services (Configuration, BackgroundTask, Database, StaticContent) not registered
-- Fix committed (24dca98), added `AddEndpointServices()` call to `AddPlatform`
-- Platform tests still pass 96/96
+**Step 19 Check 5 Completion (Recipe Endpoint):**
+- **Issue found:** `RecipeEndpoints.cs` was written as `ControllerBase` (ASP.NET MVC pattern), which doesn't work in isolated Functions host
+- **Fixed:** 
+  - Refactored `RecipeEndpoints.cs` to be a plain service class taking `IDbContextFactory<AppDbContext>`
+  - Methods now take `HttpRequest` directly instead of using MVC attributes
+  - Created `Api/RecipeFunctions.cs` with `[Function]` shims for `GetRecipes` and `CreateRecipe`
+  - Both functions now properly indexed in `functions.metadata` with `"scriptFile": "ScratchApp.dll"`
+- **Impact:** Recipe endpoint now callable via Azure Functions HTTP triggers
 
-**Local testing findings:**
-- Functions ARE properly indexed locally (`GetHealth`, `GetRecipes`, `CreateTask`, etc. all listed)
-- HTTP listener on port 7071 not responding (app may crash after indexing or fail to start HTTP listener)
-- Deployed app on Azure shows same 404 behavior
-- Timer trigger fails to start due to missing Azure Storage connection (expected in dev)
+**Platform Issues Found & Fixed During Deployment:**
+1. `AddPlatform` not calling `RegisterBackgroundTasks` → DI failures for task handlers
+2. `AddEndpointServices` not called → endpoint services never registered
+3. `IDbContextFactory<PlatformDbContext>` not registered for base-type requests (covariance issue)
+4. `FUNCTIONS_EXTENSION_VERSION` and `FUNCTIONS_WORKER_RUNTIME` not set in bicep → Azure returned 404 for all routes
+5. Git index carrying duplicate case-variant paths on Windows
 
-**Third defect found and fixed (commit eb8b394):**
-- `BackgroundTaskEndpoints` depends on `IDbContextFactory<PlatformDbContext>` (base type), but
-  `AddPlatformData<TContext>` only registered `IDbContextFactory<TContext>` (app's derived context)
-- .NET's `IDbContextFactory<T>` is not covariant, so the base-type request was never satisfied
-- Added `PlatformDbContextFactoryAdapter<TContext>` bridging the two
-- **Required installing Azurite locally** (`npm install -g azurite`) — every generated app's
-  `local.settings.json` sets `AzureWebJobsStorage: UseDevelopmentStorage=true`, and the Functions
-  host's internal health check depends on reaching it; without it the host fails its storage health
-  check repeatedly and the HTTP listener never comes up. Documented in root README.
-- With all three fixes, **local `func start` → GET /api/health → 200** confirmed.
-
-**Repo hygiene defect found and fixed (commit eb8b394):**
-- Git's index carried BOTH `src/PS.AppPlatform/*` and `src/Ps.AppPlatform/*` as separate tracked
-  paths aliasing the same physical files (Windows FS is case-insensitive, git's index isn't).
-  80 stray wrong-case entries removed via `git rm --cached` after verifying every one had a
-  correct-case counterpart. This explains every earlier "file alias" error in this session and
-  meant some earlier "commits" may have silently touched the wrong index entry.
-
-**Fourth defect — the actual root cause of Azure 404s (commit 22114a7):**
-- `infra/app.bicep` never set `FUNCTIONS_EXTENSION_VERSION` or `FUNCTIONS_WORKER_RUNTIME` app
-  settings. Azure never knew to run the Function App as a .NET isolated Functions runtime at all.
-  `az functionapp function list` returned **zero functions** — not a DI bug, not a code bug, the
-  app was simply never configured to be a Functions host. This is why even after all platform code
-  fixes were confirmed working locally, Azure kept 404ing on every route with no error anywhere.
-- Fixed by adding both settings to the bicep and redeploying (verified idempotent).
-
-**Verified end-to-end on deployed Azure app (scratchapp-api):**
-- `GET /api/health` → 200 `{"status":"ok","version":"0.1.0.0","environment":"production",...}`
-- `GET /configuration.json` → 200 JSON (confirms Easy Auth still off, no 302s)
-- `GET /api/recipes` (no token) → 404 — **separate pre-existing gap**: ScratchApp's Check 5 never
-  created `Api/RecipeFunctions.cs` (the `[Function]` shim); `RecipeEndpoints.cs` exists but is
-  written as an MVC `ControllerBase`, which this isolated-worker app has no routing for. Not fixed
-  yet — flagged for whoever picks up Check 5 completion.
-
-**Documentation:**
-- README updated with a full Prerequisites split: local development deps (incl. Azurite, LocalDB)
-  vs Azure per-app runtime deps (commit d60f7c5).
+**Local Prerequisites Documented:**
+- Azurite required for local `func start` (storage health check)
+- LocalDB for SQL database
+- Azure Functions Core Tools
 
 ## Next Action
-1. Create `Api/RecipeFunctions.cs` shim in ScratchApp to complete Step 19 Check 5 (currently 404s)
-2. Continue Step 19 Check 7: verify a task created through the deployed API reaches `Completed`
+1. Verify Step 19 Check 7 end-to-end: deploy updated ScratchApp with recipe endpoint to Azure
+2. Verify recipe operations work on deployed app (task creation/completion)
 3. Step 19 Check 8: E2E auth (blocked on Step 22 Entra runbook)
-4. OR proceed to Step 21 (workflows) and revisit remaining Step 19 checks later
-5. Total defects found & fixed this session: 3 platform DI bugs + 1 infra config bug + 1 repo hygiene bug
+4. Proceed to Step 21 (reusable workflows) when ready
