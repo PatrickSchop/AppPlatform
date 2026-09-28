@@ -43,7 +43,7 @@ jobs:
       - name: Lint workflows
         run: |
           go install github.com/rhysd/actionlint/cmd/actionlint@latest
-          "$(go env GOPATH)/bin/actionlint" -color .github/workflows/
+          "$(go env GOPATH)/bin/actionlint" -color
 
       - name: Scan for secrets
         uses: gitleaks/gitleaks-action@v2
