@@ -44,6 +44,15 @@ on:
         type: boolean
         default: true
     secrets:
+      AZURE_CLIENT_ID:
+        required: false
+        description: 'Entra app registration client id used for OIDC login'
+      AZURE_TENANT_ID:
+        required: false
+        description: 'Entra tenant id used for OIDC login'
+      AZURE_SUBSCRIPTION_ID:
+        required: false
+        description: 'Target Azure subscription id for OIDC login'
       AZURE_RBAC_CREDENTIALS:
         required: false
         description: 'Azure credentials for RBAC authentication (legacy)'
@@ -63,7 +72,7 @@ jobs:
 
       - name: Get runner IP
         id: runner-ip
-        run: echo "ip=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
+        run: echo "ip=$(curl -s https://api.ipify.org)" >> "$GITHUB_OUTPUT"
 
       - name: Azure login (OIDC)
         if: ${{ github.event.repository.private == false }}
