@@ -1,12 +1,18 @@
-# Gitleaks configuration for AppPlatform
-# Prevents false positives on template placeholder tokens
+# Gitleaks configuration for AppPlatform.
+# Without [extend] the default ruleset is replaced rather than augmented, which
+# would leave the scan with no detection rules at all -- green, and checking nothing.
+[extend]
+useDefault = true
 
-[[allowlist]]
-description = "Allowlist template GUID placeholders"
-path = '''templates/.*\.json$'''
-regex = '''(TINYAPP-NAME|TINYAPP-RESOURCE-GROUP|PLACEHOLDER|SQL-SERVER-PLACEHOLDER)'''
-
-[[allowlist]]
-description = "Allowlist documented example GUIDs in auth-setup.md"
-path = '''docs/auth-setup\.md$'''
-regex = '''6d91dfaa-31e9-4a32-84b0-c85f830ecc5a'''
+# Prevents false positives on template placeholder tokens and the tenantId/clientId
+# copy-paste example that docs/auth-setup.md quotes as a cautionary tale.
+[allowlist]
+description = "Template placeholders and documented example identifiers"
+paths = [
+  '''templates/.*\.json$''',
+  '''docs/auth-setup\.md$''',
+]
+regexes = [
+  '''(TINYAPP-NAME|TINYAPP-RESOURCE-GROUP|PLACEHOLDER|SQL-SERVER-PLACEHOLDER)''',
+  '''6d91dfaa-31e9-4a32-84b0-c85f830ecc5a''',
+]
