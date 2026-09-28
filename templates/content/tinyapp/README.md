@@ -169,11 +169,19 @@ In `appsettings.json`, set:
 
 ```json
 "authentication": {
-  "tenantId": "your-tenant-id",
-  "clientId": "your-app-id",
+  "azureEntraId": {
+    "tenantId": "your-tenant-id",
+    "clientId": "your-app-id",
+    "additionalAudiences": [ "api://your-app-id" ]
+  },
   "requiredRole": "your-app.user"
 }
 ```
+
+Leave `requiredRole` empty (`""`) to require authentication only, with no App Role check — for
+example when any signed-in Microsoft account (work, school or personal) should be able to use
+the app. Set `tenantId` to `common` in that case, since a specific tenant GUID would reject
+personal Microsoft accounts and accounts from other organizations.
 
 ### 8. Deploy to Azure
 

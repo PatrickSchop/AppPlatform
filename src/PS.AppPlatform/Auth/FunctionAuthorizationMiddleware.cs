@@ -57,11 +57,17 @@ public sealed class FunctionAuthorizationMiddleware : IFunctionsWorkerMiddleware
             : null;
         httpContext.User = authResult?.Principal ?? new();
 
-        // Determine the policy to evaluate
-        var policyName = GetAuthorizationPolicy(method) ?? PlatformPolicies.Default;
+        // Determine the policy to evaluate. An explicit [Authorize(Policy = "X")] names a
+        // policy to look up; otherwise fall back to the platform's default (default-deny) policy.
+        var policyName = GetAuthorizationPolicy(method);
+        var policyProvider = context.InstanceServices.GetService(typeof(IAuthorizationPolicyProvider)) as IAuthorizationPolicyProvider;
+        var policy = string.IsNullOrEmpty(policyName)
+            ? await policyProvider!.GetDefaultPolicyAsync()
+            : await policyProvider!.GetPolicyAsync(policyName)
+                ?? throw new InvalidOperationException($"No authorization policy found: {policyName}");
 
         // Authorize the request
-        var authzResult = await authzService.AuthorizeAsync(httpContext.User, resource: null, policyName);
+        var authzResult = await authzService.AuthorizeAsync(httpContext.User, resource: null, policy);
 
         if (!authzResult.Succeeded)
         {

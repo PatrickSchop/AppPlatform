@@ -52,14 +52,22 @@ public sealed class CorsMiddleware : IFunctionsWorkerMiddleware
                 return;
             }
 
-            await next(context);
-
-            // Set CORS headers on response
+            // Attach the headers before the response starts. Authorization writes 401/403
+            // bodies downstream, so setting them after next() would throw once the response
+            // has begun -- and those denied responses are exactly the ones that must carry
+            // Access-Control-Allow-Origin, or the browser reports an opaque CORS error
+            // instead of the real status.
             if (!string.IsNullOrEmpty(responseOrigin))
             {
-                response.Headers.AccessControlAllowOrigin = responseOrigin;
-                response.Headers.Vary = "Origin";
+                response.OnStarting(() =>
+                {
+                    response.Headers.AccessControlAllowOrigin = responseOrigin;
+                    response.Headers.Vary = "Origin";
+                    return Task.CompletedTask;
+                });
             }
+
+            await next(context);
         }
         catch (ObjectDisposedException)
         {
