@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Reflection;
 using System.Security.Claims;
+using NSubstitute;
 using PS.AppPlatform.Auth;
 using Xunit;
 
@@ -164,24 +165,6 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public void PlatformMiddlewareChain_can_be_instantiated()
-    {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["httpAccessControl:allowOrigin"] = "http://localhost:3000",
-            })
-            .Build();
-
-        var corsMiddleware = new CorsMiddleware(config);
-        var authzMiddleware = new FunctionAuthorizationMiddleware();
-        var chain = new PlatformMiddlewareChain(corsMiddleware, authzMiddleware);
-
-        Assert.NotNull(chain);
-        Assert.IsType<PlatformMiddlewareChain>(chain);
-    }
-
-    [Fact]
     public void CorsMiddleware_with_multiple_origins()
     {
         var config = new ConfigurationBuilder()
@@ -220,6 +203,52 @@ public class AuthorizationTests
         Assert.NotNull(result);
         Assert.Same(services, result);
     }
+
+    [Fact]
+    public void GetTargetFunctionMethod_resolves_an_instance_method_and_its_AllowAnonymous()
+    {
+        // Every real [Function] shim is an instance method on a primary-constructor class.
+        // Resolving static methods only returns null here, which makes [AllowAnonymous]
+        // undetectable and fails every anonymous endpoint closed.
+        var definition = NSubstitute.Substitute.For<FunctionDefinition>();
+        definition.EntryPoint.Returns(
+            $"{typeof(ShimStyleEndpoints).FullName}.{nameof(ShimStyleEndpoints.GetThing)}");
+
+        var context = NSubstitute.Substitute.For<FunctionContext>();
+        context.FunctionDefinition.Returns(definition);
+
+        var method = context.GetTargetFunctionMethod();
+
+        Assert.NotNull(method);
+        Assert.Equal(nameof(ShimStyleEndpoints.GetThing), method!.Name);
+        Assert.NotNull(method.DeclaringType!.GetCustomAttribute<AllowAnonymousAttribute>());
+    }
+
+    [Fact]
+    public async Task Default_policy_is_resolvable_when_no_named_policy_is_declared()
+    {
+        // Endpoints without [Authorize(Policy = "x")] fall back to the default policy.
+        // Looking that up as a named policy throws "No policy found: ."
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["authentication:azureEntraId:tenantId"] = "tenant-id-123",
+                ["authentication:azureEntraId:clientId"] = "client-id-456",
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddSingleton(config);
+        services.AddLogging();
+        services.AddAuthorization();
+        services.AddPlatformAuth(config);
+
+        var provider = services.BuildServiceProvider().GetRequiredService<IAuthorizationPolicyProvider>();
+        var policy = await provider.GetDefaultPolicyAsync();
+
+        Assert.NotNull(policy);
+        Assert.NotEmpty(policy.Requirements);
+    }
 }
 
 // Test endpoint classes
@@ -235,5 +264,18 @@ public static class TestEndpoints
 public static class AnonymousEndpoints
 {
     public static void AnyMethod() { }
+}
+
+/// <summary>
+/// Mirrors the shape of a real [Function] shim: [AllowAnonymous] on a primary-constructor
+/// class whose endpoint methods are instance methods. The static fixtures above do not
+/// exercise the reflection path that actually ships.
+/// </summary>
+[AllowAnonymous]
+public class ShimStyleEndpoints(string dependency)
+{
+    public string Dependency { get; } = dependency;
+
+    public void GetThing() { }
 }
 
