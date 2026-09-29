@@ -43,8 +43,8 @@ In your `.csproj`, add the package references:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="PS.AppPlatform" Version="0.1.1" />
-  <PackageReference Include="PS.AppPlatform.Functions" Version="0.1.1" />
+  <PackageReference Include="PS.AppPlatform" Version="0.1.2" />
+  <PackageReference Include="PS.AppPlatform.Functions" Version="0.1.2" />
 </ItemGroup>
 ```
 

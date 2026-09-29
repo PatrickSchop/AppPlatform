@@ -13,7 +13,7 @@
     "PlatformVersion": {
       "type": "parameter",
       "datatype": "string",
-      "defaultValue": "0.1.1",
+      "defaultValue": "0.1.2",
       "replaces": "0.0.0-PLATFORM-VERSION",
       "description": "PS.AppPlatform package version."
     },

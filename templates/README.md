@@ -13,24 +13,24 @@ dotnet new install PS.AppPlatform.Templates
 Create a new tiny app:
 
 ```powershell
-dotnet new tinyapp -n MyApp --platform-version 0.1.1
+dotnet new tinyapp -n MyApp --platform-version 0.1.2
 ```
 
 With an Entra app role requirement:
 
 ```powershell
-dotnet new tinyapp -n MyApp --platform-version 0.1.1 --app-role my-app.user
+dotnet new tinyapp -n MyApp --platform-version 0.1.2 --app-role my-app.user
 ```
 
 With React starter:
 
 ```powershell
-dotnet new tinyapp -n MyApp --platform-version 0.1.1 --frontend react
+dotnet new tinyapp -n MyApp --platform-version 0.1.2 --frontend react
 ```
 
 ## Options
 
-- `-pv`, `--platform-version` — Version of PS.AppPlatform packages to reference (default: 0.1.1)
+- `-pv`, `--platform-version` — Version of PS.AppPlatform packages to reference (default: 0.1.2)
 - `-ar`, `--app-role` — Entra App Role required to use the app. Leave unset for authentication
   only, which is the default and what the any-Microsoft-account model uses.
 - `-fe`, `--frontend` — Front-end starter to include: none, angular, or react (default: none)
