@@ -94,6 +94,8 @@ public static class PlatformAuthExtensions
 
             authOptions.FallbackPolicy = policy.Build();
             authOptions.DefaultPolicy = policy.Build();
+
+            authOptions.AddPolicy(PlatformPolicies.AuthenticatedOnly, p => p.RequireAuthenticatedUser());
         });
 
         return services;
@@ -103,5 +105,9 @@ public static class PlatformAuthExtensions
 public static class PlatformPolicies
 {
     public const string Default = "";
+
+    /// <summary>Authenticated, ignoring requiredRole. For callers that cannot hold the app's role:
+    /// deploy principals, other apps' managed identities, invitees.</summary>
+    public const string AuthenticatedOnly = "platform:authenticated";
 }
 

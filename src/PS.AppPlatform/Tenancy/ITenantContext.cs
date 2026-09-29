@@ -38,6 +38,21 @@ public sealed class TenantContext : ITenantContext
         _roles = new HashSet<string>(roles, StringComparer.OrdinalIgnoreCase);
     }
 
+    /// <summary>A registered user with no tenant selected, for [TenantOptional] endpoints.</summary>
+    public void SetUser(Guid userId)
+    {
+        if (_isResolved)
+        {
+            throw new InvalidOperationException("TenantContext.SetUser() called more than once per request scope");
+        }
+
+        _isResolved = true;
+        _userId = userId;
+        _tenantId = null;
+        _teamIds = [];
+        _roles = new HashSet<string>();
+    }
+
     public void SetSystem(Guid tenantId)
     {
         if (_isResolved)

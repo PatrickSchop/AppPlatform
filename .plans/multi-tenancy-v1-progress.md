@@ -1,6 +1,6 @@
-# Multi-tenancy v1 — Progress
+﻿# Multi-tenancy v1 — Progress
 
-**Updated:** 2026-09-29 · **Phase 1 progressing · next: MT-04**
+**Updated:** 2026-09-29 · **Phase 1 progressing · next: MT-05**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -9,11 +9,11 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 | | Steps | State |
 |---|---|---|
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
-| Phase 1 — Core tenancy | MT-02 – MT-07 | 🚧 3 of 6 complete · **Gate D** outstanding |
+| Phase 1 — Core tenancy | MT-02 – MT-07 | 🚧 4 of 6 complete · **Gate D** outstanding |
 | Phase 2 — Management app | MT-08 – MT-12 | ⏳ not started · **Gate E** outstanding |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**4 of 16 steps complete.**
+**5 of 16 steps complete.**
 
 ## Dependencies on the v1 plan
 
@@ -32,7 +32,7 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 | MT-01 | `PlatformCommandLine` | ✅ | ✅ | ✅ |
 | MT-02 | Tenancy contracts, config directory | ✅ | ✅ | ✅ |
 | MT-03 | `TenantEntity`, filters, factories | ✅ | ✅ | ✅ |
-| MT-04 | Tenant resolution, registry roles | ⏳ | | |
+| MT-04 | Tenant resolution, registry roles | ✅ | ✅ | ✅ |
 | MT-05 | Tenant-aware background tasks | ⏳ | | |
 | MT-06 | `/api/me/tenants`, conditional shims | ⏳ | | |
 | MT-07 | **Gate D** — `MultiTenantSample` | ⏳ | | |
@@ -63,6 +63,8 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 | Binding users to identities | One-time invite link; email is never matched | D5, MT-10 |
 | Tenant resolution placement | A service inside `FunctionAuthorizationMiddleware`, not a separate middleware | D3, MT-04 |
 | Token roles in registry apps | Dropped; the registry is the only source of roles | D3, MT-04 |
+| Tenant query filter placement | EF model-finalizing convention, so every `TenantEntity` in the final model is filtered (fixes an MT-03 fail-open gap) | D4, MT-04 |
+| `[TenantOptional]` with `requiredRole` | Tenant-less callers have no roles; such endpoints use `PlatformPolicies.AuthenticatedOnly` | D3, MT-04 → MT-06 |
 | Bootstrap admin ids | Repository variables, not secrets | D5, MT-12 |
 
 ## Operator actions (when their steps arrive)
@@ -75,4 +77,4 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 
 ## Next
 
-Start **MT-01** — `PlatformCommandLine`.
+Start **MT-05** — tenant-aware background tasks.

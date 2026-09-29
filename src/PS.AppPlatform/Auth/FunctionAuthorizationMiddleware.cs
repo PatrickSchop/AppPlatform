@@ -7,6 +7,7 @@ using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PS.AppPlatform.Tenancy;
 using System.Reflection;
 using System.Text.Json;
 
@@ -57,14 +58,25 @@ public sealed class FunctionAuthorizationMiddleware : IFunctionsWorkerMiddleware
             : null;
         httpContext.User = authResult?.Principal ?? new();
 
-        // Determine the policy to evaluate. An explicit [Authorize(Policy = "X")] names a
-        // policy to look up; otherwise fall back to the platform's default (default-deny) policy.
-        var policyName = GetAuthorizationPolicy(method);
-        var policyProvider = context.InstanceServices.GetService(typeof(IAuthorizationPolicyProvider)) as IAuthorizationPolicyProvider;
-        var policy = string.IsNullOrEmpty(policyName)
-            ? await policyProvider!.GetDefaultPolicyAsync()
-            : await policyProvider!.GetPolicyAsync(policyName)
-                ?? throw new InvalidOperationException($"No authorization policy found: {policyName}");
+        var tenancyMode = context.InstanceServices.GetService(typeof(TenancyMode)) as TenancyMode? ?? TenancyMode.None;
+        if (tenancyMode != TenancyMode.None)
+        {
+            var resolver = (TenantResolver)context.InstanceServices.GetRequiredService(typeof(TenantResolver));
+            var resolution = await resolver.ResolveAsync(httpContext, IsTenantOptional(method), context.CancellationToken);
+            if (resolution is TenantResolution.Stop stop)
+            {
+                httpContext.Response.StatusCode = stop.StatusCode;
+                httpContext.Response.ContentType = "application/json";
+                await httpContext.Response.WriteAsync(JsonSerializer.Serialize(new { error = stop.Error }));
+                logger?.LogInformation(
+                    "Tenant resolution stopped {FunctionName} for user {Oid}: {Error}",
+                    functionName, httpContext.User.GetIdentityKey()?.ObjectId ?? "unknown", stop.Error);
+                return;
+            }
+        }
+
+        var policyProvider = (IAuthorizationPolicyProvider)context.InstanceServices.GetRequiredService(typeof(IAuthorizationPolicyProvider));
+        var policy = await GetAuthorizationPolicyAsync(method, policyProvider);
 
         // Authorize the request
         var authzResult = await authzService.AuthorizeAsync(httpContext.User, resource: null, policy);
@@ -116,23 +128,33 @@ public sealed class FunctionAuthorizationMiddleware : IFunctionsWorkerMiddleware
         return false;
     }
 
-    private static string? GetAuthorizationPolicy(MethodInfo? method)
+    private static bool IsTenantOptional(MethodInfo? method) =>
+        method != null &&
+        (method.GetCustomAttribute<TenantOptionalAttribute>() != null ||
+         method.DeclaringType?.GetCustomAttribute<TenantOptionalAttribute>() != null);
+
+    /// <summary>
+    /// Combines [Authorize] on method and class as ASP.NET Core does. A named Policy replaces the
+    /// default policy; Roles alone are added on top of it, so they never bypass requiredRole.
+    /// </summary>
+    private static async Task<AuthorizationPolicy> GetAuthorizationPolicyAsync(
+        MethodInfo? method, IAuthorizationPolicyProvider policyProvider)
     {
+        var defaultPolicy = await policyProvider.GetDefaultPolicyAsync();
         if (method == null)
-            return null;
+            return defaultPolicy;
 
-        // Check [Authorize(Policy = "X")] on method
-        var methodAuth = method.GetCustomAttribute<AuthorizeAttribute>();
-        if (methodAuth?.Policy != null)
-            return methodAuth.Policy;
+        var authorizeData = method.GetCustomAttributes<AuthorizeAttribute>()
+            .Concat(method.DeclaringType?.GetCustomAttributes<AuthorizeAttribute>() ?? [])
+            .ToList();
 
-        // Check [Authorize(Policy = "X")] on declaring type
-        var typeAuth = method.DeclaringType?.GetCustomAttribute<AuthorizeAttribute>();
-        if (typeAuth?.Policy != null)
-            return typeAuth.Policy;
+        var combined = await AuthorizationPolicy.CombineAsync(policyProvider, authorizeData);
+        if (combined == null)
+            return defaultPolicy;
 
-        // No explicit policy - use default (which means default-deny)
-        return null;
+        return authorizeData.Any(a => !string.IsNullOrEmpty(a.Policy))
+            ? combined
+            : AuthorizationPolicy.Combine(defaultPolicy, combined);
     }
 }
 

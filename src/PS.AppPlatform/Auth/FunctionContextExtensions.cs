@@ -1,4 +1,5 @@
 using Microsoft.Azure.Functions.Worker;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace PS.AppPlatform.Auth;
@@ -11,12 +12,20 @@ internal static class FunctionContextExtensions
     /// </summary>
     public static MethodInfo? GetTargetFunctionMethod(this FunctionContext context)
     {
-        var definition = context.FunctionDefinition;
-        if (definition?.EntryPoint == null)
+        var entryPoint = context.FunctionDefinition?.EntryPoint;
+        if (entryPoint == null)
             return null;
 
+        // The lookup scans every loaded assembly, so it runs once per entry point, not per request.
+        return MethodCache.GetOrAdd(entryPoint, FindMethod);
+    }
+
+    private static readonly ConcurrentDictionary<string, MethodInfo?> MethodCache = new(StringComparer.Ordinal);
+
+    private static MethodInfo? FindMethod(string entryPoint)
+    {
         // EntryPoint format: "namespace.ClassName.MethodName"
-        var parts = definition.EntryPoint.Split('.');
+        var parts = entryPoint.Split('.');
         if (parts.Length < 2)
             return null;
 

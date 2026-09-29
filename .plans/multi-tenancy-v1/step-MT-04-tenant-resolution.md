@@ -1,4 +1,4 @@
-# Step MT-04 — Tenant resolution and registry roles
+﻿# Step MT-04 — Tenant resolution and registry roles
 
 **Phase:** 1 — Core tenancy
 **Depends on:** MT-03
@@ -190,12 +190,12 @@ token.
 
 ## Done when
 
-- [ ] Tenant resolution runs between authentication and authorization, only in `Single`/`Multi`
-- [ ] The five outcomes (`tenant_required`, `tenant_forbidden`, `not_registered`, 401, 403)
+- [x] Tenant resolution runs between authentication and authorization, only in `Single`/`Multi`
+- [x] The five outcomes (`tenant_required`, `tenant_forbidden`, `not_registered`, 401, 403)
       are asserted through `Invoke`
-- [ ] Registry roles replace token roles on the principal
-- [ ] `[Authorize(Roles=...)]` works and never bypasses the default policy
-- [ ] Target-method lookup is cached
+- [x] Registry roles replace token roles on the principal
+- [x] `[Authorize(Roles=...)]` works and never bypasses the default policy
+- [x] Target-method lookup is cached
 
 ## Commit
 

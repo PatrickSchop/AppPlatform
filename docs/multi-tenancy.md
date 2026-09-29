@@ -1,4 +1,54 @@
-# Multi-tenancy
+﻿# Multi-tenancy
+
+## Tenant resolution
+
+In `Single` and `Multi` mode, every protected HTTP call goes through
+authentication → **tenant resolution** → authorization, inside
+`FunctionAuthorizationMiddleware`. `[AllowAnonymous]` functions skip all three. In mode `None`
+nothing changes.
+
+The resolver looks the user up by the token's `oid` + `tid`, picks the tenant and fills the
+scoped `ITenantContext`:
+
+- The SPA sends the chosen tenant in `X-Tenant-Id` (configurable: `tenancy:tenantHeader`).
+  The server never trusts it; it must be one of the user's tenants.
+- With no header, a user with exactly one tenant gets that tenant. This covers every user of a
+  `Single`-mode app.
+
+Errors are JSON bodies, `{"error":"<code>"}`:
+
+| Code | Status | When |
+|---|---|---|
+| `not_registered` | 403 | The user is not in the registry, or the token has no `oid`/`tid` |
+| `tenant_forbidden` | 403 | The header names a tenant the user isn't a member of, or isn't a GUID |
+| `tenant_required` | 409 | The user has more than one tenant and sent no header |
+| `unauthorized` | 401 | No valid token (unchanged) |
+| `forbidden` | 403 | Authorization failed (unchanged) |
+
+### Roles come from the registry only
+
+After resolution the principal's `roles` claims are **replaced** by the user's roles in the
+selected tenant, the union across their teams. Entra App Role claims in the token are dropped.
+`authentication:requiredRole` and `[Authorize(Roles = "editor")]` therefore check registry roles:
+
+```csharp
+[Authorize(Roles = "editor")]            // registry role in the current tenant, AND requiredRole
+public Task<IActionResult> Publish(...)
+
+[Authorize(Policy = PlatformPolicies.AuthenticatedOnly)]  // any signed-in caller, ignores requiredRole
+public Task<IActionResult> Register(...)
+```
+
+`[Authorize(Roles = ...)]` is added on top of the default policy, so it never bypasses
+`requiredRole`. A named `Policy` replaces the default policy, as in ASP.NET Core.
+
+### Endpoints that need a user but no tenant
+
+`[TenantOptional]` (method or class) lets the call through without a selected tenant, and for
+unregistered users too. `ITenantContext` then has `UserId` set and `TenantId` null, or is
+unresolved for an unregistered user. A header that names a non-member tenant is still rejected.
+Such a caller has no roles, so in an app with `requiredRole` a `[TenantOptional]` endpoint also
+needs `[Authorize(Policy = PlatformPolicies.AuthenticatedOnly)]`.
 
 ## Tenant-aware data
 
@@ -90,3 +140,10 @@ var notes = context.Set<Note>().ToList();  // ❌ Throws TenantContextMissingExc
 ```
 
 Use `IUnscopedDbContextFactory` or `CreateForTenant()` when you need to query across tenants or without a request tenant.
+
+### How the filter is applied
+
+The filter is added to every `TenantEntity` in the finished EF model, however it got there
+(assembly discovery, a `DbSet`, or `modelBuilder.Entity<T>()` in your `OnModelCreating`). A
+query filter you add yourself is combined with it, never replaced. If your context overrides
+`ConfigureConventions`, it must call `base.ConfigureConventions(...)`.

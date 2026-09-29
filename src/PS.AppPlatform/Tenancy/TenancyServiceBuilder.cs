@@ -46,6 +46,7 @@ public static class TenancyServiceBuilder
         services.AddSingleton(manifest);
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+        services.AddScoped<TenantResolver>();
         services.AddMemoryCache();
 
         switch (options.Directory)
