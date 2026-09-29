@@ -1,4 +1,4 @@
-﻿# PS.AppPlatform.Templates
+# PS.AppPlatform.Templates
 
 `dotnet new` templates for creating PS.AppPlatform applications.
 
@@ -13,27 +13,28 @@ dotnet new install PS.AppPlatform.Templates
 Create a new tiny app:
 
 ```powershell
-dotnet new tinyapp -n MyApp --PlatformVersion 0.1.0
+dotnet new tinyapp -n MyApp --platform-version 0.1.1
 ```
 
 With an Entra app role requirement:
 
 ```powershell
-dotnet new tinyapp -n MyApp --PlatformVersion 0.1.0 --AppRole my-app.user
+dotnet new tinyapp -n MyApp --platform-version 0.1.1 --app-role my-app.user
 ```
 
 With React starter:
 
 ```powershell
-dotnet new tinyapp -n MyApp --PlatformVersion 0.1.0 --Frontend react
+dotnet new tinyapp -n MyApp --platform-version 0.1.1 --frontend react
 ```
 
 ## Options
 
-- `--PlatformVersion` â€” Version of PS.AppPlatform packages to reference (default: 0.1.0)
-- `--AppRole` â€” Entra app role required for authentication (default: none, auth only)
-- `--Frontend` â€” Front-end starter to include: none, angular, or react (default: none)
-- `--AppName` (`-aa`) â€” Lowercase Azure resource name id this app is provisioned under
+- `-pv`, `--platform-version` — Version of PS.AppPlatform packages to reference (default: 0.1.1)
+- `-ar`, `--app-role` — Entra App Role required to use the app. Leave unset for authentication
+  only, which is the default and what the any-Microsoft-account model uses.
+- `-fe`, `--frontend` — Front-end starter to include: none, angular, or react (default: none)
+- `-aa`, `--azure-app-name` — Lowercase Azure resource name id this app is provisioned under
   (matches `appName` in `infra/app.bicep`, e.g. `scratchapp`; default: tinyapp)
 
 ## See also
