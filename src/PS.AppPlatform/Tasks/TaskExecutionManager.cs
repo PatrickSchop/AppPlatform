@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text.Json;
 using PS.AppPlatform.Data;
+using PS.AppPlatform.Tenancy;
 
 namespace PS.AppPlatform.Tasks;
 
@@ -15,7 +16,7 @@ public class TaskExecutionManager<TContext> : ITaskExecutionManager
     private readonly ITaskHandlerRegistry _handlerRegistry;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<TaskExecutionManager<TContext>> _logger;
-    private readonly IDbContextFactory<TContext> _dbContextFactory;
+    private readonly IUnscopedDbContextFactory<TContext> _dbContextFactory;
     private readonly int _maxConcurrentTasks;
     private readonly int _leaseSeconds;
     private readonly ExecutionManagerIdentity _identity;
@@ -27,7 +28,7 @@ public class TaskExecutionManager<TContext> : ITaskExecutionManager
         IServiceProvider serviceProvider,
         IConfiguration configuration,
         ILogger<TaskExecutionManager<TContext>> logger,
-        IDbContextFactory<TContext> dbContextFactory,
+        IUnscopedDbContextFactory<TContext> dbContextFactory,
         ExecutionManagerIdentity identity,
         TaskCheckGate gate)
     {
@@ -159,13 +160,22 @@ END;";
         await ExecuteTaskAsync(task, ct);
     }
 
+    private async Task<BackgroundTask?> GetTaskAsync(Guid taskId, CancellationToken ct)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+        return await context.BackgroundTasks.FirstOrDefaultAsync(t => t.Id == taskId, ct);
+    }
+
     private async Task ExecuteTaskAsync(BackgroundTask task, CancellationToken ct = default)
     {
         try
         {
             await _taskService.UpdateStatusAsync(task.Id, BackgroundTaskStatus.Running);
 
-            var currentTask = await _taskService.GetTaskStatusAsync(task.Id);
+            // Unscoped: this execution manager's own scope has no request tenant, and it may be
+            // running tasks for several tenants concurrently, so it cannot use the tenant-scoped
+            // IBackgroundTaskService reads here.
+            var currentTask = await GetTaskAsync(task.Id, ct);
             if (currentTask == null)
             {
                 _logger.LogError("Task {TaskId} not found after transition to Running", task.Id);
@@ -212,6 +222,16 @@ END;";
             }
 
             await using var scope = _serviceProvider.CreateAsyncScope();
+
+            // A per-task scope, so a fresh, unresolved TenantContext can be set to this task's
+            // tenant without colliding with other tasks the same execution manager runs at once.
+            // A task with no tenant runs with an unresolved context: filtered queries fail
+            // closed, and the handler must use the unscoped factory deliberately.
+            if (currentTask.TenantId is Guid tid)
+            {
+                scope.ServiceProvider.GetService<TenantContext>()?.SetSystem(tid);
+            }
+
             var handler = scope.ServiceProvider.GetService(handlerType);
             if (handler == null)
             {
@@ -220,7 +240,7 @@ END;";
                 return;
             }
 
-            var context = new TaskHandlerContext(_taskService, currentTask.Id);
+            var context = new TaskHandlerContext(_taskService, currentTask.Id, currentTask.TenantId);
 
             var handleMethod = handlerInterfaceType.GetMethod("HandleAsync");
             if (handleMethod == null)
@@ -244,7 +264,7 @@ END;";
                     return;
                 }
 
-                var updatedTask = await _taskService.GetTaskStatusAsync(currentTask.Id);
+                var updatedTask = await GetTaskAsync(currentTask.Id, ct);
                 if (updatedTask != null && updatedTask.Status != BackgroundTaskStatus.Completed)
                 {
                     _logger.LogWarning("Task {TaskId} completed but status was not set to Completed, setting to Failed", currentTask.Id);

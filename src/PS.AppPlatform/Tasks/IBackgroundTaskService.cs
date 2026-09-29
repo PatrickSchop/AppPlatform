@@ -2,7 +2,8 @@
 
 /// <summary>
 /// Public interface for starting tasks and monitoring task status.
-/// Available to regular application code.
+/// Available to regular application code. Reads here go through the tenant-scoped factory,
+/// so a caller never sees another tenant's tasks.
 /// </summary>
 public interface IBackgroundTaskService
 {

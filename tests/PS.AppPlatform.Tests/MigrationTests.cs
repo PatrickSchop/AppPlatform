@@ -47,6 +47,10 @@ public class MigrationTests
         Assert.NotEmpty(scripts);
         Assert.Contains(scripts, s => s.Name == "000_CreateSchemaVersions.sql");
         Assert.Contains(scripts, s => s.Name == "010_CreateBackgroundTasks.sql");
+        Assert.Contains(scripts, s => s.Name == "020_AddBackgroundTaskTenancy.sql");
+        Assert.Equal(
+            new[] { "000_CreateSchemaVersions.sql", "010_CreateBackgroundTasks.sql", "020_AddBackgroundTaskTenancy.sql" },
+            scripts.Select(s => s.Name).ToArray());
     }
 
     [Fact]

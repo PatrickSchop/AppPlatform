@@ -2,7 +2,9 @@
 
 /// <summary>
 /// Internal interface for managing task state.
-/// Available only to TaskExecutionManager and related classes.
+/// Available only to TaskExecutionManager and related classes. These writes go through the
+/// unscoped factory: the execution manager calls them with no request tenant of its own, and
+/// the tenant/user were already stamped on create.
 /// </summary>
 public interface IBackgroundTaskManagementService : IBackgroundTaskService
 {

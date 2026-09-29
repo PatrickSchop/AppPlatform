@@ -17,5 +17,7 @@ public class BackgroundTask : Entity
     public DateTime? CompletedDate { get; set; }
     public Guid? ExecutionManagerId { get; set; }
     public DateTime? LeaseExpiresUtc { get; set; }
+    public Guid? TenantId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 }
 

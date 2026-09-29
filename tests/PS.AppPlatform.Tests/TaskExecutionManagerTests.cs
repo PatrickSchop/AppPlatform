@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -6,6 +6,7 @@ using NSubstitute;
 using PS.AppPlatform.Data;
 using PS.AppPlatform.Hosting;
 using PS.AppPlatform.Tasks;
+using PS.AppPlatform.Tenancy;
 using Xunit;
 
 namespace PS.AppPlatform.Tests;
@@ -19,6 +20,59 @@ public class TaskExecutionManagerTests
         {
         }
     }
+
+    public class TenantAwareTestContext : PlatformDbContext
+    {
+        public TenantAwareTestContext(DbContextOptions<TenantAwareTestContext> options, PlatformAssemblies assemblies)
+            : base(options, assemblies)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<TenantNote>();
+        }
+    }
+
+    public class TenantNote : TenantEntity
+    {
+        public string Content { get; set; } = "";
+    }
+
+    /// <summary>Wires up a PlatformDbContext-derived type against an InMemory database the
+    /// same way AddPlatformData does against SQL Server, so tests exercise the real scoped
+    /// and unscoped factories instead of mocking database access.</summary>
+    private static IServiceCollection CreatePlatformServices<TContext>(
+        string dbName, TenancyMode mode, PlatformAssemblies? assemblies = null)
+        where TContext : PlatformDbContext
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(assemblies ?? new PlatformAssemblies());
+        services.AddSingleton(typeof(TenancyMode), mode);
+        services.AddSingleton<TenantSaveChangesInterceptor>();
+
+        services.AddDbContext<TContext>((sp, options) =>
+        {
+            options.UseInMemoryDatabase(dbName);
+            options.AddInterceptors(sp.GetRequiredService<TenantSaveChangesInterceptor>());
+        }, ServiceLifetime.Scoped, ServiceLifetime.Singleton);
+
+        services.AddScoped<IScopedDbContextFactory<TContext>, ScopedDbContextFactory<TContext>>();
+        services.AddScoped<IDbContextFactory<TContext>>(sp => sp.GetRequiredService<IScopedDbContextFactory<TContext>>());
+        services.AddScoped<IUnscopedDbContextFactory<TContext>, UnscopedDbContextFactory<TContext>>();
+
+        if (mode != TenancyMode.None)
+        {
+            services.AddScoped<TenantContext>();
+            services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+        }
+
+        return services;
+    }
+
+    private static IConfiguration EmptyConfig() =>
+        new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>()).Build();
 
     public class TestHandler : ITaskHandler<string>
     {
@@ -74,6 +128,32 @@ public class TaskExecutionManagerTests
         }
     }
 
+    /// <summary>Captures what a handler observed, so the test can assert on it after the
+    /// manager's per-task scope (and everything resolved from it) has been disposed.</summary>
+    public class ObservedNotes
+    {
+        public List<TenantNote> Notes { get; } = [];
+    }
+
+    public class TenantNoteHandler : ITaskHandler<string>
+    {
+        private readonly IDbContextFactory<TenantAwareTestContext> _factory;
+        private readonly ObservedNotes _observed;
+
+        public TenantNoteHandler(IDbContextFactory<TenantAwareTestContext> factory, ObservedNotes observed)
+        {
+            _factory = factory;
+            _observed = observed;
+        }
+
+        public async Task HandleAsync(BackgroundTask task, string taskData, TaskHandlerContext context, CancellationToken cancellationToken)
+        {
+            await using var db = await _factory.CreateDbContextAsync(cancellationToken);
+            _observed.Notes.AddRange(await db.Set<TenantNote>().ToListAsync(cancellationToken));
+            await context.CompleteAsync();
+        }
+    }
+
     [Fact]
     public async Task ExecuteTaskAsync_WithRegisteredHandler_TransitionsToRunning()
     {
@@ -81,13 +161,10 @@ public class TaskExecutionManagerTests
         var registry = new TaskHandlerRegistry();
         registry.RegisterHandler("TestTask", typeof(TestHandler));
 
-        var services = new ServiceCollection();
+        var services = CreatePlatformServices<TestDbContext>(Guid.NewGuid().ToString(), TenancyMode.None);
         services.AddScoped<TestHandler>();
-        var serviceProvider = services.BuildServiceProvider();
-
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
-            .Build();
+        using var provider = services.BuildServiceProvider();
+        var dbContextFactory = provider.GetRequiredService<IUnscopedDbContextFactory<TestDbContext>>();
 
         var task = new BackgroundTask
         {
@@ -96,34 +173,17 @@ public class TaskExecutionManagerTests
             Status = BackgroundTaskStatus.NotStarted,
             TaskData = "\"test data\""
         };
+        await SeedTaskAsync(dbContextFactory, task);
 
-        // Set up mock to return task when asked, with Completed status after handler runs
-        taskService.GetTaskStatusAsync(task.Id)
-            .Returns(x =>
-            {
-                var completedTask = new BackgroundTask { Id = task.Id, Status = BackgroundTaskStatus.Completed };
-                return Task.FromResult<BackgroundTask?>(completedTask);
-            });
-
-        var dbContextFactory = Substitute.For<IDbContextFactory<TestDbContext>>();
         var logger = Substitute.For<ILogger<TaskExecutionManager<TestDbContext>>>();
         var identity = new ExecutionManagerIdentity();
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService,
-            registry,
-            serviceProvider,
-            config,
-            logger,
-            dbContextFactory,
-            identity,
-            gate
-        );
+            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
-        // Verify Running was called
         await taskService.Received(1).UpdateStatusAsync(task.Id, BackgroundTaskStatus.Running);
     }
 
@@ -133,12 +193,9 @@ public class TaskExecutionManagerTests
         var taskService = Substitute.For<IBackgroundTaskManagementService>();
         var registry = new TaskHandlerRegistry();
 
-        var services = new ServiceCollection();
-        var serviceProvider = services.BuildServiceProvider();
-
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
-            .Build();
+        var services = CreatePlatformServices<TestDbContext>(Guid.NewGuid().ToString(), TenancyMode.None);
+        using var provider = services.BuildServiceProvider();
+        var dbContextFactory = provider.GetRequiredService<IUnscopedDbContextFactory<TestDbContext>>();
 
         var task = new BackgroundTask
         {
@@ -147,25 +204,14 @@ public class TaskExecutionManagerTests
             Status = BackgroundTaskStatus.NotStarted,
             TaskData = "{}"
         };
+        await SeedTaskAsync(dbContextFactory, task);
 
-        taskService.GetTaskStatusAsync(task.Id)
-            .Returns(Task.FromResult<BackgroundTask?>(task));
-
-        var dbContextFactory = Substitute.For<IDbContextFactory<TestDbContext>>();
         var logger = Substitute.For<ILogger<TaskExecutionManager<TestDbContext>>>();
         var identity = new ExecutionManagerIdentity();
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService,
-            registry,
-            serviceProvider,
-            config,
-            logger,
-            dbContextFactory,
-            identity,
-            gate
-        );
+            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -183,13 +229,10 @@ public class TaskExecutionManagerTests
         var registry = new TaskHandlerRegistry();
         registry.RegisterHandler("FailingTask", typeof(FailingHandler));
 
-        var services = new ServiceCollection();
+        var services = CreatePlatformServices<TestDbContext>(Guid.NewGuid().ToString(), TenancyMode.None);
         services.AddScoped<FailingHandler>();
-        var serviceProvider = services.BuildServiceProvider();
-
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
-            .Build();
+        using var provider = services.BuildServiceProvider();
+        var dbContextFactory = provider.GetRequiredService<IUnscopedDbContextFactory<TestDbContext>>();
 
         var task = new BackgroundTask
         {
@@ -198,22 +241,14 @@ public class TaskExecutionManagerTests
             Status = BackgroundTaskStatus.NotStarted,
             TaskData = "\"test\""
         };
+        await SeedTaskAsync(dbContextFactory, task);
 
-        var dbContextFactory = Substitute.For<IDbContextFactory<TestDbContext>>();
         var logger = Substitute.For<ILogger<TaskExecutionManager<TestDbContext>>>();
         var identity = new ExecutionManagerIdentity();
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService,
-            registry,
-            serviceProvider,
-            config,
-            logger,
-            dbContextFactory,
-            identity,
-            gate
-        );
+            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -231,13 +266,10 @@ public class TaskExecutionManagerTests
         var registry = new TaskHandlerRegistry();
         registry.RegisterHandler("NeverCompleting", typeof(NeverCompletingHandler));
 
-        var services = new ServiceCollection();
+        var services = CreatePlatformServices<TestDbContext>(Guid.NewGuid().ToString(), TenancyMode.None);
         services.AddScoped<NeverCompletingHandler>();
-        var serviceProvider = services.BuildServiceProvider();
-
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
-            .Build();
+        using var provider = services.BuildServiceProvider();
+        var dbContextFactory = provider.GetRequiredService<IUnscopedDbContextFactory<TestDbContext>>();
 
         var task = new BackgroundTask
         {
@@ -246,24 +278,14 @@ public class TaskExecutionManagerTests
             Status = BackgroundTaskStatus.NotStarted,
             TaskData = "\"test\""
         };
+        await SeedTaskAsync(dbContextFactory, task);
 
-        taskService.GetTaskStatusAsync(task.Id).Returns(Task.FromResult<BackgroundTask?>(task));
-
-        var dbContextFactory = Substitute.For<IDbContextFactory<TestDbContext>>();
         var logger = Substitute.For<ILogger<TaskExecutionManager<TestDbContext>>>();
         var identity = new ExecutionManagerIdentity();
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService,
-            registry,
-            serviceProvider,
-            config,
-            logger,
-            dbContextFactory,
-            identity,
-            gate
-        );
+            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -281,13 +303,10 @@ public class TaskExecutionManagerTests
         var registry = new TaskHandlerRegistry();
         registry.RegisterHandler("EndWithoutCompleting", typeof(EndWithoutCompletingHandler));
 
-        var services = new ServiceCollection();
+        var services = CreatePlatformServices<TestDbContext>(Guid.NewGuid().ToString(), TenancyMode.None);
         services.AddScoped<EndWithoutCompletingHandler>();
-        var serviceProvider = services.BuildServiceProvider();
-
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
-            .Build();
+        using var provider = services.BuildServiceProvider();
+        var dbContextFactory = provider.GetRequiredService<IUnscopedDbContextFactory<TestDbContext>>();
 
         var task = new BackgroundTask
         {
@@ -296,24 +315,14 @@ public class TaskExecutionManagerTests
             Status = BackgroundTaskStatus.NotStarted,
             TaskData = "\"test\""
         };
+        await SeedTaskAsync(dbContextFactory, task);
 
-        taskService.GetTaskStatusAsync(task.Id).Returns(Task.FromResult<BackgroundTask?>(task));
-
-        var dbContextFactory = Substitute.For<IDbContextFactory<TestDbContext>>();
         var logger = Substitute.For<ILogger<TaskExecutionManager<TestDbContext>>>();
         var identity = new ExecutionManagerIdentity();
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService,
-            registry,
-            serviceProvider,
-            config,
-            logger,
-            dbContextFactory,
-            identity,
-            gate
-        );
+            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -332,13 +341,10 @@ public class TaskExecutionManagerTests
         var registry = new TaskHandlerRegistry();
         registry.RegisterHandler("TestTask", typeof(TestHandler));
 
-        var services = new ServiceCollection();
+        var services = CreatePlatformServices<TestDbContext>(Guid.NewGuid().ToString(), TenancyMode.None);
         services.AddScoped<TestHandler>();
-        var serviceProvider = services.BuildServiceProvider();
-
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
-            .Build();
+        using var provider = services.BuildServiceProvider();
+        var dbContextFactory = provider.GetRequiredService<IUnscopedDbContextFactory<TestDbContext>>();
 
         var task = new BackgroundTask
         {
@@ -347,24 +353,14 @@ public class TaskExecutionManagerTests
             Status = BackgroundTaskStatus.NotStarted,
             TaskData = "\"test\""
         };
+        await SeedTaskAsync(dbContextFactory, task);
 
-        taskService.GetTaskStatusAsync(task.Id).Returns(Task.FromResult<BackgroundTask?>(task));
-
-        var dbContextFactory = Substitute.For<IDbContextFactory<TestDbContext>>();
         var logger = Substitute.For<ILogger<TaskExecutionManager<TestDbContext>>>();
         var identity = new ExecutionManagerIdentity();
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService,
-            registry,
-            serviceProvider,
-            config,
-            logger,
-            dbContextFactory,
-            identity,
-            gate
-        );
+            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -378,14 +374,11 @@ public class TaskExecutionManagerTests
         var registry = new TaskHandlerRegistry();
         registry.RegisterHandler("ScopedTest", typeof(ScopeDependencyTrackingHandler));
 
-        var services = new ServiceCollection();
+        var services = CreatePlatformServices<TestDbContext>(Guid.NewGuid().ToString(), TenancyMode.None);
         services.AddScoped<ScopedDependency>();
         services.AddScoped<ScopeDependencyTrackingHandler>();
-        var serviceProvider = services.BuildServiceProvider();
-
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
-            .Build();
+        using var provider = services.BuildServiceProvider();
+        var dbContextFactory = provider.GetRequiredService<IUnscopedDbContextFactory<TestDbContext>>();
 
         var task = new BackgroundTask
         {
@@ -394,28 +387,121 @@ public class TaskExecutionManagerTests
             Status = BackgroundTaskStatus.NotStarted,
             TaskData = "\"test\""
         };
+        await SeedTaskAsync(dbContextFactory, task);
 
-        taskService.GetTaskStatusAsync(task.Id).Returns(Task.FromResult<BackgroundTask?>(task));
-
-        var dbContextFactory = Substitute.For<IDbContextFactory<TestDbContext>>();
         var logger = Substitute.For<ILogger<TaskExecutionManager<TestDbContext>>>();
         var identity = new ExecutionManagerIdentity();
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService,
-            registry,
-            serviceProvider,
-            config,
-            logger,
-            dbContextFactory,
-            identity,
-            gate
-        );
+            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
         await taskService.Received(1).UpdateStatusAsync(task.Id, BackgroundTaskStatus.Completed);
     }
-}
 
+    [Fact]
+    public async Task ExecuteTaskAsync_NoTenant_HandlerRunsWithUnresolvedTenantContext()
+    {
+        // A system task (no TenantId) must not silently see every tenant's data: the handler's
+        // scope gets no SetSystem call, so a filtered query fails closed instead of leaking.
+        var taskService = Substitute.For<IBackgroundTaskManagementService>();
+        var registry = new TaskHandlerRegistry();
+        registry.RegisterHandler("ReadNotes", typeof(TenantNoteHandler));
+
+        var dbName = Guid.NewGuid().ToString();
+        var services = CreatePlatformServices<TenantAwareTestContext>(dbName, TenancyMode.Multi);
+        var observed = new ObservedNotes();
+        services.AddSingleton(observed);
+        services.AddScoped<TenantNoteHandler>();
+        using var provider = services.BuildServiceProvider();
+        var dbContextFactory = provider.GetRequiredService<IUnscopedDbContextFactory<TenantAwareTestContext>>();
+
+        var task = new BackgroundTask
+        {
+            Id = Guid.NewGuid(),
+            TaskType = "ReadNotes",
+            Status = BackgroundTaskStatus.NotStarted,
+            TaskData = "\"test\"",
+            TenantId = null
+        };
+        await SeedTaskAsync(dbContextFactory, task);
+
+        var logger = Substitute.For<ILogger<TaskExecutionManager<TenantAwareTestContext>>>();
+        var identity = new ExecutionManagerIdentity();
+        var gate = new TaskCheckGate();
+
+        var manager = new TaskExecutionManager<TenantAwareTestContext>(
+            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+
+        await manager.ExecuteTaskInternalAsync(task);
+
+        await taskService.Received(1).UpdateStatusAsync(
+            task.Id,
+            BackgroundTaskStatus.Failed,
+            Arg.Any<string>()
+        );
+        Assert.Empty(observed.Notes);
+    }
+
+    [Fact]
+    public async Task ExecuteTaskAsync_RunsHandlerInTasksTenantScope()
+    {
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+
+        var taskService = Substitute.For<IBackgroundTaskManagementService>();
+        var registry = new TaskHandlerRegistry();
+        registry.RegisterHandler("ReadNotes", typeof(TenantNoteHandler));
+
+        var dbName = Guid.NewGuid().ToString();
+        var services = CreatePlatformServices<TenantAwareTestContext>(dbName, TenancyMode.Multi);
+        var observed = new ObservedNotes();
+        services.AddSingleton(observed);
+        services.AddScoped<TenantNoteHandler>();
+        using var provider = services.BuildServiceProvider();
+        var dbContextFactory = provider.GetRequiredService<IUnscopedDbContextFactory<TenantAwareTestContext>>();
+
+        using (var seedContext = dbContextFactory.CreateDbContext())
+        {
+            seedContext.Set<TenantNote>().AddRange(
+                new TenantNote { Id = Guid.NewGuid(), TenantId = tenantA, Content = "A's note" },
+                new TenantNote { Id = Guid.NewGuid(), TenantId = tenantB, Content = "B's note" });
+            await seedContext.SaveChangesAsync();
+        }
+
+        var task = new BackgroundTask
+        {
+            Id = Guid.NewGuid(),
+            TaskType = "ReadNotes",
+            Status = BackgroundTaskStatus.NotStarted,
+            TaskData = "\"test\"",
+            TenantId = tenantB
+        };
+        await SeedTaskAsync(dbContextFactory, task);
+
+        var logger = Substitute.For<ILogger<TaskExecutionManager<TenantAwareTestContext>>>();
+        var identity = new ExecutionManagerIdentity();
+        var gate = new TaskCheckGate();
+
+        var manager = new TaskExecutionManager<TenantAwareTestContext>(
+            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+
+        await manager.ExecuteTaskInternalAsync(task);
+
+        var note = Assert.Single(observed.Notes);
+        Assert.Equal(tenantB, note.TenantId);
+        Assert.Equal("B's note", note.Content);
+
+        await taskService.Received(1).UpdateStatusAsync(task.Id, BackgroundTaskStatus.Completed);
+    }
+
+    private static async Task SeedTaskAsync<TContext>(IUnscopedDbContextFactory<TContext> factory, BackgroundTask task)
+        where TContext : PlatformDbContext
+    {
+        using var context = factory.CreateDbContext();
+        context.BackgroundTasks.Add(task);
+        await context.SaveChangesAsync();
+    }
+}

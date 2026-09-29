@@ -6,11 +6,15 @@ public class TaskHandlerContext
     private readonly Guid _taskId;
     private bool _endedWithoutCompleting = false;
 
-    public TaskHandlerContext(IBackgroundTaskManagementService taskService, Guid taskId)
+    public TaskHandlerContext(IBackgroundTaskManagementService taskService, Guid taskId, Guid? tenantId = null)
     {
         _taskService = taskService;
         _taskId = taskId;
+        TenantId = tenantId;
     }
+
+    /// <summary>The tenant the task was created for, or null for a system task.</summary>
+    public Guid? TenantId { get; }
 
     public Guid GetTaskId()
     {

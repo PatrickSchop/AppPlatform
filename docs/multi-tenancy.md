@@ -141,6 +141,38 @@ var notes = context.Set<Note>().ToList();  // ❌ Throws TenantContextMissingExc
 
 Use `IUnscopedDbContextFactory` or `CreateForTenant()` when you need to query across tenants or without a request tenant.
 
+### Background tasks
+
+`BackgroundTask` itself carries a nullable `TenantId` and `CreatedByUserId`, stamped from the
+creating request's `ITenantContext` when a task is created via `IBackgroundTaskService`. A task
+created outside a request (a timer, an anonymous flow) gets `TenantId = null` — a system task.
+
+The platform endpoints (`GET /api/tasks`, `GET /api/tasks/{id}`, `GET /api/tasks/notifications`)
+and `ResumeTaskAsync` are filtered to the caller's tenant automatically; a user never sees or
+resumes another tenant's task, and a system task with no tenant is invisible to every user.
+
+`TaskExecutionManager` runs each claimed task in its own DI scope and resolves that task's
+tenant into the scope's `ITenantContext` before the handler is created. A handler therefore
+needs no tenancy code of its own — `IDbContextFactory<TContext>` injected into the handler is
+already filtered to the task's tenant:
+
+```csharp
+public class WordCountTaskHandler(IDbContextFactory<AppDbContext> factory) : ITaskHandler<WordCountTaskData>
+{
+    public async Task HandleAsync(BackgroundTask task, WordCountTaskData data, TaskHandlerContext context, CancellationToken ct)
+    {
+        await using var db = await factory.CreateDbContextAsync(ct);   // scoped to task.TenantId
+        ...
+    }
+}
+```
+
+A task with no tenant (`TenantId == null`) runs with **no** tenant resolved: a filtered query in
+such a handler fails closed with `TenantContextMissingException`, the same as any other
+unresolved-tenant query. A handler that intentionally runs across tenants must ask for
+`IUnscopedDbContextFactory<TContext>` explicitly. `TaskHandlerContext.TenantId` exposes the
+task's tenant without a DI lookup, for handlers that only need to read it.
+
 ### How the filter is applied
 
 The filter is added to every `TenantEntity` in the finished EF model, however it got there

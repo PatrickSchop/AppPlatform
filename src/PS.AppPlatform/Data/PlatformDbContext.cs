@@ -65,7 +65,7 @@ public abstract class PlatformDbContext : DbContext
                 .ValueGeneratedOnAdd();
         }
 
-        ConfigurePlatformModel(modelBuilder);
+        ConfigurePlatformModel(this, modelBuilder);
     }
 
     /// <summary>Derived contexts that override this must call base, or TenantEntity loses its filter.</summary>
@@ -75,7 +75,7 @@ public abstract class PlatformDbContext : DbContext
         configurationBuilder.Conventions.Add(_ => new TenantQueryFilterConvention(this));
     }
 
-    private static void ConfigurePlatformModel(ModelBuilder modelBuilder)
+    private static void ConfigurePlatformModel(PlatformDbContext context, ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<BackgroundTask>(e =>
         {
@@ -84,6 +84,12 @@ public abstract class PlatformDbContext : DbContext
             e.HasIndex(t => t.TaskType);
             e.HasIndex(t => t.CreatedDate);
             e.HasIndex(t => new { t.ExecutionManagerId, t.Status });
+            e.HasIndex(t => new { t.TenantId, t.CreatedDate });
+
+            // With the filter enabled, tasks with a null TenantId (system tasks) are invisible
+            // to users; that is intended. EF re-binds the DbContext constant to the executing
+            // context on every query, the same as TenantQueryFilterConvention.
+            e.HasQueryFilter(t => !context.TenantFilterEnabled || t.TenantId == context.CurrentTenantId);
         });
     }
 

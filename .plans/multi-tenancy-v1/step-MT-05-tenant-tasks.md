@@ -126,9 +126,9 @@ task lifecycle from Gate A still completes.
 
 ## Done when
 
-- [ ] No platform endpoint can return another tenant's task
-- [ ] Handlers run inside their task's tenant scope
-- [ ] `None` apps behave exactly as before, including on an existing database
+- [x] No platform endpoint can return another tenant's task
+- [x] Handlers run inside their task's tenant scope
+- [x] `None` apps behave exactly as before, including on an existing database
 
 ## Commit
 

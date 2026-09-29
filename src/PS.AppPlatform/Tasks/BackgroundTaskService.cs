@@ -1,27 +1,35 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using PS.AppPlatform.Data;
+using PS.AppPlatform.Tenancy;
 
 namespace PS.AppPlatform.Tasks;
 
 public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
     where TContext : PlatformDbContext
 {
-    private readonly IDbContextFactory<TContext> _dbContextFactory;
+    private readonly IScopedDbContextFactory<TContext> _scopedFactory;
+    private readonly IUnscopedDbContextFactory<TContext> _unscopedFactory;
+    private readonly ITenantContext? _tenantContext;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<BackgroundTaskService<TContext>> _logger;
     private readonly string? _apiBaseUrl;
     private readonly int _leaseSeconds;
 
     public BackgroundTaskService(
-        IDbContextFactory<TContext> dbContextFactory,
+        IScopedDbContextFactory<TContext> scopedFactory,
+        IUnscopedDbContextFactory<TContext> unscopedFactory,
+        IServiceProvider serviceProvider,
         IConfiguration configuration,
         IHttpClientFactory httpClientFactory,
         ILogger<BackgroundTaskService<TContext>> logger)
     {
-        _dbContextFactory = dbContextFactory;
+        _scopedFactory = scopedFactory;
+        _unscopedFactory = unscopedFactory;
+        _tenantContext = serviceProvider.GetService<ITenantContext>();
         _httpClientFactory = httpClientFactory;
         _logger = logger;
 
@@ -31,7 +39,9 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
 
     public async Task<Guid> CreateTaskAsync<T>(string taskType, T taskData, string description, bool requiresNotification, CancellationToken ct = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+        // Unscoped: the TenantEntity interceptor rules do not apply to BackgroundTask, and the
+        // tenant/user come from the ambient ITenantContext, not from the query filter.
+        using var context = await _unscopedFactory.CreateDbContextAsync(ct);
 
         var task = new BackgroundTask
         {
@@ -45,7 +55,9 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow,
             ExecutionManagerId = null,
-            LeaseExpiresUtc = null
+            LeaseExpiresUtc = null,
+            TenantId = _tenantContext?.TenantId,
+            CreatedByUserId = _tenantContext?.UserId
         };
 
         context.BackgroundTasks.Add(task);
@@ -60,7 +72,7 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
 
     public async Task<BackgroundTask?> GetTaskStatusAsync(Guid taskId, CancellationToken ct = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+        using var context = await _scopedFactory.CreateDbContextAsync(ct);
 
         return await context.BackgroundTasks
             .FirstOrDefaultAsync(t => t.Id == taskId, ct);
@@ -68,7 +80,7 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
 
     public async Task<List<BackgroundTask>> GetAllTasksAsync(CancellationToken ct = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+        using var context = await _scopedFactory.CreateDbContextAsync(ct);
 
         return await context.BackgroundTasks
             .OrderByDescending(t => t.CreatedDate)
@@ -77,7 +89,7 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
 
     public async Task<bool> ResumeTaskAsync(Guid taskId, CancellationToken ct = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+        using var context = await _scopedFactory.CreateDbContextAsync(ct);
 
         var task = await context.BackgroundTasks
             .FirstOrDefaultAsync(t => t.Id == taskId, ct);
@@ -114,7 +126,7 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
     {
         percentage = Math.Clamp(percentage, 0, 100);
 
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        using var context = await _unscopedFactory.CreateDbContextAsync();
 
         var task = await context.BackgroundTasks
             .FirstOrDefaultAsync(t => t.Id == taskId);
@@ -134,7 +146,7 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
 
     public async Task UpdateStatusAsync(Guid taskId, BackgroundTaskStatus status, string? message)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        using var context = await _unscopedFactory.CreateDbContextAsync();
 
         var task = await context.BackgroundTasks
             .FirstOrDefaultAsync(t => t.Id == taskId);
@@ -169,7 +181,7 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
 
     public async Task RenewLeaseAsync(Guid taskId, CancellationToken ct = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+        using var context = await _unscopedFactory.CreateDbContextAsync(ct);
         var seconds = _leaseSeconds;
         await context.Database.ExecuteSqlInterpolatedAsync(
             $@"UPDATE [dbo].[BackgroundTasks]
