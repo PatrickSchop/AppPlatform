@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Progress
 
-**Updated:** 2026-09-29 · **Phase 0-4 complete · Step 23 done · Phase 5 in progress**
+**Updated:** 2026-09-29 · **Phase 0-4 complete · Steps 23-24 done · Phase 5 in progress**
 
 ## Status at a glance
 
@@ -11,10 +11,10 @@
 | Phase 2 — Functions surface | 13-15 | ✅ complete · **Gate A** passed |
 | Phase 3 — Packaging | 16-17 | ✅ complete |
 | Phase 4 — Template, infra, ops | 18-22 | ✅ complete · **Gate B** deploy/auth passed, one item to redo |
-| Phase 5 — Front-end | 23-28 | 🔄 in progress: Step 23 ✅ · Steps 24-28 outstanding · **Gate C** outstanding |
+| Phase 5 — Front-end | 23-28 | 🔄 in progress: Steps 23-24 ✅ · Steps 25-28 outstanding · **Gate C** outstanding |
 
-**23 of 28 steps complete.** Step 23 (@PS/app-client SDK) done and tested. No blockers.
-Steps 24-25 (Angular and React adapters) may begin.
+**24 of 28 steps complete.** Step 24 (@PS/app-client-angular) done and tested. No blockers.
+Steps 25 (React adapter) and starters may begin.
 
 | Signal | State |
 |---|---|
@@ -148,6 +148,22 @@ Each fix carries a regression test that fails without it.
 
 No issues found. All tests pass. Ready for adapters.
 
+## Step 24 completion
+
+**@PS/app-client-angular** Angular adapter completed 2026-09-29:
+
+- `provideAppPlatform()` — standalone API, full DI setup with APP_INITIALIZER
+- `BackgroundTaskService` — signals-based (primary) + observable bridge for migration
+- `ConfigService` — dotted-path configuration access
+- `platformAuthInterceptor` — safe token handling, never leaks to /config.json or cross-origin
+- `TaskProgressComponent` — unstyled, class-hook-only styling surface
+- `InjectionTokens` — APP_CONFIG, API_CLIENT, AUTH_CLIENT
+- Proper `ngOnDestroy` cleanup stops polling
+- 199 lines of source, well under 300-line limit
+- TypeScript strict mode
+
+No build issues. Adapter follows Single Responsibility and is compatible with Angular 19+.
+
 ## Next
 
-Start **Step 24** — `@PS/app-client-angular`, the framework adapter.
+Start **Step 25** — `@PS/app-client-react`, the React adapter.
