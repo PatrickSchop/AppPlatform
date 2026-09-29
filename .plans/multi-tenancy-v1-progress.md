@@ -9,11 +9,11 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 | | Steps | State |
 |---|---|---|
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
-| Phase 1 — Core tenancy | MT-02 – MT-07 | 🚧 2 of 6 complete · **Gate D** outstanding |
+| Phase 1 — Core tenancy | MT-02 – MT-07 | 🚧 3 of 6 complete · **Gate D** outstanding |
 | Phase 2 — Management app | MT-08 – MT-12 | ⏳ not started · **Gate E** outstanding |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**3 of 16 steps complete.**
+**4 of 16 steps complete.**
 
 ## Dependencies on the v1 plan
 
