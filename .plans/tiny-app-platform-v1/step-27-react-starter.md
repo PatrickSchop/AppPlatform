@@ -1,8 +1,14 @@
-﻿# Step 27 â€” React starter
+# Step 27 â€” React starter
 
 **Phase:** 5 â€” Front-end
 **Depends on:** Step 26
 **Working directory:** `C:\Dev\AppPlatform\starters\react`
+
+**Amended 2026-09-29 (container plan §10 A1):** these apps require authentication but **no
+App Role**, so a 403 cannot occur in the default configuration. Keep the 403 branch — the
+platform still supports `requiredRole` and an app may set it — but do not make holding a
+role a condition of signing in, and do not treat the 403 page as reachable in a normal run.
+
 
 ## Goal
 

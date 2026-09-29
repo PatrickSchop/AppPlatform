@@ -1,8 +1,16 @@
-﻿# Step 23 â€” `@PS/app-client`
+# Step 23 â€” `@PS/app-client`
 
 **Phase:** 5 â€” Front-end
 **Depends on:** Step 22
 **Working directory:** `C:\Dev\AppPlatform\clients`
+
+**Precondition added 2026-09-29 (container plan §10 A3):** this client reads
+`auth: { tenantId, clientId, scopes }` from `/configuration.json`, but nothing writes it.
+That endpoint just passes through the `webApp` configuration key, and neither `SampleApp`
+nor the template has a `webApp:auth` section. Add one in this step, using the **SPA**
+registration's client id — not the API id held by `authentication:azureEntraId:clientId` —
+and `tenantId: "common"` so personal Microsoft accounts are accepted (§10 A1). Everything
+under `webApp` is served unauthenticated by design, and both ids are public.
 
 ## Goal
 

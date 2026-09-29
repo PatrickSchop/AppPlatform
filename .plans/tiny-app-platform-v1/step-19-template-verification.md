@@ -125,6 +125,11 @@ Note the app has no `wwwroot` yet, so static routes 404 — correct for a backen
 
 ## Check 7 — Deploy (needs Step 20)
 
+**Precondition added 2026-09-29:** the platform packages must be at a version that contains
+the authorization fixes (see container plan §10 A5). A build from `0.1.0` enforces nothing.
+Publish `0.1.1`, point the app at it, and deploy that — otherwise this check passes against
+a build whose `/api/*` routes are wide open.
+
 Each app gets its own resource group (Azure was reorganized post-Step-20: apps no longer share
 `Applications` — the SQL server alone lives in `ApplicationsShared`, and every app, including
 this one, gets its own per-app resource group). Create it first:
@@ -177,16 +182,39 @@ and it is what the SPA would hit first.
 
 ## Check 8 — Auth end to end
 
-Following `docs/auth-setup.md` (Step 22), create the `scratch.user` App Role, assign it to
-yourself, and set the tenant/client ids in the Function App settings.
+**Amended by the container plan §10 (A1): this app uses no App Role.** The authorization
+model is authentication-only so that any Microsoft account can sign in, so there is no
+`scratch.user` role to create and no 403 to observe.
+
+Following `docs/auth-setup.md` (Step 22, Part 2 steps 3-4 only), set the Function App
+settings to the **API** registration's client id with `tenantId` = `common`:
+
+```powershell
+az functionapp config appsettings set `
+  --resource-group ScratchApp --name scratchapp-api --settings `
+    "authentication__azureEntraId__tenantId=common" `
+    "authentication__azureEntraId__clientId=<API app client id>" `
+    "authentication__azureEntraId__additionalAudiences__0=api://<API app client id>" `
+    "authentication__requiredRole="
+```
+
+Acquire a token for the API and call a protected route:
+
+```powershell
+$token = az account get-access-token --resource "api://<API app client id>" --query accessToken -o tsv
+curl.exe -s -o NUL -w "%{http_code}`n" https://scratchapp-api.azurewebsites.net/api/recipes
+curl.exe -s -o NUL -w "%{http_code}`n" -H "Authorization: Bearer $token" https://scratchapp-api.azurewebsites.net/api/recipes
+```
 
 **Expected:**
-- `/api/recipes` with no token → 401
-- with a token lacking `scratch.user` → **403**
-- with a token holding it → 200
+- no token → **401**
+- malformed token → **401** (not 500)
+- valid token → **200**
 
-The 401-vs-403 distinction is the proof that the role check is doing work, not just the
-authentication check.
+The 401-vs-200 distinction is the proof that authentication is enforced. If you also want to
+prove the role check works, set `requiredRole` to a role you have *not* been assigned and
+confirm the same valid token then yields **403**; this is optional for this app but it is the
+only way to exercise that branch.
 
 ## Gate B checklist
 
@@ -198,7 +226,7 @@ authentication check.
 - [ ] `az deployment group create` produces the full per-app footprint
 - [ ] The deploy workflow succeeds and the deployed health endpoint is 200
 - [ ] Easy Auth is off on the deployed app: no 302s, and `/configuration.json` returns JSON
-- [ ] Auth yields 401 / 403 / 200 correctly
+- [ ] Auth yields 401 without a token and 200 with one (403 only if `requiredRole` is set)
 - [ ] **Zero files copied from StockAnalysis or SampleApp**
 - [ ] Elapsed time recorded
 

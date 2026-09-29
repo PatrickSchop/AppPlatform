@@ -1,8 +1,16 @@
-﻿# Step 28 â€” Gate C and release
+# Step 28 â€” Gate C and release
 
 **Phase:** 5 â€” Front-end
 **Depends on:** Step 27
 **Working directory:** `C:\Dev\AppPlatform`
+
+**Amended 2026-09-29 (container plan §10 A4):** "Notes list and create" now requires a real
+sign-in. Those routes are protected and, until the authorization fixes landed, the middleware
+never ran — so this check would previously have passed with no token at all. `SampleApp` ships
+placeholder ids that exercise default-deny but cannot complete a sign-in, so before running
+Gate C either give `SampleApp` real ids (API id under `authentication:azureEntraId`, SPA id
+under `webApp:auth`) or run Gate C against the deployed ScratchApp.
+
 
 ## Goal
 
