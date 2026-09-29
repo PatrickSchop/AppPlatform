@@ -9,6 +9,13 @@ using PS.AppPlatform.Tasks;
 
 namespace PS.AppPlatform.Endpoints;
 
+/// <summary>
+/// The read endpoints opportunistically run a claim-and-execute pass before returning, so
+/// that a client polling for task status is what drives execution forward -- there is no
+/// standing background loop and nothing keeps a Consumption-plan app "warm" between calls. A
+/// task queued with nobody watching still runs eventually via the timer safety net
+/// (TaskSchedulerFunctions), just not immediately.
+/// </summary>
 public sealed class BackgroundTaskEndpoints : IBackgroundTaskEndpoints
 {
     private readonly IBackgroundTaskService _taskService;
@@ -40,6 +47,8 @@ public sealed class BackgroundTaskEndpoints : IBackgroundTaskEndpoints
 
         try
         {
+            await _executionManager.CheckAndStartTasksAsync(ct);
+
             var notificationWindowHours = _configuration.GetValue<int>("backgroundTasks:notificationWindowHours", 12);
             var cutoffDate = DateTime.UtcNow.AddHours(-notificationWindowHours);
 
@@ -68,6 +77,8 @@ public sealed class BackgroundTaskEndpoints : IBackgroundTaskEndpoints
 
         try
         {
+            await _executionManager.CheckAndStartTasksAsync(ct);
+
             var tasks = await _taskService.GetAllTasksAsync(ct);
             var result = tasks.Select(MapToResponse).ToList();
             return new OkObjectResult(result);
@@ -89,6 +100,8 @@ public sealed class BackgroundTaskEndpoints : IBackgroundTaskEndpoints
             {
                 return new BadRequestObjectResult(new { error = "Invalid task ID format" });
             }
+
+            await _executionManager.CheckAndStartTasksAsync(ct);
 
             var task = await _taskService.GetTaskStatusAsync(taskId, ct);
 

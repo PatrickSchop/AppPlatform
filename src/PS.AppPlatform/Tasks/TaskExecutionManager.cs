@@ -14,7 +14,7 @@ public class TaskExecutionManager<TContext> : ITaskExecutionManager
 {
     private readonly IBackgroundTaskManagementService _taskService;
     private readonly ITaskHandlerRegistry _handlerRegistry;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<TaskExecutionManager<TContext>> _logger;
     private readonly IUnscopedDbContextFactory<TContext> _dbContextFactory;
     private readonly int _maxConcurrentTasks;
@@ -25,7 +25,7 @@ public class TaskExecutionManager<TContext> : ITaskExecutionManager
     public TaskExecutionManager(
         IBackgroundTaskManagementService taskService,
         ITaskHandlerRegistry handlerRegistry,
-        IServiceProvider serviceProvider,
+        IServiceScopeFactory scopeFactory,
         IConfiguration configuration,
         ILogger<TaskExecutionManager<TContext>> logger,
         IUnscopedDbContextFactory<TContext> dbContextFactory,
@@ -34,7 +34,13 @@ public class TaskExecutionManager<TContext> : ITaskExecutionManager
     {
         _taskService = taskService;
         _handlerRegistry = handlerRegistry;
-        _serviceProvider = serviceProvider;
+        // IServiceScopeFactory, not IServiceProvider: CheckAndStartTasksAsync schedules
+        // ExecuteTaskAsync fire-and-forget, so it keeps running after the HTTP/timer
+        // invocation that triggered it returns and its DI scope is disposed. The factory is
+        // a framework singleton rooted at the container, safe to create fresh scopes from
+        // long after the invocation that resolved it has gone away; the scoped IServiceProvider
+        // itself would already be disposed by the time a queued Task.Run body runs.
+        _scopeFactory = scopeFactory;
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _identity = identity;
@@ -62,12 +68,17 @@ public class TaskExecutionManager<TContext> : ITaskExecutionManager
                 return tasks;
             });
 
-            foreach (var task in claimedTasks)
-            {
-                _ = Task.Run(async () => await ExecuteTaskAsync(task, ct))
-                    .ContinueWith(t => _logger.LogError(t.Exception, "Unobserved failure executing task {TaskId}", task.Id),
-                                  TaskContinuationOptions.OnlyOnFaulted);
-            }
+            // Awaited, not fire-and-forget: a detached Task.Run here used to race against the
+            // triggering HTTP/timer invocation tearing down (its DI scope disposing, and the
+            // Functions Worker's invocation-correlated logger going away under it), which
+            // could silently stall a claimed task before it ever started. Running the claimed
+            // batch inside this invocation removes that race entirely. Concurrency within the
+            // batch (bounded by maxConcurrentTasks) still comes from each task getting its own
+            // DI scope and running via Task.WhenAll; what changed is that the caller (the
+            // check endpoint or the timer) now waits for the batch instead of returning first.
+            // Nothing here keeps the app "running" between invocations -- there is still no
+            // standing loop, only work done inside an invocation that was already happening.
+            await Task.WhenAll(claimedTasks.Select(task => ExecuteTaskAsync(task, ct)));
         }
         catch (Exception ex)
         {
@@ -139,8 +150,14 @@ BEGIN
     WHERE [dbo].[BackgroundTasks].[Id] = TasksToClaim.[Id];
 END;";
 
+        // IgnoreQueryFilters: BackgroundTask's tenant filter would otherwise force EF to
+        // compose a WHERE clause around this raw SQL, which fails because the SQL is a
+        // multi-statement batch (DECLARE/IF/UPDATE), not a single composable SELECT. This
+        // context already comes from the unscoped factory, so the filter would be a no-op
+        // at runtime anyway -- claiming legitimately spans every tenant.
         var claimedTasks = await context.BackgroundTasks
             .FromSqlInterpolated(sql)
+            .IgnoreQueryFilters()
             .ToListAsync(ct);
 
         if (claimedTasks.Count > 0)
@@ -221,7 +238,7 @@ END;";
                 return;
             }
 
-            await using var scope = _serviceProvider.CreateAsyncScope();
+            await using var scope = _scopeFactory.CreateAsyncScope();
 
             // A per-task scope, so a fresh, unresolved TenantContext can be set to this task's
             // tenant without colliding with other tasks the same execution manager runs at once.

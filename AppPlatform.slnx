@@ -1,6 +1,7 @@
 ﻿<Solution>
   <Folder Name="/samples/">
     <Project Path="samples/SampleApp/SampleApp.csproj" />
+    <Project Path="samples/MultiTenantSample/MultiTenantSample.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/PS.AppPlatform.Functions/PS.AppPlatform.Functions.csproj" />

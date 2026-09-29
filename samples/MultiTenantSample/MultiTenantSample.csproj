@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MultiTenantSample</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <PlatformTenancy>true</PlatformTenancy>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PS.AppPlatform\PS.AppPlatform.csproj" />
+  </ItemGroup>
+
+  <!--
+    ProjectReference does not flow build/*.targets the way PackageReference does, so the
+    shims are included explicitly here, including the tenancy shims that <PlatformTenancy>
+    would otherwise inject automatically for a PackageReference consumer. See
+    src/PS.AppPlatform.Functions/README.md.
+  -->
+  <ItemGroup>
+    <Compile Include="..\..\src\PS.AppPlatform.Functions\endpoints\*.cs" Visible="false" />
+    <Compile Include="..\..\src\PS.AppPlatform.Functions\endpoints\tenancy\*.cs" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="host.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="local.settings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="appsettings.development.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Database\Scripts\**\*.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

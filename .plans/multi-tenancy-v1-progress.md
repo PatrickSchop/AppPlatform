@@ -1,6 +1,6 @@
 ﻿# Multi-tenancy v1 — Progress
 
-**Updated:** 2026-09-29 · **Phase 1 progressing · next: MT-07 (Gate D)**
+**Updated:** 2026-09-29 · **Phase 1 complete (Gate D passed) · next: MT-08**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -9,11 +9,11 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 | | Steps | State |
 |---|---|---|
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
-| Phase 1 — Core tenancy | MT-02 – MT-07 | 🚧 6 of 6 complete · **Gate D** outstanding |
+| Phase 1 — Core tenancy | MT-02 – MT-07 | ✅ complete · **Gate D passed** |
 | Phase 2 — Management app | MT-08 – MT-12 | ⏳ not started · **Gate E** outstanding |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**7 of 16 steps complete.**
+**8 of 16 steps complete.**
 
 ## Dependencies on the v1 plan
 
@@ -35,7 +35,7 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 | MT-04 | Tenant resolution, registry roles | ✅ | ✅ | ✅ |
 | MT-05 | Tenant-aware background tasks | ✅ | ✅ | ✅ |
 | MT-06 | `/api/me/tenants`, conditional shims | ✅ | ✅ | ✅ |
-| MT-07 | **Gate D** — `MultiTenantSample` | ⏳ | | |
+| MT-07 | **Gate D** — `MultiTenantSample` | ✅ | ✅ | ✅ |
 | MT-08 | Management backend, bootstrap | ⏳ | | |
 | MT-09 | Registry API, `--register` | ⏳ | | |
 | MT-10 | Admin API, invitations | ⏳ | | |
@@ -48,7 +48,116 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 
 ## Gates
 
-**Gate D (MT-07) — outstanding.** 18 checks; results go here.
+**Gate D (MT-07) — passed 2026-09-29.** All 18 checks passed against a real Functions host
+(`func start`) with LocalDB and a real Entra token, using `ConfigTenantDirectory`. `gate-d.ps1`
+(checks 3–9, 11–13, 15–16) passed twice in a row.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `--migrate` twice | ✅ First applied `000`–`020` + `100`–`130` (7 scripts); second run "Database is up to date"; tenancy column check passed. Run via `dotnet exec MultiTenantSample.dll --migrate`, **not** `dotnet run -- --migrate` — see note below. |
+| 2 | `functions.metadata` | ✅ `GetMyTenants` present with `"scriptFile": "MultiTenantSample.dll"` |
+| 3 | `GET /api/me/tenants` no token | ✅ 401 |
+| 4 | `GET /api/me/tenants` token, no header | ✅ 200, both tenants with correct roles |
+| 5 | `GET /api/projects` token, no header | ✅ 409 `tenant_required` |
+| 6 | `POST /api/projects` header C | ✅ 200 (after fixing a case-sensitive JSON deserialization bug in the sample, see below) |
+| 7 | `POST /api/projects` header F | ✅ 403 (viewer) |
+| 8 | `GET /api/projects` header C / F | ✅ `[C1]` / `[]` |
+| 9 | `GET /api/projects` random-GUID header | ✅ 403 `tenant_forbidden` |
+| 10 | SQL: `Projects.TenantId` | ✅ Stamped with Contoso's id by the save interceptor, code never set it |
+| 11 | `GET /api/countries` header F | ✅ both seeded countries |
+| 12 | Anonymous feedback via slug | ✅ visible to Fabrikam only |
+| 13 | Reports, no `reporter` role | ✅ 403 |
+| 14 | Reports, `reporter` added to Contoso | ✅ 200, counts for **both** tenants (confirmed by inserting a Fabrikam project directly via SQL, since a viewer can't create one) |
+| 15 | `projects/count` task | ✅ Completes reliably, `statusMessage` reports Contoso's count only |
+| 16 | Fabrikam sees Contoso's task | ✅ Not present in `GET /api/tasks` header F |
+| 17 | Configured oid no longer matches | ✅ 403 `not_registered` |
+| 18 | `SampleApp` regression | ✅ Auth, Notes CRUD and the `WordCount` background task all still work; see findings below |
+
+### Findings while running Gate D through a real host
+
+Exactly the v1 §5 lesson repeating: running MultiTenantSample against a real Functions host,
+real SQL Server and a real token surfaced defects no construction-only or InMemory-provider
+test had caught. All are fixed, all 173 unit/integration tests still pass, and both SampleApp
+and MultiTenantSample were re-verified live afterward.
+
+1. **`dotnet run -- --migrate` silently does the wrong thing** for an Azure Functions Worker
+   SDK project: the SDK overrides `dotnet run`'s target to launch `func start` (passing
+   `--migrate` through as a meaningless extra argument), starting the full Functions host
+   instead of running the command-line path in `Program.cs`. The proven-correct invocation,
+   already used by v1 Gate A, is `dotnet exec <dll> --migrate` from the build output
+   directory. The MT-07 step doc's `dotnet run -- --migrate` snippet is wrong; step docs are
+   historical records and were left as written, but future steps should use `dotnet exec`.
+2. **`TaskExecutionManager`'s task-claim query crashed against real SQL Server.** MT-05 added
+   a query filter to `BackgroundTask`. EF Core must compose a `WHERE` clause for that filter
+   around any query against the entity, but the claim query is a multi-statement
+   `DECLARE`/`IF`/`UPDATE...OUTPUT` batch, not a composable `SELECT` — `FromSqlInterpolated`
+   threw `InvalidOperationException`. Invisible to `TaskExecutionManagerTests` because those
+   run against EF's InMemory provider, which never performs this check. Fixed with
+   `.IgnoreQueryFilters()` in `TaskExecutionManager.ClaimAndUpdateTasksAsync`
+   (`src/PS.AppPlatform/Tasks/TaskExecutionManager.cs`) — correct regardless, since the claim
+   query already runs on the unscoped factory and legitimately spans every tenant.
+3. **Fire-and-forget task execution was fundamentally unreliable under the Functions .NET
+   Isolated Worker local host**, for two stacked reasons, both pre-existing (not introduced by
+   MT-05, just never exercised for real before): (a) `TaskExecutionManager` captured the
+   per-invocation scoped `IServiceProvider` and used it to build each task's execution scope;
+   that provider is disposed the instant the triggering HTTP/timer invocation returns, so a
+   `Task.Run` picked up afterward could throw `ObjectDisposedException`. (b) even past that, a
+   `Task.Run` continuation that outlives its triggering invocation raced against the Functions
+   Worker's invocation-scoped logging pipeline and could stall indefinitely before its first
+   `await`. Proved (by temporarily awaiting execution directly instead of detaching it) that
+   the tenant-scoped execution logic itself was always correct — this was purely a dispatch
+   reliability problem.
+
+   **Redesigned per operator direction** (a "thorough fix," explicitly not a standing
+   worker loop, since this app must scale to zero on a Consumption plan when idle):
+   - `TaskExecutionManager.CheckAndStartTasksAsync` now runs a claimed batch with
+     `await Task.WhenAll(...)` inside the invocation that claimed it, instead of detaching
+     each task via `Task.Run`. Concurrency within the batch (bounded by
+     `maxConcurrentTasks`) is unchanged — each task still gets its own DI scope via
+     `IServiceScopeFactory` (captured instead of `IServiceProvider`, fixing (a) above too);
+     what changed is that the caller now waits for the batch instead of returning first.
+   - Removed `BackgroundTaskService.TriggerTaskCheck()` entirely — the self-HTTP-POST to
+     its own `/api/tasks/check` that used to nudge execution after create/resume/status
+     update. It was fire-and-forget with no credentials, so it would have 401'd against a
+     tenancy-mode app the moment it worked at all. `backgroundTasks:apiBaseUrl` is gone
+     from every `appsettings.development.json` (SampleApp, MultiTenantSample, the
+     `tinyapp` template) and `IHttpClientFactory` is no longer a `BackgroundTaskService`
+     dependency.
+   - **Polling now drives execution.** `BackgroundTaskEndpoints.GetAllAsync`,
+     `GetByIdAsync` and `GetNotificationsAsync` each run a claim-and-execute pass before
+     answering. A client polling task status is what makes queued work progress — matching
+     the operator's guidance that the design should partially depend on frontend polling.
+     `POST /api/tasks/check` still exists for a caller that wants to nudge processing
+     without reading state.
+   - The timer (`ScheduledTaskCheck`, `backgroundTasks:checkSchedule`, still every 5
+     minutes by default) is now explicitly documented as the safety net for tasks nobody
+     is polling (`--migrate`-created tasks, an app that scaled to another instance) — not
+     the primary path.
+   - **Nothing here keeps the app "running" between invocations.** No standing loop, no
+     `IHostedService`. Work only happens inside an invocation that was already executing
+     (an HTTP call or a timer tick), so a Consumption-plan app still scales to zero once
+     nobody is polling — the explicit operator constraint.
+   - Verified: 3/3 consecutive attempts completed on the very first poll with SQL Server
+     and a real token, both stand-alone and via `gate-d.ps1` run twice in a row.
+     `docs/multi-tenancy.md` needed no changes (it never described the dispatch
+     mechanism); `samples/SampleApp/docs/background-tasks.md` gained a section
+     explaining how a task actually runs now.
+4. **Own-code bug (not a platform defect):** `ProjectsEndpoints.CreateAsync` and
+   `FeedbackEndpoints.SubmitAsync` used `JsonSerializer.Deserialize<T>(json)` with default
+   options, which is case-sensitive — a `{"name": "C1"}` body from `curl` silently failed to
+   bind to the `Name` record property. Fixed with `JsonSerializerOptions.Web`. The same latent
+   bug exists in `samples/SampleApp/Api/NotesEndpoints.cs` (`Note` fields came back empty when
+   posted with lowercase JSON) — confirmed during the check-18 regression pass, left
+   unfixed since SampleApp is out of MT-07's scope; worth a small follow-up.
+
+### Operator identity used for the run
+
+Contoso `11111111-1111-1111-1111-111111111111` (editor), Fabrikam
+`22222222-2222-2222-2222-222222222222` (viewer). Real oid/tid/API-client-id came from
+`az ad signed-in-user show`, `az account show` and the `PS Apps API` app registration, and
+live only in the gitignored `samples/MultiTenantSample/local.settings.json` — never
+committed. `appsettings.development.json` (committed) has the tenant metadata only; the
+`devDirectory:users` entry with the real oid is local-only, since this repo is public.
 
 **Gate E (MT-12) — outstanding.** 12 checks; results go here.
 
@@ -67,10 +176,12 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 | `[TenantOptional]` with `requiredRole` | Tenant-less callers have no roles; such endpoints use `PlatformPolicies.AuthenticatedOnly` | D3, MT-04 → MT-06 |
 | `TaskExecutionManager`'s own task bookkeeping reads | Read the claimed row directly via the unscoped factory instead of `IBackgroundTaskService.GetTaskStatusAsync`, since the manager's own scope has no request tenant and may run tasks for several tenants at once (the tenant-scoped read stays correct for `BackgroundTaskEndpoints`, which always has a resolved request tenant) | D4, MT-05 |
 | Bootstrap admin ids | Repository variables, not secrets | D5, MT-12 |
+| Background task dispatch | Polling-driven (task read endpoints claim-and-execute before answering) plus a timer safety net, not a fire-and-forget self-POST or a standing worker loop — must scale to zero on Consumption when idle | Gate D (MT-07) finding, `TaskExecutionManager`/`BackgroundTaskService` |
 
 ## Operator actions (when their steps arrive)
 
-- MT-07: note your `oid`/`tid` from a decoded token.
+- MT-07: ✅ done — used `az ad signed-in-user show` / `az account show` instead of a decoded
+  token; both give the same `oid`/`tid`.
 - MT-12: create the `Management` resource group and deploy; set app settings; add the SPA
   redirect URI; set the `BOOTSTRAP_ADMIN_*` repository variables; grant the deploy principal
   `db_owner` on the `management` database; have a second Microsoft account ready.
@@ -78,5 +189,5 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 
 ## Next
 
-Start **MT-07** — Gate D: `samples/MultiTenantSample` on `ConfigTenantDirectory`, proving
-cross-tenant isolation through a running host.
+Start **MT-08** — Management backend: registry schema scripts, `LocalRegistryTenantDirectory`,
+self-registration, `--bootstrap-admin`.

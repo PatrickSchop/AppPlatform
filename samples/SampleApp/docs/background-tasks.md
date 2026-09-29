@@ -61,6 +61,24 @@ for (var i = 0; i < items.Count; i++)
 Without this, a handler that takes longer than the lease will be killed mid-work and re-executed,
 causing duplicate processing.
 
+## How a task actually runs
+
+There is no standing worker process. A queued task (`New`/`Resumed`) is claimed and executed
+when something invokes a check:
+
+- **Polling drives it.** `GET /api/tasks`, `GET /api/tasks/{id}` and
+  `GET /api/tasks/notifications` each run a claim-and-execute pass before responding. A
+  frontend that polls for status is, by that same call, what makes the task progress.
+- **A timer is the safety net**, not the primary path (`ScheduledTaskCheck`,
+  `backgroundTasks:checkSchedule`, default every 5 minutes). It covers tasks nobody is
+  watching -- created from `--migrate`, or abandoned after the app scaled to another instance.
+- **`POST /api/tasks/check`** exists for a caller that wants to nudge processing without
+  reading task state (a script, for example).
+
+Nothing here keeps the app "running" between invocations; each pass only does work while an
+HTTP call or the timer is already executing, so a Consumption-plan app still scales to zero
+once nobody is polling.
+
 ## Polling for Progress
 
 From the frontend, poll `GET /api/tasks/notifications` to receive tasks that have progress updates:

@@ -180,7 +180,7 @@ public class TaskExecutionManagerTests
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+            taskService, registry, provider.GetRequiredService<IServiceScopeFactory>(), EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -211,7 +211,7 @@ public class TaskExecutionManagerTests
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+            taskService, registry, provider.GetRequiredService<IServiceScopeFactory>(), EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -248,7 +248,7 @@ public class TaskExecutionManagerTests
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+            taskService, registry, provider.GetRequiredService<IServiceScopeFactory>(), EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -285,7 +285,7 @@ public class TaskExecutionManagerTests
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+            taskService, registry, provider.GetRequiredService<IServiceScopeFactory>(), EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -322,7 +322,7 @@ public class TaskExecutionManagerTests
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+            taskService, registry, provider.GetRequiredService<IServiceScopeFactory>(), EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -360,7 +360,7 @@ public class TaskExecutionManagerTests
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+            taskService, registry, provider.GetRequiredService<IServiceScopeFactory>(), EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -394,7 +394,7 @@ public class TaskExecutionManagerTests
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TestDbContext>(
-            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+            taskService, registry, provider.GetRequiredService<IServiceScopeFactory>(), EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -433,7 +433,7 @@ public class TaskExecutionManagerTests
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TenantAwareTestContext>(
-            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+            taskService, registry, provider.GetRequiredService<IServiceScopeFactory>(), EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 
@@ -486,7 +486,7 @@ public class TaskExecutionManagerTests
         var gate = new TaskCheckGate();
 
         var manager = new TaskExecutionManager<TenantAwareTestContext>(
-            taskService, registry, provider, EmptyConfig(), logger, dbContextFactory, identity, gate);
+            taskService, registry, provider.GetRequiredService<IServiceScopeFactory>(), EmptyConfig(), logger, dbContextFactory, identity, gate);
 
         await manager.ExecuteTaskInternalAsync(task);
 

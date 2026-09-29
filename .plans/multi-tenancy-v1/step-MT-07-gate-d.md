@@ -135,9 +135,9 @@ dotnet test
 
 ## Done when
 
-- [ ] All 18 checks pass and are recorded, with the date, in `multi-tenancy-v1-progress.md`
-- [ ] `gate-d.ps1` passes against a running host
-- [ ] `MultiTenantSample` builds in CI (it is in the solution)
+- [x] All 18 checks pass and are recorded, with the date, in `multi-tenancy-v1-progress.md`
+- [x] `gate-d.ps1` passes against a running host
+- [x] `MultiTenantSample` builds in CI (it is in the solution)
 
 If any check fails, fix forward in the step that owns it. Do not start Phase 2.
 

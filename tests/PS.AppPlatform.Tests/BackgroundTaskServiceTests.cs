@@ -119,7 +119,6 @@ public class BackgroundTaskServiceTests
             new TestUnscopedFactory(options, assemblies),
             serviceProvider,
             config,
-            new MockHttpClientFactory(),
             new NullLogger()
         );
     }
@@ -464,10 +463,5 @@ public class BackgroundTaskServiceTests
         Assert.Same(id2, id3);
         Assert.Equal(id1.Id, id2.Id);
         Assert.Equal(id2.Id, id3.Id);
-    }
-
-    private class MockHttpClientFactory : IHttpClientFactory
-    {
-        public HttpClient CreateClient(string name) => new();
     }
 }

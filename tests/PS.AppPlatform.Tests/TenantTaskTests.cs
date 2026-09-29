@@ -139,17 +139,11 @@ public class TenantTaskTests
             new UnscopedDbContextFactory<TestDbContext>(provider),
             provider,
             config,
-            new MockHttpClientFactory(),
             new NullLogger());
 
         var tasks = await service.GetAllTasksAsync();
 
         Assert.Equal(2, tasks.Count);
-    }
-
-    private class MockHttpClientFactory : IHttpClientFactory
-    {
-        public HttpClient CreateClient(string name) => new();
     }
 
     private class NullLogger : ILogger<BackgroundTaskService<TestDbContext>>

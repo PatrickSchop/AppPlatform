@@ -14,9 +14,7 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
     private readonly IScopedDbContextFactory<TContext> _scopedFactory;
     private readonly IUnscopedDbContextFactory<TContext> _unscopedFactory;
     private readonly ITenantContext? _tenantContext;
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<BackgroundTaskService<TContext>> _logger;
-    private readonly string? _apiBaseUrl;
     private readonly int _leaseSeconds;
 
     public BackgroundTaskService(
@@ -24,16 +22,13 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
         IUnscopedDbContextFactory<TContext> unscopedFactory,
         IServiceProvider serviceProvider,
         IConfiguration configuration,
-        IHttpClientFactory httpClientFactory,
         ILogger<BackgroundTaskService<TContext>> logger)
     {
         _scopedFactory = scopedFactory;
         _unscopedFactory = unscopedFactory;
         _tenantContext = serviceProvider.GetService<ITenantContext>();
-        _httpClientFactory = httpClientFactory;
         _logger = logger;
 
-        _apiBaseUrl = configuration.GetValue<string>("backgroundTasks:apiBaseUrl");
         _leaseSeconds = configuration.GetValue("backgroundTasks:leaseSeconds", 300);
     }
 
@@ -64,8 +59,6 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
         await context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Created background task {TaskId} of type {TaskType}", task.Id, taskType);
-
-        TriggerTaskCheck();
 
         return task.Id;
     }
@@ -116,8 +109,6 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
         await context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Resumed task {TaskId}", taskId);
-
-        TriggerTaskCheck();
 
         return true;
     }
@@ -174,8 +165,6 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
             await context.SaveChangesAsync();
 
             _logger.LogInformation("Updated task {TaskId} status to {Status}", taskId, status);
-
-            TriggerTaskCheck();
         }
     }
 
@@ -188,37 +177,6 @@ public class BackgroundTaskService<TContext> : IBackgroundTaskManagementService
                SET [LeaseExpiresUtc] = DATEADD(second, {seconds}, GETUTCDATE()),
                    [UpdatedDate] = GETUTCDATE()
                WHERE [Id] = {taskId}", ct);
-    }
-
-    private void TriggerTaskCheck()
-    {
-        if (_apiBaseUrl is null)
-        {
-            _logger.LogDebug("backgroundTasks:apiBaseUrl is not configured; relying on the timer trigger to start queued tasks.");
-            return;
-        }
-
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var httpClient = _httpClientFactory.CreateClient();
-                httpClient.Timeout = TimeSpan.FromSeconds(5);
-
-                var url = $"{_apiBaseUrl}/api/tasks/check";
-                _logger.LogDebug("Triggering task check via HTTP: {Url}", url);
-
-                var response = await httpClient.PostAsync(url, null);
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogWarning("Task check HTTP call returned status {StatusCode}", response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error triggering task check via HTTP");
-            }
-        });
     }
 }
 

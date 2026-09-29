@@ -12,3 +12,5 @@ appsettings.local.json
 *.nupkg
 TestResults/
 .env
+func.log
+.azurite/
