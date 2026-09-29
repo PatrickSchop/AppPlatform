@@ -26,6 +26,12 @@ on:
         default: ''
         description: 'Build output relative to frontend_path, e.g. dist/WebApp/browser'
 
+permissions:
+  contents: read
+  # Without packages:read the job's GITHUB_TOKEN carries no package scope, and
+  # restoring PS.AppPlatform fails with 403 even though the packages are public.
+  packages: read
+
 jobs:
   dotnet-build:
     runs-on: ubuntu-latest

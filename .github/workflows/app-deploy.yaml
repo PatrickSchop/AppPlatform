@@ -61,6 +61,12 @@ on:
         required: false
         description: 'Azure credentials for RBAC authentication (legacy)'
 
+permissions:
+  contents: read
+  # azure/login requests a federated token, which needs id-token: write. Without it the
+  # OIDC login fails no matter how the client and tenant secrets are set.
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
