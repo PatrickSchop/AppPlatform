@@ -21,8 +21,8 @@ checklist item should be redone on the current ScratchApp — see Gates.
 | Tests | 98 passing, 0 failing (Windows and Linux CI) |
 | Build | clean, 0 warnings, `TreatWarningsAsErrors` on |
 | CI | green end to end, every step executing |
-| Published packages | `0.1.1` on GitHub Packages |
-| Local packages | `0.1.2-local` in `nupkg/` (unreleased fixes) |
+| Published packages | `0.1.2` on GitHub Packages, public |
+| Consumer restore | verified: a separate repo restored `0.1.2` with only its own `GITHUB_TOKEN` |
 
 ## Gates
 
@@ -57,7 +57,8 @@ carries only the scaffold, so the claim rests on a build that no longer exists. 
 current app before calling Gate B closed in full — it is the half that proves the *template*,
 as opposed to the deployment path proven above.
 
-*Restore came from the local feed rather than GitHub Packages — see Operator actions.*
+Restore came from **GitHub Packages**, not the local feed: ScratchApp's CI restored the
+published `0.1.2` using only `secrets.GITHUB_TOKEN` with `packages: read`.
 
 **Gate C (Step 28) — outstanding.** Needs both starters driving background-task progress
 against one unchanged backend build, with a real sign-in.
@@ -76,7 +77,7 @@ predecessor. Everything it assumed but did not have now exists:
 
 | | |
 |---|---|
-| Platform repo | `PatrickSchop/AppPlatform` (public since 2026-09-29; the NuGet package is still private) |
+| Platform repo | `PatrickSchop/AppPlatform` (public; packages public) |
 | Verification app | `PatrickSchop/ScratchApp` → `https://scratchapp-api.azurewebsites.net` |
 | Azure | resource group `ScratchApp` (westeurope); database `scratchapp` on `pschop-db` in `ApplicationsShared` |
 | Entra | `PS Apps API` `c5692707-…` and `PS Apps SPA` `28267d47-…`, both `AzureADandPersonalMicrosoftAccount` |
@@ -88,23 +89,17 @@ interactive consent prompt.
 
 ## Operator actions outstanding
 
-These need a human; none blocks Phase 5.
+One remains, and it does not block Phase 5.
 
-1. **Make the package public, then a PAT may stop being needed.** The repository went public
-   on 2026-09-29, but **package visibility did not follow it** and the package is still
-   private. Anonymous restore fails either way — GitHub Packages' NuGet registry requires a
-   token for every read, verified on 2026-09-29; only `ghcr.io` serves anonymously. What
-   visibility changes is *which* token works: while the package is private each consuming
-   repository needs a classic PAT with `read:packages`, whereas a public package can be
-   restored with a consuming workflow's own `secrets.GITHUB_TOKEN`. Switch it from the
-   repository's Packages section. See `docs/consuming-packages.md`.
-
-   Gate B was therefore verified against the local feed. Publishing is proven — CI pushed
-   `0.1.1` — but a *consumer restoring from GitHub Packages* is not yet proven either way.
-2. **Publish the fixed platform.** `0.1.2-local` carries the migration and bicep fixes and is
-   not yet released. Publish it before another app is generated.
-3. **Rotate the leaked Cognitive Services key** in the StockAnalysis repo (carried from
+1. **Rotate the leaked Cognitive Services key** in the StockAnalysis repository (carried from
    Step 22; out of scope here but still unresolved).
+
+Resolved on 2026-09-29: the platform repository and its packages were made public, `0.1.2`
+was published with the migration and bicep fixes, and a consuming repository was shown to
+restore it with no PAT. Package reads still require a token — anonymous restore returns 401,
+which is how the GitHub Packages NuGet registry behaves for public packages too — but a
+workflow's own `GITHUB_TOKEN` suffices once granted `packages: read`. A PAT is now only
+needed for local development.
 
 ## Defect history
 
@@ -131,8 +126,10 @@ paths, and only one has the csproj CI builds.
 
 **The deploy workflow could not have worked.** It ran `dotnet App.dll --migrate` with a
 hard-coded assembly name; read three `AZURE_*` secrets it never declared; gated OIDC on
-repository visibility; and tested an `env` value that was never mapped. The template's caller
-passed `TINYAPP-NAME`, which is not a template symbol.
+repository visibility; and tested an `env` value that was never mapped. Neither reusable
+workflow declared a `permissions` block, so the build could not read packages and the OIDC
+login could not mint a federated token. The template's caller passed `TINYAPP-NAME`, which is
+not a template symbol.
 
 Each fix carries a regression test that fails without it.
 

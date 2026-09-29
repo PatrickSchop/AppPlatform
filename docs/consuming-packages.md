@@ -57,62 +57,45 @@ dotnet build
 
 ## GitHub Actions Workflow Setup
 
-### Restoring always needs a token, even now the repository is public
+### Restoring needs a token, but not a PAT
 
-**GitHub Packages' NuGet registry requires authentication for every read.** Making
-`AppPlatform` public did not change this: an anonymous `dotnet restore` still fails with
-**401 Unauthorized**, verified on 2026-09-29. Only the container registry (`ghcr.io`) serves
-anonymously; npm, NuGet, Maven and RubyGems on GitHub Packages do not.
+**GitHub Packages' NuGet registry requires a token for every read, even for public
+packages.** An anonymous `dotnet restore` fails with **401 Unauthorized** — verified on
+2026-09-29 against the public `PS.AppPlatform`. Only the container registry (`ghcr.io`)
+serves anonymously; npm, NuGet, Maven and RubyGems do not.
 
-The failure is easy to misread. NuGet reports *"Your request could not be authenticated by
-the GitHub Packages service"* and then a 401 — which reads like a broken token rather than
-the absence of one.
+The failure is easy to misread: NuGet reports *"Your request could not be authenticated by
+the GitHub Packages service"* and then a 401, which reads like a broken token rather than the
+absence of one.
 
-**Package visibility is separate from repository visibility, and did not follow it.** As of
-2026-09-29 the package metadata endpoint still refuses anonymous reads, so the package is
-still private. That distinction decides which token you need:
-
-| Package visibility | What can restore it |
-|---|---|
-| Private (current) | A classic PAT with `read:packages`. A consuming workflow's own `secrets.GITHUB_TOKEN` is scoped to its own repository and gets **403**. |
-| Public | Any authenticated token, so a consuming workflow's `secrets.GITHUB_TOKEN` is enough. Local developers still need some token. |
-
-To switch the package over, open it from the repository's Packages section and change its
-visibility there; it is not inherited from the repository.
-
-While the package is private, every consuming repository needs a classic PAT with
-`read:packages` stored as a secret, whether or not it shares an owner with `AppPlatform`:
+**In a workflow, `secrets.GITHUB_TOKEN` is enough — provided you grant it the scope.** The
+token has no package access by default, and without it restore fails with **403** even though
+the packages are public. A token carrying `repo` but not `read:packages` reaches the service
+index and is still refused on the package itself, which is what makes this look like a
+permissions bug in your own repository.
 
 ```yaml
-name: Build
-
-on: [push, pull_request]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - run: dotnet restore
-      - run: dotnet build
+permissions:
+  contents: read
+  packages: read      # without this, restore fails with 403
 ```
 
-### Different organization
+Verified end to end on 2026-09-29: a consuming repository restored `PS.AppPlatform 0.1.2`
+from GitHub Packages using only its own `GITHUB_TOKEN` and that permission block.
 
-If your consuming app is in a different GitHub organization or account, create a Personal Access Token in the `PatrickSchop` account and store it as a repository secret:
+**A classic PAT with `read:packages` is only needed for local development**, where no
+workflow token exists. See *Developer Machine Setup* above.
 
-1. Create a [classic PAT](https://github.com/settings/tokens) with `read:packages` scope in the `PatrickSchop` account
-2. Add it as a repository secret (e.g., `PS_PACKAGES_TOKEN`) in your consuming repo
-3. Use it in your workflow:
+A full workflow:
 
 ```yaml
 name: Build
 
 on: [push, pull_request]
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   build:
@@ -123,18 +106,25 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Add GitHub NuGet source
-        shell: bash
+      - name: Authenticate to GitHub Packages
         run: |
-          dotnet nuget add source https://nuget.pkg.github.com/PatrickSchop/index.json \
-            --name PS \
-            --username PatrickSchop \
-            --password ${{ secrets.PS_PACKAGES_TOKEN }} \
-            --store-password-in-clear-text
+          dotnet nuget update source github             --username ${{ github.actor }}             --password ${{ secrets.GITHUB_TOKEN }}             --store-password-in-clear-text
 
       - run: dotnet restore
-      - run: dotnet build
+      - run: dotnet build -c Release --no-restore
 ```
+
+This assumes a `nuget.config` that already declares the `github` source, which the template
+generates. `update source` rather than `add source` avoids failing on a source that exists.
+
+### Consumers in another account or organization
+
+Nothing extra is required. The packages are public, so any workflow's own `GITHUB_TOKEN`
+can read them with `packages: read`; it does not need to belong to the publishing account.
+
+While the packages were private this needed a PAT from the publishing account, because a
+token is scoped to its own repository and got a 403 across repositories. That no longer
+applies, and a PAT is now only useful for local development.
 
 ## Troubleshooting
 
