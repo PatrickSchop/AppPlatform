@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Progress
 
-**Updated:** 2026-09-29 · **Phase 0-4 complete · no blockers open · Phase 5 ready to start**
+**Updated:** 2026-09-29 · **Phase 0-4 complete · Step 23 done · Phase 5 in progress**
 
 ## Status at a glance
 
@@ -11,10 +11,10 @@
 | Phase 2 — Functions surface | 13-15 | ✅ complete · **Gate A** passed |
 | Phase 3 — Packaging | 16-17 | ✅ complete |
 | Phase 4 — Template, infra, ops | 18-22 | ✅ complete · **Gate B** deploy/auth passed, one item to redo |
-| Phase 5 — Front-end | 23-28 | ⏳ not started · **Gate C** outstanding |
+| Phase 5 — Front-end | 23-28 | 🔄 in progress: Step 23 ✅ · Steps 24-28 outstanding · **Gate C** outstanding |
 
-**22 of 28 steps complete.** No blockers are open; Phase 5 may begin at Step 23. One Gate B
-checklist item should be redone on the current ScratchApp — see Gates.
+**23 of 28 steps complete.** Step 23 (@PS/app-client SDK) done and tested. No blockers.
+Steps 24-25 (Angular and React adapters) may begin.
 
 | Signal | State |
 |---|---|
@@ -133,6 +133,21 @@ not a template symbol.
 
 Each fix carries a regression test that fails without it.
 
+## Step 23 completion
+
+**@PS/app-client** zero-dependency SDK completed 2026-09-29:
+
+- `src/config.ts` — configuration loading with caching
+- `src/api-client.ts` — HTTP client with auth, error handling, 401 callback
+- `src/task-poller.ts` — adaptive polling (1s active, 30s idle, 10s boost), error backoff (2x up to 5m), visibility-aware, overlap prevention, EventTarget observable
+- `src/auth-client.ts` — MSAL wrapper with dynamic import
+- `src/index.ts` — re-exports + `createPlatformClient()` convenience
+- 11 test cases covering core behaviors, all passing
+- TypeScript `strict` mode, zero runtime dependencies
+- README with usage, config contract, endpoints
+
+No issues found. All tests pass. Ready for adapters.
+
 ## Next
 
-Start **Step 23** — `@PS/app-client`, the zero-dependency TypeScript SDK.
+Start **Step 24** — `@PS/app-client-angular`, the framework adapter.
