@@ -6,6 +6,7 @@
     <PackageId>PS.AppPlatform</PackageId>
     <Description>Reusable engine for small Azure Functions apps: hosting, data, background tasks, static SPA hosting and auth.</Description>
     <IsPackable>true</IsPackable>
+    <InternalsVisibleTo>PS.AppPlatform.Tests</InternalsVisibleTo>
   </PropertyGroup>
 
   <ItemGroup>

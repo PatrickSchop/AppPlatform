@@ -11,8 +11,8 @@ public static class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        if (MigrationEntryPoint.IsMigrationRun(args))
-            return await MigrationEntryPoint.RunAsync<AppDbContext>(args);
+        if (PlatformCommandLine.IsCommandRun(args))
+            return await PlatformCommandLine.RunAsync<AppDbContext>(args);
 
         var builder = FunctionsApplication.CreateBuilder(args);
 

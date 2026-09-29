@@ -1,6 +1,6 @@
 # Multi-tenancy v1 — Progress
 
-**Updated:** 2026-09-29 · **Planned · not started · next: MT-01**
+**Updated:** 2026-09-29 · **Phase 0 complete · next: MT-02**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -8,12 +8,12 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 
 | | Steps | State |
 |---|---|---|
-| Phase 0 — Prerequisites | MT-01 | ⏳ not started |
+| Phase 0 — Prerequisites | MT-01 | ✅ complete |
 | Phase 1 — Core tenancy | MT-02 – MT-07 | ⏳ not started · **Gate D** outstanding |
 | Phase 2 — Management app | MT-08 – MT-12 | ⏳ not started · **Gate E** outstanding |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**0 of 16 steps complete.**
+**1 of 16 steps complete.**
 
 ## Dependencies on the v1 plan
 
@@ -29,7 +29,7 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 
 | Step | Outcome | State | Tests | Commit |
 |---|---|---|---|---|
-| MT-01 | `PlatformCommandLine` | ⏳ | | |
+| MT-01 | `PlatformCommandLine` | ✅ | ✅ | ✅ |
 | MT-02 | Tenancy contracts, config directory | ⏳ | | |
 | MT-03 | `TenantEntity`, filters, factories | ⏳ | | |
 | MT-04 | Tenant resolution, registry roles | ⏳ | | |
