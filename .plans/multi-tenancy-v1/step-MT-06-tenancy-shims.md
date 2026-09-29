@@ -128,9 +128,9 @@ list `GetMyTenants`.
 
 ## Done when
 
-- [ ] `GET /api/me/tenants` exists only in apps that opt in
-- [ ] Its response shape matches this document exactly (MT-13 depends on it)
-- [ ] The SPA can learn the tenancy mode from `/configuration.json`
+- [x] `GET /api/me/tenants` exists only in apps that opt in
+- [x] Its response shape matches this document exactly (MT-13 depends on it)
+- [x] The SPA can learn the tenancy mode from `/configuration.json`
 
 ## Commit
 

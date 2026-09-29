@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 using PS.AppPlatform.Data;
 using PS.AppPlatform.Endpoints;
 using PS.AppPlatform.Hosting;
 using PS.AppPlatform.Tasks;
+using PS.AppPlatform.Tenancy;
 using Xunit;
 
 namespace PS.AppPlatform.Tests;
@@ -80,7 +83,7 @@ public class EndpointTests
         var sp = services.BuildServiceProvider();
 
         var logger = sp.GetRequiredService<ILogger<ConfigurationEndpoints>>();
-        var endpoint = new ConfigurationEndpoints(logger, config);
+        var endpoint = new ConfigurationEndpoints(logger, config, TenancyMode.None, Options.Create(new TenancyOptions()));
 
         var request = new DefaultHttpContext().Request;
         var result = endpoint.GetWebAppConfigurationAsync(request);
@@ -105,7 +108,7 @@ public class EndpointTests
         var sp = services.BuildServiceProvider();
 
         var logger = sp.GetRequiredService<ILogger<ConfigurationEndpoints>>();
-        var endpoint = new ConfigurationEndpoints(logger, config);
+        var endpoint = new ConfigurationEndpoints(logger, config, TenancyMode.None, Options.Create(new TenancyOptions()));
 
         var request = new DefaultHttpContext().Request;
         var result = endpoint.GetWebAppConfigurationAsync(request);
@@ -168,6 +171,67 @@ public class EndpointTests
         Assert.Contains(typeof(IBackgroundTaskService), paramTypes);
         Assert.Contains(typeof(ITaskExecutionManager), paramTypes);
         Assert.Contains(typeof(ITaskHandlerRegistry), paramTypes);
+    }
+
+    [Fact]
+    public async Task ConfigurationEndpoints_includes_tenancy_in_Multi_mode()
+    {
+        var config = new ConfigurationBuilder().Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var sp = services.BuildServiceProvider();
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger<ConfigurationEndpoints>();
+
+        var endpoint = new ConfigurationEndpoints(
+            logger, config, TenancyMode.Multi, Options.Create(new TenancyOptions { TenantHeader = "X-Tenant-Id" }));
+
+        var result = (OkObjectResult)await endpoint.GetWebAppConfigurationAsync(new DefaultHttpContext().Request);
+        var webApp = Assert.IsType<Dictionary<string, object>>(result.Value);
+        var tenancy = Assert.IsType<Dictionary<string, object>>(webApp["tenancy"]);
+
+        Assert.Equal("Multi", tenancy["mode"]);
+        Assert.Equal("X-Tenant-Id", tenancy["header"]);
+    }
+
+    [Fact]
+    public async Task ConfigurationEndpoints_omits_tenancy_in_None_mode()
+    {
+        var config = new ConfigurationBuilder().Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var sp = services.BuildServiceProvider();
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger<ConfigurationEndpoints>();
+
+        var endpoint = new ConfigurationEndpoints(logger, config, TenancyMode.None, Options.Create(new TenancyOptions()));
+
+        var result = (OkObjectResult)await endpoint.GetWebAppConfigurationAsync(new DefaultHttpContext().Request);
+        var webApp = Assert.IsType<Dictionary<string, object>>(result.Value);
+
+        Assert.False(webApp.ContainsKey("tenancy"));
+    }
+
+    [Fact]
+    public async Task ConfigurationEndpoints_overwrites_an_app_supplied_tenancy_key()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["webApp:tenancy"] = "should-be-overwritten",
+            })
+            .Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var sp = services.BuildServiceProvider();
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger<ConfigurationEndpoints>();
+
+        var endpoint = new ConfigurationEndpoints(
+            logger, config, TenancyMode.Single, Options.Create(new TenancyOptions { TenantHeader = "X-Tenant-Id" }));
+
+        var result = (OkObjectResult)await endpoint.GetWebAppConfigurationAsync(new DefaultHttpContext().Request);
+        var webApp = Assert.IsType<Dictionary<string, object>>(result.Value);
+        var tenancy = Assert.IsType<Dictionary<string, object>>(webApp["tenancy"]);
+
+        Assert.Equal("Single", tenancy["mode"]);
     }
 }
 

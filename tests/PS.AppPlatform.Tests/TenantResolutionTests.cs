@@ -191,6 +191,18 @@ public class TenantResolutionTests
         Assert.Equal(200, result.Status);
     }
 
+    [Fact]
+    public async Task Authorize_plus_TenantOptional_shim_lets_a_multi_tenant_user_through_with_no_header()
+    {
+        using var host = new Harness();
+
+        var result = await host.Invoke(typeof(MeTenantsShimEndpoints), nameof(MeTenantsShimEndpoints.GetMyTenants), oid: "u-oid");
+
+        Assert.Equal(200, result.Status);
+        Assert.True(result.Tenant!.IsResolved);
+        Assert.Null(result.Tenant.TenantId);
+    }
+
     // 7–8a. Roles
 
     [Fact]
@@ -481,4 +493,12 @@ public class TenantShimEndpoints
 public class TenantOptionalShimEndpoints
 {
     public void Get() { }
+}
+
+/// <summary>Shaped exactly like TenancyFunctions.GetMyTenants (MT-06).</summary>
+public class MeTenantsShimEndpoints
+{
+    [Authorize]
+    [TenantOptional]
+    public void GetMyTenants() { }
 }

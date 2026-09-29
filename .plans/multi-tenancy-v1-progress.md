@@ -1,6 +1,6 @@
 ﻿# Multi-tenancy v1 — Progress
 
-**Updated:** 2026-09-29 · **Phase 1 progressing · next: MT-06**
+**Updated:** 2026-09-29 · **Phase 1 progressing · next: MT-07 (Gate D)**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -9,11 +9,11 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 | | Steps | State |
 |---|---|---|
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
-| Phase 1 — Core tenancy | MT-02 – MT-07 | 🚧 5 of 6 complete · **Gate D** outstanding |
+| Phase 1 — Core tenancy | MT-02 – MT-07 | 🚧 6 of 6 complete · **Gate D** outstanding |
 | Phase 2 — Management app | MT-08 – MT-12 | ⏳ not started · **Gate E** outstanding |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**6 of 16 steps complete.**
+**7 of 16 steps complete.**
 
 ## Dependencies on the v1 plan
 
@@ -34,7 +34,7 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 | MT-03 | `TenantEntity`, filters, factories | ✅ | ✅ | ✅ |
 | MT-04 | Tenant resolution, registry roles | ✅ | ✅ | ✅ |
 | MT-05 | Tenant-aware background tasks | ✅ | ✅ | ✅ |
-| MT-06 | `/api/me/tenants`, conditional shims | ⏳ | | |
+| MT-06 | `/api/me/tenants`, conditional shims | ✅ | ✅ | ✅ |
 | MT-07 | **Gate D** — `MultiTenantSample` | ⏳ | | |
 | MT-08 | Management backend, bootstrap | ⏳ | | |
 | MT-09 | Registry API, `--register` | ⏳ | | |
@@ -78,4 +78,5 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 
 ## Next
 
-Start **MT-06** — `/api/me/tenants` and conditional tenancy shims.
+Start **MT-07** — Gate D: `samples/MultiTenantSample` on `ConfigTenantDirectory`, proving
+cross-tenant isolation through a running host.

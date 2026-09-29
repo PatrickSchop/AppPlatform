@@ -4,5 +4,10 @@
              Visible="false"
              PSAppPlatformEndpoint="true" />
   </ItemGroup>
+  <ItemGroup Condition="'$(PSAppPlatformInjectEndpoints)' != 'false' And '$(PlatformTenancy)' == 'true'">
+    <Compile Include="$(MSBuildThisFileDirectory)../endpoints/tenancy/*.cs"
+             Visible="false"
+             PSAppPlatformEndpoint="true" />
+  </ItemGroup>
 </Project>
 

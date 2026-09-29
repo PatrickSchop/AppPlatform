@@ -2,6 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using PS.AppPlatform.Endpoints;
 using PS.AppPlatform.Hosting;
 
 namespace PS.AppPlatform.Tenancy;
@@ -47,6 +48,7 @@ public static class TenancyServiceBuilder
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
         services.AddScoped<TenantResolver>();
+        services.AddScoped<ITenancyEndpoints, TenancyEndpoints>();
         services.AddMemoryCache();
 
         switch (options.Directory)

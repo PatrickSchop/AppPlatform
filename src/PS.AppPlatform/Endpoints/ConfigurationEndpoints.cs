@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using PS.AppPlatform.Tenancy;
 
 namespace PS.AppPlatform.Endpoints;
 
@@ -9,11 +11,19 @@ public sealed class ConfigurationEndpoints : IConfigurationEndpoints
 {
     private readonly ILogger<ConfigurationEndpoints> _logger;
     private readonly IConfiguration _configuration;
+    private readonly TenancyMode _tenancyMode;
+    private readonly TenancyOptions _tenancyOptions;
 
-    public ConfigurationEndpoints(ILogger<ConfigurationEndpoints> logger, IConfiguration configuration)
+    public ConfigurationEndpoints(
+        ILogger<ConfigurationEndpoints> logger,
+        IConfiguration configuration,
+        TenancyMode tenancyMode,
+        IOptions<TenancyOptions> tenancyOptions)
     {
         _logger = logger;
         _configuration = configuration;
+        _tenancyMode = tenancyMode;
+        _tenancyOptions = tenancyOptions.Value;
     }
 
     public Task<IActionResult> GetWebAppConfigurationAsync(HttpRequest request, CancellationToken ct = default)
@@ -23,14 +33,25 @@ public sealed class ConfigurationEndpoints : IConfigurationEndpoints
         try
         {
             var webAppConfig = _configuration.GetSection("webApp");
+            var result = webAppConfig.Exists()
+                ? ConvertConfigurationSectionToObject(webAppConfig) as Dictionary<string, object> ?? new Dictionary<string, object>()
+                : new Dictionary<string, object>();
 
-            if (!webAppConfig.Exists())
+            if (_tenancyMode != TenancyMode.None)
             {
-                return Task.FromResult<IActionResult>(new OkObjectResult(new { }));
+                if (result.ContainsKey("tenancy"))
+                {
+                    _logger.LogWarning("webApp:tenancy is reserved by the platform and will be overwritten");
+                }
+
+                result["tenancy"] = new Dictionary<string, object>
+                {
+                    ["mode"] = _tenancyMode.ToString(),
+                    ["header"] = _tenancyOptions.TenantHeader
+                };
             }
 
-            var webAppObject = ConvertConfigurationSectionToObject(webAppConfig);
-            return Task.FromResult<IActionResult>(new OkObjectResult(webAppObject));
+            return Task.FromResult<IActionResult>(new OkObjectResult(result));
         }
         catch (Exception ex)
         {

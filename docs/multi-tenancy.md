@@ -50,6 +50,61 @@ unresolved for an unregistered user. A header that names a non-member tenant is 
 Such a caller has no roles, so in an app with `requiredRole` a `[TenantOptional]` endpoint also
 needs `[Authorize(Policy = PlatformPolicies.AuthenticatedOnly)]`.
 
+## Opting in: `AddPlatformTenancy` and `<PlatformTenancy>`
+
+Both of these go together — one without the other gives either a missing endpoint or one that
+fails DI resolution on its first call:
+
+```xml
+<!-- app.csproj -->
+<PlatformTenancy>true</PlatformTenancy>
+```
+
+```csharp
+// Program.cs
+builder.Services.AddPlatformTenancy(builder.Configuration);
+```
+
+`<PlatformTenancy>true</PlatformTenancy>` makes `PS.AppPlatform.Functions.targets` inject the
+tenancy shims (`endpoints/tenancy/*.cs`, currently `GET /api/me/tenants`) alongside the always-on
+platform shims. Nothing can read the MSBuild property at runtime, so `AddPlatformTenancy` cannot
+detect a missing `<PlatformTenancy>` (the shim just isn't compiled in) and the property cannot
+detect a missing `AddPlatformTenancy` call (the shim compiles but fails DI resolution the first
+time it runs). The MT-15 template sets both from the same `--Tenancy` symbol so generated apps
+cannot drift.
+
+### `GET /api/me/tenants`
+
+The endpoint the login flow (MT-13) is built on. `[Authorize] [TenantOptional]`, so it runs for
+any authenticated caller, registered or not, with no tenant selected.
+
+```json
+{
+  "registered": true,
+  "displayName": "Patrick",
+  "tenants": [
+    { "tenantId": "…", "name": "Contoso",  "roles": [ "editor" ] },
+    { "tenantId": "…", "name": "Fabrikam", "roles": [ "viewer" ] }
+  ]
+}
+```
+
+An unregistered user gets `200 { "registered": false, "displayName": null, "tenants": [] }` —
+a clean state for the SPA to render, not an error to decode. Tenants are ordered by name
+(ordinal, case-insensitive).
+
+### `/configuration.json`
+
+In `Single`/`Multi` mode the platform adds a `tenancy` key so the SPA knows whether to run the
+tenant flow before it has a token:
+
+```json
+"tenancy": { "mode": "Multi", "header": "X-Tenant-Id" }
+```
+
+An app-supplied `webApp:tenancy` key is overwritten (and logged as a warning) — that key is
+reserved by the platform. In mode `None` the key is omitted entirely.
+
 ## Tenant-aware data
 
 ### Entity base class
