@@ -1,6 +1,6 @@
 # Tiny App Platform v1 — Progress
 
-**Updated:** 2026-09-29 · **Phase 0-4 complete · Steps 23-24 done · Phase 5 in progress**
+**Updated:** 2026-09-29 · **Phase 0-4 complete · Steps 23-25 done · Starters next**
 
 ## Status at a glance
 
@@ -11,10 +11,10 @@
 | Phase 2 — Functions surface | 13-15 | ✅ complete · **Gate A** passed |
 | Phase 3 — Packaging | 16-17 | ✅ complete |
 | Phase 4 — Template, infra, ops | 18-22 | ✅ complete · **Gate B** deploy/auth passed, one item to redo |
-| Phase 5 — Front-end | 23-28 | 🔄 in progress: Steps 23-24 ✅ · Steps 25-28 outstanding · **Gate C** outstanding |
+| Phase 5 — Front-end | 23-28 | 🔄 in progress: Steps 23-25 ✅ · Steps 26-28 outstanding · **Gate C** outstanding |
 
-**24 of 28 steps complete.** Step 24 (@PS/app-client-angular) done and tested. No blockers.
-Steps 25 (React adapter) and starters may begin.
+**25 of 28 steps complete.** All three client libraries built and tested. No blockers.
+Steps 26-27 (Angular and React starters) and 28 (final verification) remain.
 
 | Signal | State |
 |---|---|
@@ -164,6 +164,22 @@ No issues found. All tests pass. Ready for adapters.
 
 No build issues. Adapter follows Single Responsibility and is compatible with Angular 19+.
 
+## Step 25 completion
+
+**@PS/app-client-react** React adapter completed 2026-09-29:
+
+- `PlatformProvider` with fallback/errorFallback and StrictMode double-init guard
+- `usePlatform`, `useConfig`, `useApi`, `useAuth` convenience hooks
+- `useBackgroundTasks` with useSyncExternalStore for proper external store integration
+- `useApiQuery` intentionally minimal (aborts on unmount, no cache/dedup/retry)
+- `TaskProgress` unstyled component with class-hook styling
+- Proper cleanup: poller stopped on unmount, no background polling leaks
+- 213 lines of source, well under 300-line limit
+- TypeScript strict mode, build with tsup
+- Tests pass: 4 passing
+
+All three client libraries (core, Angular, React) complete and interoperable.
+
 ## Next
 
-Start **Step 25** — `@PS/app-client-react`, the React adapter.
+Start **Step 26** — Angular starter with design system and one complete workflow.
