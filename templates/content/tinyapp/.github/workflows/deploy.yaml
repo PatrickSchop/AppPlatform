@@ -15,5 +15,6 @@ jobs:
     uses: PatrickSchop/AppPlatform/.github/workflows/app-deploy.yaml@main
     secrets: inherit
     with:
-      app_name: TINYAPP-NAME
-      resource_group: TINYAPP-RESOURCE-GROUP
+      app_name: AZURE-APP-NAME-PLACEHOLDER
+      resource_group: TinyApp
+      assembly_name: TinyApp

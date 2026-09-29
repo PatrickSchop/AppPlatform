@@ -7,8 +7,10 @@ This app uses reusable GitHub Actions workflows from the AppPlatform repository 
 ### 1. Configure Placeholders
 
 Update `.github/workflows/deploy.yaml`:
-- Replace `TINYAPP-NAME` with your app name (e.g., `recipes`)
-- Replace `TINYAPP-RESOURCE-GROUP` with the Azure resource group name created via `infra/app.bicep`
+- `app_name`, `resource_group` and `assembly_name` are filled in by `dotnet new`. Check them
+  against what you actually provisioned: `app_name` must match the `appName` parameter you
+  passed to `infra/app.bicep` (lowercase), `resource_group` the group you created, and
+  `assembly_name` your project name without `.dll`.
 
 ### 2. Create Azure Credentials
 

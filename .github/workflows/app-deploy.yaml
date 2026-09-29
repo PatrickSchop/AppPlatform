@@ -31,6 +31,10 @@ on:
         required: true
         type: string
         description: 'Per-app resource group name'
+      assembly_name:
+        required: true
+        type: string
+        description: 'Entry assembly without .dll, e.g. Recipes. Used by the migration step.'
       environment:
         required: false
         type: string
@@ -61,6 +65,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_RBAC_CREDENTIALS: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
     steps:
       - uses: actions/checkout@v4
 
@@ -75,18 +82,25 @@ jobs:
         run: echo "ip=$(curl -s https://api.ipify.org)" >> "$GITHUB_OUTPUT"
 
       - name: Azure login (OIDC)
-        if: ${{ github.event.repository.private == false }}
+        if: ${{ env.AZURE_CLIENT_ID != '' }}
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Azure login (RBAC fallback)
-        if: ${{ failure() && env.AZURE_RBAC_CREDENTIALS != '' }}
+      - name: Azure login (RBAC credentials)
+        if: ${{ env.AZURE_CLIENT_ID == '' && env.AZURE_RBAC_CREDENTIALS != '' }}
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
+
+      - name: Fail when no Azure credential was supplied
+        if: ${{ env.AZURE_CLIENT_ID == '' && env.AZURE_RBAC_CREDENTIALS == '' }}
+        run: |
+          echo "Neither AZURE_CLIENT_ID (OIDC) nor AZURE_RBAC_CREDENTIALS was provided." >&2
+          echo "Pass one from the calling workflow; see docs/deployment.md." >&2
+          exit 1
 
       - name: Add SQL firewall rule
         run: |
@@ -101,7 +115,7 @@ jobs:
         if: ${{ inputs.run_migrations }}
         run: |
           cd app-output
-          dotnet App.dll --migrate
+          dotnet "${{ inputs.assembly_name }}.dll" --migrate
 
       - name: Remove SQL firewall rule
         if: always()
