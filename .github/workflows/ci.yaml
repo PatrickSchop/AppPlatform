@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -18,6 +18,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          # gitleaks scans the pushed commit range, so the parent of the first commit must
+          # exist locally. The default shallow clone leaves it missing and the scan aborts
+          # having read nothing, which reads as a pass until you check the byte count.
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
