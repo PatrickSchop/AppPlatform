@@ -1,10 +1,12 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using PS.AppPlatform.Auth;
 using PS.AppPlatform.Endpoints;
 using PS.AppPlatform.Tasks;
+using PS.AppPlatform.Tenancy;
 
 namespace PS.AppPlatform.Hosting;
 
@@ -23,6 +25,7 @@ public static class PlatformHostBuilder
         services.AddSingleton(assemblies);
         services.AddEndpointServices();
         services.AddPlatformAuth(configuration);
+        services.TryAdd(ServiceDescriptor.Singleton(typeof(TenancyMode), TenancyMode.None));
 
         var serviceBuilderTypes = new List<Type>();
         foreach (var assembly in assemblies.All)
