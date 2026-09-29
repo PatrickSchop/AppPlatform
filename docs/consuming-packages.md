@@ -57,16 +57,31 @@ dotnet build
 
 ## GitHub Actions Workflow Setup
 
-### `secrets.GITHUB_TOKEN` is not enough
+### Restoring always needs a token, even now the repository is public
 
-**`AppPlatform` is a private repository, so reading its packages always requires
-authentication — there is no anonymous access even for a public consumer.** A workflow's
-automatic `secrets.GITHUB_TOKEN` is scoped to the repository it runs in, so a consuming app's
-`GITHUB_TOKEN` cannot read packages owned by `AppPlatform`. It fails with **403 Forbidden**
-during restore, which looks like a permissions bug in your own workflow and is not.
+**GitHub Packages' NuGet registry requires authentication for every read.** Making
+`AppPlatform` public did not change this: an anonymous `dotnet restore` still fails with
+**401 Unauthorized**, verified on 2026-09-29. Only the container registry (`ghcr.io`) serves
+anonymously; npm, NuGet, Maven and RubyGems on GitHub Packages do not.
 
-Every consuming repository therefore needs a classic PAT with `read:packages`, stored as a
-repository secret, regardless of whether it shares an owner with `AppPlatform`:
+The failure is easy to misread. NuGet reports *"Your request could not be authenticated by
+the GitHub Packages service"* and then a 401 — which reads like a broken token rather than
+the absence of one.
+
+**Package visibility is separate from repository visibility, and did not follow it.** As of
+2026-09-29 the package metadata endpoint still refuses anonymous reads, so the package is
+still private. That distinction decides which token you need:
+
+| Package visibility | What can restore it |
+|---|---|
+| Private (current) | A classic PAT with `read:packages`. A consuming workflow's own `secrets.GITHUB_TOKEN` is scoped to its own repository and gets **403**. |
+| Public | Any authenticated token, so a consuming workflow's `secrets.GITHUB_TOKEN` is enough. Local developers still need some token. |
+
+To switch the package over, open it from the repository's Packages section and change its
+visibility there; it is not inherited from the repository.
+
+While the package is private, every consuming repository needs a classic PAT with
+`read:packages` stored as a secret, whether or not it shares an owner with `AppPlatform`:
 
 ```yaml
 name: Build

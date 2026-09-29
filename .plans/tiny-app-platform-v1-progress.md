@@ -76,7 +76,7 @@ predecessor. Everything it assumed but did not have now exists:
 
 | | |
 |---|---|
-| Platform repo | `PatrickSchop/AppPlatform` (**private**) |
+| Platform repo | `PatrickSchop/AppPlatform` (public since 2026-09-29; the NuGet package is still private) |
 | Verification app | `PatrickSchop/ScratchApp` → `https://scratchapp-api.azurewebsites.net` |
 | Azure | resource group `ScratchApp` (westeurope); database `scratchapp` on `pschop-db` in `ApplicationsShared` |
 | Entra | `PS Apps API` `c5692707-…` and `PS Apps SPA` `28267d47-…`, both `AzureADandPersonalMicrosoftAccount` |
@@ -90,11 +90,17 @@ interactive consent prompt.
 
 These need a human; none blocks Phase 5.
 
-1. **A PAT for package restore.** `AppPlatform` is private, so consumers cannot restore its
-   packages with a workflow's own `GITHUB_TOKEN` — it fails with 403. Each consuming
-   repository needs a classic PAT with `read:packages` as a secret. Gate B was therefore
-   verified against the local feed; the published-package path is proven by CI publishing
-   `0.1.1` successfully, but not by a consumer restoring it. See `docs/consuming-packages.md`.
+1. **Make the package public, then a PAT may stop being needed.** The repository went public
+   on 2026-09-29, but **package visibility did not follow it** and the package is still
+   private. Anonymous restore fails either way — GitHub Packages' NuGet registry requires a
+   token for every read, verified on 2026-09-29; only `ghcr.io` serves anonymously. What
+   visibility changes is *which* token works: while the package is private each consuming
+   repository needs a classic PAT with `read:packages`, whereas a public package can be
+   restored with a consuming workflow's own `secrets.GITHUB_TOKEN`. Switch it from the
+   repository's Packages section. See `docs/consuming-packages.md`.
+
+   Gate B was therefore verified against the local feed. Publishing is proven — CI pushed
+   `0.1.1` — but a *consumer restoring from GitHub Packages* is not yet proven either way.
 2. **Publish the fixed platform.** `0.1.2-local` carries the migration and bicep fixes and is
    not yet released. Publish it before another app is generated.
 3. **Rotate the leaked Cognitive Services key** in the StockAnalysis repo (carried from
