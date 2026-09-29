@@ -350,6 +350,7 @@ the repository, so supply real ids at run time through environment variables —
 - **Multi-tenancy.** No `UserId`/`TenantId`, no query filters. The per-app-database model
   sidesteps it. If an app later needs per-user data, the platform grows a
   `UserScopedEntity` convention â€” it does not get invented per app.
+  **Now planned** as a follow-on: [multi-tenancy-v1.md](multi-tenancy-v1.md).
 - **Schema parameterisation** of the claim SQL. `[dbo].[BackgroundTasks]` stays hard-coded;
   it only matters if apps ever share one database, which this model rejects.
 - **Cleaning the ~35 AI-generated status docs** at the StockAnalysis repo root â€” that tree

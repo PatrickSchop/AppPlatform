@@ -1,0 +1,25 @@
+{
+  "name": "@PS/app-client-angular",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist"],
+  "peerDependencies": {
+    "@angular/core": ">=19.0.0",
+    "@angular/common": ">=19.0.0",
+    "@PS/app-client": "^0.1.0"
+  },
+  "devDependencies": {
+    "@angular/core": "^21.0.0",
+    "@angular/common": "^21.0.0",
+    "typescript": "^5.6.0",
+    "tslib": "^2.7.0",
+    "@PS/app-client": "file:../app-client"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit"
+  }
+}

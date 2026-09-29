@@ -106,7 +106,7 @@ The step reuses the deploy workflow's existing `assembly_name` input, the same o
 - **Management app bootstrap:**
   - The management app is registered **in its own registry** (key `management`, one role, `admin`, `TenancyMode.Single`) by its `--migrate` run, a local database write.
   - `--bootstrap-admin --oid <oid> --tid <tid> --name <name>` ensures that identity is an `admin` in the `Default` team. It is idempotent.
-  - The deploy workflow passes these values from secrets. The operator gets them from `az ad signed-in-user show`.
+  - The deploy workflow passes these values from **repository variables**. They are identifiers, not credentials, and a reusable workflow's `with:` cannot read `secrets`. The operator gets them from `az ad signed-in-user show` or a decoded token.
 
 ### D6. Front-end login flow (`@PS/app-client` + adapters)
 
