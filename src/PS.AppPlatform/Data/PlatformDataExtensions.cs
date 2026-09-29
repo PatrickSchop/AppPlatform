@@ -2,7 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using PS.AppPlatform.Tasks;
+using PS.AppPlatform.Tenancy;
 
 namespace PS.AppPlatform.Data;
 
@@ -34,6 +36,9 @@ public static class PlatformDataExtensions
             services.AddSingleton<AzureSqlTokenInterceptor>();
         }
 
+        services.AddSingleton<TenantSaveChangesInterceptor>();
+        services.TryAdd(ServiceDescriptor.Singleton(typeof(TenancyMode), TenancyMode.None));
+
         var configureDbContext = (IServiceProvider serviceProvider, DbContextOptionsBuilder options) =>
         {
             var connectionStringBuilder = new SqlConnectionStringBuilder(dbConfig.ConnectionString);
@@ -56,12 +61,23 @@ public static class PlatformDataExtensions
                 var interceptor = serviceProvider.GetRequiredService<AzureSqlTokenInterceptor>();
                 options.AddInterceptors(interceptor);
             }
+
+            var tenantInterceptor = serviceProvider.GetRequiredService<TenantSaveChangesInterceptor>();
+            options.AddInterceptors(tenantInterceptor);
         };
 
-        services.AddDbContext<TContext>(configureDbContext);
-        services.AddDbContextFactory<TContext>(configureDbContext, ServiceLifetime.Scoped);
+        services.AddDbContext<TContext>(configureDbContext, ServiceLifetime.Scoped, ServiceLifetime.Singleton);
+
+        services.AddScoped<IScopedDbContextFactory<TContext>, ScopedDbContextFactory<TContext>>();
+        services.AddScoped<IDbContextFactory<TContext>>(sp => sp.GetRequiredService<IScopedDbContextFactory<TContext>>());
+        services.AddScoped<TContext>(sp => sp.GetRequiredService<IScopedDbContextFactory<TContext>>().CreateDbContext());
+
+        services.AddScoped<IUnscopedDbContextFactory<TContext>, UnscopedDbContextFactory<TContext>>();
+
         services.AddScoped<IDbContextFactory<PlatformDbContext>>(sp =>
-            new PlatformDbContextFactoryAdapter<TContext>(sp.GetRequiredService<IDbContextFactory<TContext>>()));
+            new PlatformDbContextFactoryAdapter<TContext>(sp.GetRequiredService<IScopedDbContextFactory<TContext>>()));
+        services.AddScoped<IUnscopedDbContextFactory<PlatformDbContext>>(sp =>
+            new PlatformUnscopedDbContextFactoryAdapter<TContext>(sp.GetRequiredService<IUnscopedDbContextFactory<TContext>>()));
 
         services.AddSingleton<IMigrationScriptProvider, EmbeddedMigrationScriptProvider>();
         services.AddSingleton<IMigrationScriptProvider, DirectoryMigrationScriptProvider>();
@@ -76,18 +92,6 @@ public static class PlatformDataExtensions
         services.AddScoped<ITaskExecutionManager>(sp => sp.GetRequiredService<TaskExecutionManager<TContext>>());
 
         return services;
-    }
-
-    /// <summary>
-    /// Adapts an IDbContextFactory&lt;TContext&gt; to IDbContextFactory&lt;PlatformDbContext&gt;.
-    /// .NET's IDbContextFactory&lt;T&gt; is not covariant, so registering the app's derived
-    /// factory does not satisfy platform services that depend on the base type.
-    /// </summary>
-    private sealed class PlatformDbContextFactoryAdapter<TContext>(IDbContextFactory<TContext> inner)
-        : IDbContextFactory<PlatformDbContext>
-        where TContext : PlatformDbContext
-    {
-        public PlatformDbContext CreateDbContext() => inner.CreateDbContext();
     }
 }
 

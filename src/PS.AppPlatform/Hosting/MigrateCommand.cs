@@ -11,7 +11,7 @@ public sealed class MigrateCommand : IPlatformCommand
     public async Task<int> RunAsync(PlatformCommandArgs args, IServiceProvider services, CancellationToken ct)
     {
         var migrator = services.GetRequiredService<IDatabaseMigrator>();
-        var result = await migrator.InitializeDatabaseAsync();
+        var result = await migrator.InitializeDatabaseAsync(ct);
 
         if (!result.Success)
         {
@@ -38,6 +38,21 @@ public sealed class MigrateCommand : IPlatformCommand
         }
 
         Console.ResetColor();
+
+        var violations = await migrator.ValidateTenancyConventionsAsync(ct);
+        if (violations.Count > 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nTenancy convention violations:");
+            foreach (var violation in violations)
+            {
+                Console.WriteLine($"  - {violation}");
+            }
+
+            Console.ResetColor();
+            return 1;
+        }
+
         return 0;
     }
 }

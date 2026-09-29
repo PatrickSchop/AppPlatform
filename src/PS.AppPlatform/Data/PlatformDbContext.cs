@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using PS.AppPlatform.Hosting;
 using PS.AppPlatform.Tasks;
@@ -21,6 +22,8 @@ namespace PS.AppPlatform.Data;
 public abstract class PlatformDbContext : DbContext
 {
     private readonly PlatformAssemblies _assemblies;
+    private TenantScope _tenantScope = TenantScope.Disabled;
+    private bool _scopeApplied;
 
     protected PlatformDbContext(DbContextOptions options, PlatformAssemblies assemblies)
         : base(options)
@@ -29,6 +32,25 @@ public abstract class PlatformDbContext : DbContext
     }
 
     public DbSet<BackgroundTask> BackgroundTasks { get; set; } = null!;
+
+    /// <summary>Called once by the platform factories, before first use.</summary>
+    public void ApplyTenantScope(TenantScope scope)
+    {
+        if (_scopeApplied)
+        {
+            throw new InvalidOperationException("ApplyTenantScope() called more than once on this context");
+        }
+
+        _scopeApplied = true;
+        _tenantScope = scope;
+    }
+
+    public bool TenantFilterEnabled => _tenantScope.Enabled;
+
+    /// <summary>Guid.Empty when filtering is disabled; throws when enabled without a tenant.</summary>
+    public Guid CurrentTenantId => !_tenantScope.Enabled
+        ? Guid.Empty
+        : _tenantScope.TenantId ?? throw new TenantContextMissingException();
 
     public DbSet<T> GetEntitySet<T>() where T : Entity => Set<T>();
 
@@ -44,7 +66,38 @@ public abstract class PlatformDbContext : DbContext
                 .ValueGeneratedOnAdd();
         }
 
+        ApplyTenantFilters(modelBuilder);
         ConfigurePlatformModel(modelBuilder);
+    }
+
+    private void ApplyTenantFilters(ModelBuilder modelBuilder)
+    {
+        var tenantEntityType = typeof(TenantEntity);
+
+        foreach (var entityType in DiscoverEntityTypes())
+        {
+            if (!tenantEntityType.IsAssignableFrom(entityType))
+            {
+                continue;
+            }
+
+            var baseType = entityType.BaseType;
+            if (baseType != null && tenantEntityType.IsAssignableFrom(baseType) && baseType != tenantEntityType)
+            {
+                continue;
+            }
+
+            var e = Expression.Parameter(entityType, "e");
+            var ctx = Expression.Constant(this);
+            var body = Expression.OrElse(
+                Expression.Not(Expression.Property(ctx, nameof(TenantFilterEnabled))),
+                Expression.Equal(
+                    Expression.Property(e, nameof(TenantEntity.TenantId)),
+                    Expression.Property(ctx, nameof(CurrentTenantId))));
+
+            modelBuilder.Entity(entityType).HasQueryFilter(Expression.Lambda(body, e));
+            modelBuilder.Entity(entityType).HasIndex(nameof(TenantEntity.TenantId));
+        }
     }
 
     private static void ConfigurePlatformModel(ModelBuilder modelBuilder)

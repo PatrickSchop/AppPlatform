@@ -15,17 +15,18 @@ public interface IDatabaseMigrator
     Task<IReadOnlyList<string>> GetAvailableScriptsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<string>> GetAppliedScriptsAsync(CancellationToken ct = default);
     Task<bool> CanConnectAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<string>> ValidateTenancyConventionsAsync(CancellationToken ct = default);
 }
 
 public class DatabaseMigrator<TContext> : IDatabaseMigrator
     where TContext : PlatformDbContext
 {
-    private readonly IDbContextFactory<TContext> _dbContextFactory;
+    private readonly IUnscopedDbContextFactory<TContext> _dbContextFactory;
     private readonly IEnumerable<IMigrationScriptProvider> _providers;
     private readonly ILogger<DatabaseMigrator<TContext>> _logger;
 
     public DatabaseMigrator(
-        IDbContextFactory<TContext> dbContextFactory,
+        IUnscopedDbContextFactory<TContext> dbContextFactory,
         IEnumerable<IMigrationScriptProvider> providers,
         ILogger<DatabaseMigrator<TContext>> logger)
     {
@@ -321,6 +322,12 @@ END";
         {
             return false;
         }
+    }
+
+    public async Task<IReadOnlyList<string>> ValidateTenancyConventionsAsync(CancellationToken ct = default)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+        return await TenancyConventions.FindTenantColumnViolationsAsync(context, ct);
     }
 }
 

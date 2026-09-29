@@ -13,6 +13,15 @@ This plan builds on the **end state** of v1, so it assumes Phase 5 is done: `@PS
 
 Step documents: [multi-tenancy-v1/](multi-tenancy-v1/). Progress: [multi-tenancy-v1-progress.md](multi-tenancy-v1-progress.md). The v1 execution rules (§7: strictly in order, green build and tests per step, commit and push, update progress) apply unchanged.
 
+## Completion criteria for each step
+Each step must meet all criteria before handoff:
+- ✅ Feature implemented
+- ✅ Tests created (unit and integration)
+- ✅ All tests, new and old, must pass
+- ✅ Code review done (self-review + design verification)
+- ✅ Committed and pushed to main
+- ✅ Published/deployed if relevant (samples updated, docs added)
+
 ## Locked design decisions
 
 ### D1. The registry lives in the management app, and apps query it through its API
