@@ -1,4 +1,4 @@
-﻿# Consuming PS.AppPlatform Packages
+# Consuming PS.AppPlatform Packages
 
 The `PS.AppPlatform` and `PS.AppPlatform.Functions` packages are published to GitHub Packages, which requires authentication even for private repositories.
 
@@ -57,9 +57,16 @@ dotnet build
 
 ## GitHub Actions Workflow Setup
 
-### Same organization
+### `secrets.GITHUB_TOKEN` is not enough
 
-If your consuming app is in the same GitHub organization as `AppPlatform`, `secrets.GITHUB_TOKEN` works out of the box:
+**`AppPlatform` is a private repository, so reading its packages always requires
+authentication — there is no anonymous access even for a public consumer.** A workflow's
+automatic `secrets.GITHUB_TOKEN` is scoped to the repository it runs in, so a consuming app's
+`GITHUB_TOKEN` cannot read packages owned by `AppPlatform`. It fails with **403 Forbidden**
+during restore, which looks like a permissions bug in your own workflow and is not.
+
+Every consuming repository therefore needs a classic PAT with `read:packages`, stored as a
+repository secret, regardless of whether it shares an owner with `AppPlatform`:
 
 ```yaml
 name: Build

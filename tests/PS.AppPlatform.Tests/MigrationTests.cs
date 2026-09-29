@@ -1,10 +1,43 @@
-﻿using PS.AppPlatform.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using PS.AppPlatform.Data;
+using PS.AppPlatform.Hosting;
 using Xunit;
 
 namespace PS.AppPlatform.Tests;
 
 public class MigrationTests
 {
+    [Fact]
+    public void Migration_service_graph_resolves_the_identity_provider()
+    {
+        // A deployed app authenticates to SQL with a managed identity, so a migration run
+        // must construct AzureIdentityProvider, which takes IConfiguration. While the
+        // migration service collection did not register IConfiguration, --migrate threw
+        // before reaching the database, so no deployed migration could ever run.
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["database:connectionString"] = "Server=tcp:example.database.windows.net,1433;Database=x;Encrypt=True;",
+                ["database:useManagedIdentity"] = "true",
+                ["azureIdentity:type"] = "azureCli",
+            })
+            .Build();
+
+        var services = MigrationEntryPoint.BuildMigrationServices<TestMigrationContext>(configuration);
+        using var provider = services.BuildServiceProvider();
+
+        Assert.NotNull(provider.GetRequiredService<IAzureIdentityProvider>());
+        Assert.NotNull(provider.GetRequiredService<IConfiguration>());
+    }
+
+    private class TestMigrationContext : PlatformDbContext
+    {
+        public TestMigrationContext(DbContextOptions<TestMigrationContext> options, PlatformAssemblies assemblies)
+            : base(options, assemblies) { }
+    }
+
     [Fact]
     public void EmbeddedScriptsAreDiscovered()
     {

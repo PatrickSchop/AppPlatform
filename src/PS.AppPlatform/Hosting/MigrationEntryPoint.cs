@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -29,27 +29,16 @@ public static class MigrationEntryPoint
         where TContext : PlatformDbContext
     {
         var settingsFile = ExtractSettingsFile(args);
-        var assembly = Assembly.GetExecutingAssembly();
+        // The anchor must be the app, not this library: it locates the appsettings files
+        // next to the entry assembly.
+        var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
 
         var configBuilder = new ConfigurationBuilder();
         configBuilder.AddPlatformConfiguration(assembly, extraSettingsFile: settingsFile);
 
         var configuration = configBuilder.Build();
 
-        var services = new ServiceCollection();
-        services.AddLogging(builder =>
-        {
-            builder.AddConsole();
-            builder.SetMinimumLevel(LogLevel.Information);
-        });
-
-        var assemblies = new PlatformAssemblies();
-        configureAssemblies?.Invoke(assemblies);
-
-        services.AddSingleton(assemblies);
-        services.AddSingleton<IHostingEnvironment, HostingEnvironment>();
-        services.AddSingleton<IAzureIdentityProvider, AzureIdentityProvider>();
-        services.AddPlatformData<TContext>(configuration);
+        var services = BuildMigrationServices<TContext>(configuration, configureAssemblies);
 
         var serviceProvider = services.BuildServiceProvider();
         var migrator = serviceProvider.GetRequiredService<IDatabaseMigrator>();
@@ -82,6 +71,36 @@ public static class MigrationEntryPoint
 
         Console.ResetColor();
         return 0;
+    }
+
+    /// <summary>
+    /// The service graph a migration run needs. Separated so a test can assert it resolves
+    /// without running an actual migration.
+    /// </summary>
+    internal static ServiceCollection BuildMigrationServices<TContext>(
+        IConfiguration configuration,
+        Action<PlatformAssemblies>? configureAssemblies = null)
+        where TContext : PlatformDbContext
+    {
+        var services = new ServiceCollection();
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();
+            builder.SetMinimumLevel(LogLevel.Information);
+        });
+
+        var assemblies = new PlatformAssemblies();
+        configureAssemblies?.Invoke(assemblies);
+
+        services.AddSingleton(assemblies);
+        // AzureIdentityProvider takes IConfiguration, so it has to be resolvable here.
+        // Without this, --migrate throws before touching the database whenever the app
+        // authenticates to SQL with a managed identity -- which is every deployed app.
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddSingleton<IHostingEnvironment, HostingEnvironment>();
+        services.AddSingleton<IAzureIdentityProvider, AzureIdentityProvider>();
+        services.AddPlatformData<TContext>(configuration);
+        return services;
     }
 
     private static string? ExtractSettingsFile(string[] args)

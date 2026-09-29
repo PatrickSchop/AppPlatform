@@ -124,7 +124,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'database__connectionString'
-          value: 'Server=tcp:${sqlServerName}.${environment().suffixes.sqlServerHostname},1433;Database=${appName};Encrypt=True;'
+          value: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Database=${appName};Encrypt=True;'
         }
         {
           name: 'database__useManagedIdentity'
