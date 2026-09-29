@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using PS.AppPlatform.Hosting;
 using PS.AppPlatform.Tasks;
@@ -66,38 +65,14 @@ public abstract class PlatformDbContext : DbContext
                 .ValueGeneratedOnAdd();
         }
 
-        ApplyTenantFilters(modelBuilder);
         ConfigurePlatformModel(modelBuilder);
     }
 
-    private void ApplyTenantFilters(ModelBuilder modelBuilder)
+    /// <summary>Derived contexts that override this must call base, or TenantEntity loses its filter.</summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
-        var tenantEntityType = typeof(TenantEntity);
-
-        foreach (var entityType in DiscoverEntityTypes())
-        {
-            if (!tenantEntityType.IsAssignableFrom(entityType))
-            {
-                continue;
-            }
-
-            var baseType = entityType.BaseType;
-            if (baseType != null && tenantEntityType.IsAssignableFrom(baseType) && baseType != tenantEntityType)
-            {
-                continue;
-            }
-
-            var e = Expression.Parameter(entityType, "e");
-            var ctx = Expression.Constant(this);
-            var body = Expression.OrElse(
-                Expression.Not(Expression.Property(ctx, nameof(TenantFilterEnabled))),
-                Expression.Equal(
-                    Expression.Property(e, nameof(TenantEntity.TenantId)),
-                    Expression.Property(ctx, nameof(CurrentTenantId))));
-
-            modelBuilder.Entity(entityType).HasQueryFilter(Expression.Lambda(body, e));
-            modelBuilder.Entity(entityType).HasIndex(nameof(TenantEntity.TenantId));
-        }
+        base.ConfigureConventions(configurationBuilder);
+        configurationBuilder.Conventions.Add(_ => new TenantQueryFilterConvention(this));
     }
 
     private static void ConfigurePlatformModel(ModelBuilder modelBuilder)

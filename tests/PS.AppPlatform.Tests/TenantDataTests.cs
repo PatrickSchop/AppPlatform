@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PS.AppPlatform.Data;
@@ -58,14 +58,7 @@ public class TenantDataTests
     {
         using var context = CreateContextWithoutTenant();
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            context.Set<TenantNote>().ToList());
-
-        // EF may wrap the exception; check either the exception itself or its inner exception
-        Assert.True(
-            exception is TenantContextMissingException ||
-            exception.InnerException is TenantContextMissingException,
-            $"Expected TenantContextMissingException, got {exception.GetType().Name}");
+        Assert.Throws<TenantContextMissingException>(() => context.Set<TenantNote>().ToList());
     }
 
     [Fact]
@@ -105,17 +98,20 @@ public class TenantDataTests
     public async Task ScopedModify_FromDifferentTenant_Throws()
     {
         var dbName = Guid.NewGuid().ToString();
+        TenantNote note;
 
         using (var unscopedContext = CreateUnscopedContextWithDbName(dbName))
         {
-            var note = new TenantNote { Id = Guid.NewGuid(), TenantId = TenantB, Content = "Original" };
+            note = new TenantNote { Id = Guid.NewGuid(), TenantId = TenantB, Content = "Original" };
             unscopedContext.Set<TenantNote>().Add(note);
             await unscopedContext.SaveChangesAsync();
         }
 
         using (var scopedContextA = CreateContextWithDbName(TenantA, dbName))
         {
-            var note = scopedContextA.Set<TenantNote>().First();
+            // The filter hides B's row from A, so the only way to reach it is attaching it.
+            Assert.Empty(scopedContextA.Set<TenantNote>().ToList());
+            scopedContextA.Attach(note);
             note.Content = "Modified";
 
             var exception = await Assert.ThrowsAsync<TenantMismatchException>(() => scopedContextA.SaveChangesAsync());
@@ -152,6 +148,33 @@ public class TenantDataTests
             Assert.Single(notesA);
             Assert.Equal(TenantA, notesA[0].TenantId);
         }
+    }
+
+    [Fact]
+    public async Task AppQueryFilter_IsCombinedWithTenantFilter_NotReplaced()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        var options = new DbContextOptionsBuilder<ContextWithOwnFilter>()
+            .UseInMemoryDatabase(dbName)
+            .AddInterceptors(new TenantSaveChangesInterceptor())
+            .Options;
+
+        using (var unscoped = new ContextWithOwnFilter(options))
+        {
+            unscoped.ApplyTenantScope(TenantScope.Disabled);
+            unscoped.Set<TenantNote>().AddRange(
+                new TenantNote { Id = Guid.NewGuid(), TenantId = TenantA, Content = "visible" },
+                new TenantNote { Id = Guid.NewGuid(), TenantId = TenantA, Content = "hidden" },
+                new TenantNote { Id = Guid.NewGuid(), TenantId = TenantB, Content = "visible" });
+            await unscoped.SaveChangesAsync();
+        }
+
+        using var scoped = new ContextWithOwnFilter(options);
+        scoped.ApplyTenantScope(TenantScope.For(TenantA));
+
+        var note = Assert.Single(scoped.Set<TenantNote>().ToList());
+        Assert.Equal(TenantA, note.TenantId);
+        Assert.Equal("visible", note.Content);
     }
 
     [Fact]
@@ -290,6 +313,16 @@ public class TenantDataTests
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Setting>();
+        }
+    }
+
+    private class ContextWithOwnFilter(DbContextOptions<ContextWithOwnFilter> options)
+        : PlatformDbContext(options, new PlatformAssemblies())
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<TenantNote>().HasQueryFilter(n => n.Content != "hidden");
         }
     }
 
