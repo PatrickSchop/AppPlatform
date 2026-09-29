@@ -61,7 +61,11 @@ public class TenantDataTests
         var exception = Assert.Throws<InvalidOperationException>(() =>
             context.Set<TenantNote>().ToList());
 
-        Assert.IsType<TenantContextMissingException>(exception);
+        // EF may wrap the exception; check either the exception itself or its inner exception
+        Assert.True(
+            exception is TenantContextMissingException ||
+            exception.InnerException is TenantContextMissingException,
+            $"Expected TenantContextMissingException, got {exception.GetType().Name}");
     }
 
     [Fact]
@@ -210,8 +214,10 @@ public class TenantDataTests
 
     private TestDbContext CreateContextWithDbName(Guid tenantId, string dbName)
     {
+        var interceptor = new TenantSaveChangesInterceptor();
         var context = new TestDbContext(new DbContextOptionsBuilder<TestDbContext>()
             .UseInMemoryDatabase(dbName)
+            .AddInterceptors(interceptor)
             .Options, new PlatformAssemblies());
         context.ApplyTenantScope(TenantScope.For(tenantId));
         return context;
@@ -219,8 +225,10 @@ public class TenantDataTests
 
     private TestDbContext CreateContextWithoutTenant()
     {
+        var interceptor = new TenantSaveChangesInterceptor();
         var context = new TestDbContext(new DbContextOptionsBuilder<TestDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .AddInterceptors(interceptor)
             .Options, new PlatformAssemblies());
         context.ApplyTenantScope(TenantScope.For(null));
         return context;
@@ -233,8 +241,10 @@ public class TenantDataTests
 
     private TestDbContext CreateUnscopedContextWithDbName(string dbName)
     {
+        var interceptor = new TenantSaveChangesInterceptor();
         var context = new TestDbContext(new DbContextOptionsBuilder<TestDbContext>()
             .UseInMemoryDatabase(dbName)
+            .AddInterceptors(interceptor)
             .Options, new PlatformAssemblies());
         context.ApplyTenantScope(TenantScope.Disabled);
         return context;
