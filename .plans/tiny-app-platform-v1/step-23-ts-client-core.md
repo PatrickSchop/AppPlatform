@@ -4,13 +4,14 @@
 **Depends on:** Step 22
 **Working directory:** `C:\Dev\AppPlatform\clients`
 
-**Precondition added 2026-09-29 (container plan §10 A3):** this client reads
-`auth: { tenantId, clientId, scopes }` from `/configuration.json`, but nothing writes it.
-That endpoint just passes through the `webApp` configuration key, and neither `SampleApp`
-nor the template has a `webApp:auth` section. Add one in this step, using the **SPA**
-registration's client id — not the API id held by `authentication:azureEntraId:clientId` —
-and `tenantId: "common"` so personal Microsoft accounts are accepted (§10 A1). Everything
-under `webApp` is served unauthenticated by design, and both ids are public.
+**Config contract (added 2026-09-29):** this client reads `auth: { tenantId, clientId, scopes }`
+from `/configuration.json`, which passes through the `webApp` configuration key. That section
+now ships in both the template and `SampleApp`, so the contract exists before this step starts.
+
+`clientId` there is the **SPA** registration — not the API id held by
+`authentication:azureEntraId:clientId` — and `tenantId` is `common` so personal Microsoft
+accounts are accepted (§2(4)). Everything under `webApp` is served unauthenticated by design;
+both ids are public, and the template ships `clientId` empty for the operator to fill in.
 
 ## Goal
 

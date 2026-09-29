@@ -1,195 +1,135 @@
-# Tiny App Platform v1 — Execution Progress
+# Tiny App Platform v1 — Progress
 
-Last updated: 2026-09-29 (plan reviewed; Gate B open, Phase 5 blocked behind it)
+**Updated:** 2026-09-29 · **Phase 0-4 complete · no blockers open · Phase 5 ready to start**
 
-## Completed Steps
+## Status at a glance
 
-### Phase 0 — Foundation
-- ✅ **Step 01**: Repository skeleton, build props, central package versions, Azure Functions Core Tools installed
-- ✅ **Step 02**: Core library (PS.AppPlatform) and test projects; architecture guard test preventing [Function] attributes in library
-
-### Phase 1 — Core Engine
-- ✅ **Step 03**: Hosting layer, Azure identity provider, config layering, explicit assembly scanning
-- ✅ **Step 04**: Generic data layer with PlatformDbContext and AddPlatformData<TContext>
-- ✅ **Step 05**: Script-tracked migrations with version tracking and idempotency
-- ✅ **Step 06**: Background task contracts, model, registry, and handler context
-- ✅ **Step 07**: Generic BackgroundTaskService with singleton execution manager id and check gate
-- ✅ **Step 08**: Task execution manager with claim SQL, concurrency cap, and orphan lease recovery
-- ✅ **Step 09**: Static content with SPA deep-link fallback, ETag caching, and content types
-- ✅ **Step 10**: Default-deny Functions-native authorization, CORS-first ordering, role enforcement
-- ✅ **Step 11**: Generic LLM text parsing with retry and error recovery
-- ✅ **Step 12**: Platform endpoints as plain injectable services
-
-### Phase 2 — Functions Surface and First Proof
-- ✅ **Step 13**: Source-injected Functions shim package with timer safety net
-- ✅ **Step 14**: samples/SampleApp — standing regression gate with entity, task handler, endpoints
-- ✅ **Step 15**: **Gate A** — metadata, migrations, numbering, test suite verification
-
-### Phase 3 — Packaging
-- ✅ **Step 16**: NuGet packaging with targets-based shim injection verified
-- ✅ **Step 17**: CI and publish workflows; 0.1.0 published to GitHub Packages
-
-### Phase 4 — Template, Infrastructure, Operations
-- ✅ **Step 18**: dotnet new tinyapp template with full scaffolding
-- 🚧 **Step 19**: **Gate B** — ScratchApp from template verification
-  - ✅ Checks 1-6: scaffold, build, functions indexed, local testing
-  - ⚠️ Check 7: deployed and serving, but the build on Azure predates the
-    authorization fixes below, so it must be redeployed before the gate counts
-  - ⏳ Check 8: E2E auth. Entra registrations now exist; needs platform 0.1.1
-    published, ScratchApp repointed at it, redeployed, then tested with a token
-- ✅ **Step 20**: Bicep infrastructure for per-app Azure footprint
-- ✅ **Step 21**: Reusable GitHub Actions workflows (pp-build.yaml, pp-deploy.yaml)
-- ✅ **Step 22**: Entra auth runbook, security policy, secret scanning
-
-## Plan review (2026-09-29)
-
-Reviewed the remaining plan for sequential executability. The step chain is sound; the
-problems are prerequisites and stale assumptions, not ordering. Seven amendments recorded in
-`tiny-app-platform-v1.md` §10:
-
-- **A1** Authorization is now authentication-only for any Microsoft account. Supersedes the
-  per-app App Role model in §4.1a and Step 22. `tenantId` must be `common`; `requiredRole`
-  stays empty. Roles remain supported for apps that want them.
-- **A2** TFM split — the platform builds `net9.0` while generated apps build `net10.0`, and
-  §3 claims `net10.0` for everything. Works, but the platform is not tested on the framework
-  its consumers run. Needs a decision.
-- **A3** Steps 23-27 read `auth` from `/configuration.json`, but nothing writes a
-  `webApp:auth` section. Step 23 has to add it.
-- **A4** Gate C's Notes checks now need a real sign-in, because they are protected routes and
-  the middleware previously never ran.
-- **A5** Step 10's outcome was never true until 2026-09-28, with two process lessons: the
-  plan's own snippet does not compile, and passing tests did not mean the step worked.
-- **A6** Gate B is open, so Phase 5 is formally blocked.
-- **A7** Three open defects in `app-deploy.yaml`, including a hard-coded `App.dll` in the
-  migration step that has never run successfully.
-
-Step documents amended in place with pointers: 19 (Check 7 precondition, Check 8 rewritten
-for 401/200 with no role), 23 (A3), 26, 27 (403 unreachable), 28 (A4). Inline corrections to
-the container plan: the TFM row, the stale "func is missing" warning, and Gate B's 401/403/200
-expectation.
-
-## Authorization was never enforced (found 2026-09-28)
-
-The default-deny model from Step 10 was inert in every app built on the platform.
-Five defects compounded; all are fixed and verified against SampleApp:
-
-1. `UsePlatform()` was a no-op stub that registered no middleware. The documented
-   call does not compile without `using Microsoft.Extensions.Hosting;`, which is
-   likely why it was replaced with a comment claiming DI registration sufficed.
-2. `AddPlatform` never called `AddPlatformAuth`, so the middleware was unregistered.
-3. Authorization passed an empty policy name to `AuthorizeAsync`, which throws
-   rather than falling back to the default policy.
-4. `GetTargetFunctionMethod` matched static methods only, but every shim is an
-   instance method, so `[AllowAnonymous]` was never seen and anonymous endpoints
-   failed closed.
-5. `CorsMiddleware` set headers after `next()`, crashing once a 401 body existed.
-
-**Why Gate A missed it:** SampleApp had no `authentication` section, which silently
-disables auth, and the tests only asserted that types resolve from DI and that
-attributes exist — using static-class fixtures, the one shape the broken reflection
-handled. SampleApp now enables auth, and the new tests fail without the fixes.
-
-Related defects found and fixed the same day:
-
-- The whole test suite was tracked twice under case-variant paths; only
-  `tests/PS.AppPlatform.Tests/` has the csproj CI builds, so new tests added under
-  the other path would never have run on Linux.
-- `actionlint` was invoked by bare name after `go install`, which is not on PATH —
-  it exited 127 on every run since Step 21, and because it failed, the secret scan
-  and packaging assertions after it were always skipped.
-- `.gitleaks.toml` declared `[[allowlist]]` where a single `[allowlist]` map is
-  expected, and omitted `[extend] useDefault = true`, so the scan either aborted or
-  would have run with no rules at all.
-- `app-deploy.yaml` read `AZURE_CLIENT_ID`/`TENANT_ID`/`SUBSCRIPTION_ID` without
-  declaring them under `workflow_call.secrets`, so OIDC login could never authenticate.
-
-CI is now green end to end for the first time, with every step actually executing.
-
-**Still open in `app-deploy.yaml`** (not fixed, needs a decision):
-- The migration step runs `dotnet App.dll --migrate` — the assembly name is
-  hard-coded and wrong for every app.
-- The RBAC fallback is gated on `env.AZURE_RBAC_CREDENTIALS`, which is never
-  mapped into `env`, so the condition is always false and the fallback is dead.
-- OIDC login is gated on `github.event.repository.private == false`, which is an
-  odd way to choose an auth mechanism.
-
-## Pending Steps
-
-### Phase 5 — Front-End (TypeScript SDKs and Starters)
-
-**Blocked:** §8 requires a gate to close before the next phase starts, and Gate B (Step 19)
-is open. The 23→24→25→26→27→28 chain itself is sequentially sound — each step depends only
-on the one before — but three prerequisites must land first, all recorded as amendments in
-the container plan §10:
-
-| | Blocker | Needed by |
+| | Steps | State |
 |---|---|---|
-| A6 | Gate B open: publish 0.1.1, repoint ScratchApp, redeploy, verify 401/200 | before Phase 5 |
-| A3 | Nothing writes `webApp:auth`, so the SPA has no client id to sign in with | Step 23 |
-| A2 | TFM split: platform is net9.0, generated apps net10.0; §3 claims net10.0 | decide before Phase 5 |
-| A4 | Gate C needs real Entra ids in SampleApp, or must run against ScratchApp | Step 28 |
+| Phase 0 — Foundation | 01-02 | ✅ complete |
+| Phase 1 — Core engine | 03-12 | ✅ complete |
+| Phase 2 — Functions surface | 13-15 | ✅ complete · **Gate A** passed |
+| Phase 3 — Packaging | 16-17 | ✅ complete |
+| Phase 4 — Template, infra, ops | 18-22 | ✅ complete · **Gate B** deploy/auth passed, one item to redo |
+| Phase 5 — Front-end | 23-28 | ⏳ not started · **Gate C** outstanding |
 
-- ⏳ **Step 23**: @PS/app-client — zero-dep TypeScript SDK
-- ⏳ **Step 24**: @PS/app-client-angular — Angular adapter
-- ⏳ **Step 25**: @PS/app-client-react — React adapter
-- ⏳ **Step 26**: Angular starter + design system
-- ⏳ **Step 27**: Vite React starter
-- ⏳ **Step 28**: **Gate C** — both front-ends, one unchanged backend
+**22 of 28 steps complete.** No blockers are open; Phase 5 may begin at Step 23. One Gate B
+checklist item should be redone on the current ScratchApp — see Gates.
 
-## Test & Deployment Status
+| Signal | State |
+|---|---|
+| Tests | 98 passing, 0 failing (Windows and Linux CI) |
+| Build | clean, 0 warnings, `TreatWarningsAsErrors` on |
+| CI | green end to end, every step executing |
+| Published packages | `0.1.1` on GitHub Packages |
+| Local packages | `0.1.2-local` in `nupkg/` (unreleased fixes) |
 
-**Step 19 Check 7 Verification:**
-- ✅ ScratchApp scaffolded from template
-- ✅ Functions indexed via package targets
-- ✅ Local build successful
-- ✅ Pushed to GitHub: https://github.com/PatrickSchop/ScratchApp
-- ✅ Azure infrastructure deployed (Function App, SQL DB, Storage, Managed Identity)
-- ✅ App deployed via z functionapp deployment source config-zip
-- ✅ /api/health returns 200
-- ✅ /configuration.json returns 200 with JSON
-- ✅ Easy Auth verified disabled on deployed app
+## Gates
 
-**Elapsed time for Check 7:** ~2 hours (with GitHub Packages debugging)
+**Gate A (Step 15) — passed.** Shims indexed into the consumer assembly; migrations
+idempotent; SPA deep links served; task lifecycle completes.
 
-## Key Findings & Notes
+> Gate A did not cover authorization, because `SampleApp` carried no `authentication`
+> section and auth silently disables itself without one. `SampleApp` now enables it, so the
+> gate covers default-deny from here on.
 
-### GitHub Packages NuGet Authentication
-- Packages published to GitHub Packages at version 0.1.0
-- GitHub Actions workflows need explicit NuGet source configuration with GITHUB_TOKEN
-- Local development uses nuget.config with local feed fallback (C:\Dev\AppPlatform\nupkg)
-- Remote deployments should use app-deploy.yaml reusable workflow (handles auth)
+**Gate B (Step 19) — deploy and auth half passed 2026-09-29**, verified against the deployed
+ScratchApp:
 
-### Package Versioning  
-- Local packages built as  .1.0-local for development
-- Published to GitHub Packages as  .1.0
-- Template scaffolds with version references matching published packages
+| Check | Result |
+|---|---|
+| Scaffolds and builds from the template | ✅ |
+| Platform functions indexed as `ScratchApp.dll` via targets injection | ✅ |
+| Migrations apply, and reapply clean on a second run | ✅ |
+| Deployed to Azure and serving | ✅ |
+| Easy Auth confirmed off | ✅ |
+| Anonymous routes → 200 | ✅ |
+| Protected route, no token → 401 | ✅ |
+| Protected route, malformed token → 401 (not 500) | ✅ |
+| Protected route, valid token → 200 | ✅ |
 
-### ScratchApp Deployment
-- Repository: https://github.com/PatrickSchop/ScratchApp
-- Deployed to: https://scratchapp-api.azurewebsites.net
-- Resource group: ScratchApp (westeurope)
-- Database: scratchapp in ApplicationsShared SQL server
+The token used was issued to a **personal Microsoft account**, which is the model in §2(4).
 
-## Remaining Work
+**One checklist item is not demonstrated on the current app.** Gate B also asks for one
+entity, one `ITaskHandler<T>` and one endpoint added with nothing copied. That was done on an
+earlier ScratchApp iteration, but this one was regenerated to pick up the platform fixes and
+carries only the scaffold, so the claim rests on a build that no longer exists. Redo it on the
+current app before calling Gate B closed in full — it is the half that proves the *template*,
+as opposed to the deployment path proven above.
 
-**Step 19 Check 8 (E2E Auth):** Requires manual setup:
-1. Create Entra app registrations (PS Apps API + PS Apps SPA)
-2. Add scratch.user App Role to API registration
-3. Assign role to your user
-4. Configure app settings with tenant/client IDs
-5. Test 401/403/200 auth flow
+*Restore came from the local feed rather than GitHub Packages — see Operator actions.*
 
-See .plans/step-19-manual-execution-guide.md for detailed instructions.
+**Gate C (Step 28) — outstanding.** Needs both starters driving background-task progress
+against one unchanged backend build, with a real sign-in.
 
-**Phase 5 (Steps 23-28):** Front-end TypeScript clients and starters
-- @PS/app-client core SDK
-- Angular and React adapters
-- Starter projects for both frameworks
-- Gate C: verify both UIs work with unchanged backend
+## Phase 5 readiness
 
-## Commits
+The 23→24→25→26→27→28 chain is strictly linear, each step depending only on its
+predecessor. Everything it assumed but did not have now exists:
 
-- Step 19 scaffolding + local package configuration
-- Step 19 deploy workflow refinements (GitHub Packages, Azure CLI deployment)
+- `/configuration.json` serves `auth: { tenantId, clientId, scopes }` from `webApp:auth`, in
+  both the template and `SampleApp`.
+- The platform enforces authorization, so protected routes behave as the starters expect.
+- The TFM split is a recorded decision (§3.2), not drift.
 
-**Total Steps Complete: 22/28** | **Progress: 78%**
+## Environment
+
+| | |
+|---|---|
+| Platform repo | `PatrickSchop/AppPlatform` (**private**) |
+| Verification app | `PatrickSchop/ScratchApp` → `https://scratchapp-api.azurewebsites.net` |
+| Azure | resource group `ScratchApp` (westeurope); database `scratchapp` on `pschop-db` in `ApplicationsShared` |
+| Entra | `PS Apps API` `c5692707-…` and `PS Apps SPA` `28267d47-…`, both `AzureADandPersonalMicrosoftAccount` |
+| Tenant | `6f033fd3-…` · apps authenticate through the `common` authority |
+
+The Azure CLI is pre-authorized on the API registration, so `az account get-access-token
+--resource api://<api-client-id>` yields a token for testing protected routes without an
+interactive consent prompt.
+
+## Operator actions outstanding
+
+These need a human; none blocks Phase 5.
+
+1. **A PAT for package restore.** `AppPlatform` is private, so consumers cannot restore its
+   packages with a workflow's own `GITHUB_TOKEN` — it fails with 403. Each consuming
+   repository needs a classic PAT with `read:packages` as a secret. Gate B was therefore
+   verified against the local feed; the published-package path is proven by CI publishing
+   `0.1.1` successfully, but not by a consumer restoring it. See `docs/consuming-packages.md`.
+2. **Publish the fixed platform.** `0.1.2-local` carries the migration and bicep fixes and is
+   not yet released. Publish it before another app is generated.
+3. **Rotate the leaked Cognitive Services key** in the StockAnalysis repo (carried from
+   Step 22; out of scope here but still unresolved).
+
+## Defect history
+
+Nine defects found in supposedly complete steps. They shared one cause: every step's tests
+asserted that a type resolves from DI or that an attribute exists, never that a request
+through a running host produced the right status. Recorded in §5 of the plan.
+
+**Authorization never ran (2026-09-28).** Five compounding defects meant default-deny was
+inert in every app: `UsePlatform()` registered no middleware; `AddPlatform` never called
+`AddPlatformAuth`; authorization used an empty policy name, which throws; `[AllowAnonymous]`
+was invisible because the shim lookup matched static methods only; and `CorsMiddleware` wrote
+headers after the response had started.
+
+**Migrations never ran against a deployed database (2026-09-29).** `MigrationEntryPoint` never
+registered `IConfiguration`, so `--migrate` threw before reaching the database whenever a
+managed identity was used; `infra/app.bicep` emitted `<server>..database.windows.net`, whose
+extra dot fails DNS and surfaces as a 500 after ~63 seconds.
+
+**CI was not running what it claimed (2026-09-28/29).** `actionlint` exited 127 on every run
+since Step 21, and because it failed, the secret scan and packaging assertions after it were
+skipped every time. `.gitleaks.toml` had a schema error and omitted `[extend] useDefault`, so
+the scan would have run with no rules. The test suite was tracked twice under case-variant
+paths, and only one has the csproj CI builds.
+
+**The deploy workflow could not have worked.** It ran `dotnet App.dll --migrate` with a
+hard-coded assembly name; read three `AZURE_*` secrets it never declared; gated OIDC on
+repository visibility; and tested an `env` value that was never mapped. The template's caller
+passed `TINYAPP-NAME`, which is not a template symbol.
+
+Each fix carries a regression test that fails without it.
+
+## Next
+
+Start **Step 23** — `@PS/app-client`, the zero-dependency TypeScript SDK.

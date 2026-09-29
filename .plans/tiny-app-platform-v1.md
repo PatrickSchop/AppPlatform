@@ -34,8 +34,18 @@ These were decided before planning and constrain every step below.
    front-end starters.
 3. **Auth is implemented in code, configured by hand.** The default-deny authorization
    middleware, role enforcement and CORS ordering are built and tested here. Creating
-   the Entra app registrations and App Roles is a written runbook (Step 22) that the
-   operator executes, because it needs tenant admin.
+   the Entra app registrations is a written runbook (Step 22) that the operator executes,
+   because it needs tenant admin.
+4. **Authorization is authentication-only, for any Microsoft account** (decided 2026-09-29).
+   Work, school and personal accounts may all use these apps, so both registrations use the
+   `AzureADandPersonalMicrosoftAccount` audience and `tenantId` is `common`, never a tenant
+   GUID. `requiredRole` is empty by default.
+
+   This is a trade, not a simplification: an App Role can only be assigned to a principal in
+   your directory, so gating on one is incompatible with admitting arbitrary personal
+   accounts. Roles remain fully supported for an app that sets `requiredRole`; they are just
+   not the default. Every `/api/*` endpoint is still default-deny — authentication is the
+   gate.
 
 ### 2.1 The consequence that shapes the plan
 
@@ -57,12 +67,28 @@ building, migrating and serving. It is also what keeps the source-injected shims
 |---|---|
 | Root namespace | `PS.AppPlatform` (+ `.Hosting`, `.Auth`, `.Data`, `.Tasks`, `.StaticContent`, `.Llm`, `.Endpoints`) |
 | Visibility | **Everything the consumer or a shim touches is `public`.** The source is largely `internal`; that must not be carried over (Â§2.1 of the analysis). |
-| TFM | `net10.0` — **not currently true, see §10 (A2):** the platform builds `net9.0`, only template-generated apps build `net10.0` |
+| TFM | Platform and tests: `net9.0`. Apps from `dotnet new tinyapp`: `net10.0`. Deliberate — see §3.2 |
 | Language | `<Nullable>enable</Nullable>`, `<ImplicitUsings>enable</ImplicitUsings>`, `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` |
 | Package versions | Central, in `Directory.Packages.props`. Never pin a version in a `.csproj`. |
 | `[Function]` attributes | **Never** in `PS.AppPlatform` or any assembly a consumer references. Only in source-injected shims. See Â§4. |
 | Secrets | Never in `appsettings.json`. Function App settings or Key Vault references only. |
 | Per step | Ends green (`dotnet build` + `dotnet test`) and with one git commit. |
+
+### 3.2 Why the platform targets `net9.0` while generated apps target `net10.0`
+
+A library on `net9.0` is consumable from a `net10.0` app, so the split costs nothing at the
+seam. Moving the platform up was tried on 2026-09-29 and reverted: on `net10.0` the
+dependency graph resolves `System.Security.Cryptography.Xml` and
+`Microsoft.AspNetCore.DataProtection` at `10.0.0`, which carry six high and one **critical**
+advisory, and `10.0.1` carries the identical set — there is no patched version to move to.
+With `TreatWarningsAsErrors`, NuGet audit turns those into 20 build errors.
+
+The only ways forward were to suppress a critical advisory or to stop treating audit findings
+as errors. Both defeat a safety check to buy tidiness, so the platform stays on `net9.0`,
+which also keeps generated apps off that graph.
+
+**Revisit when patched 10.0.x packages ship.** Until then this row is a deliberate decision,
+not drift.
 
 ### 3.1 Toolchain prerequisites
 
@@ -106,7 +132,13 @@ gets quietly reversed by someone trying to be careful:
 > bearer token anyway. A front-end that mishandles a 401 or 403 is ugly, not insecure.
 
 `StaticContent`, `GetHealth` and `GetWebAppConfiguration` are therefore `[AllowAnonymous]`;
-everything else is protected. This differs from the source, where `Static.cs:25` carries the
+everything else is protected. Per §2(4) the gate is **authentication**, not a role: a caller
+with no token gets 401 and a caller with a valid token gets through. A 403 appears only when
+an app sets `requiredRole`.
+
+The SPA gets the client id it signs in with from the **public** `webApp:auth` section of
+`/configuration.json` — `tenantId` (`common`), `clientId` (the **SPA** registration, not the
+API one) and `scopes`. Both ids are public by design; nothing secret is served. This differs from the source, where `Static.cs:25` carries the
 repo's only `[Authorize]` â€” which, per Â§6, could not have been enforcing anything anyway.
 
 Three consequences that are easy to miss:
@@ -148,6 +180,25 @@ assigned to a step and verified there.
 | Scope leak | Both middleware resolve from the root provider | 10 |
 | `tenantId == clientId` | Copy-paste error in `appsettings.json` | 22 |
 | Workflow inputs | `dotnetversion` declared, `inputs.dotnet_version` read; default `9.0.x` vs `net10.0` | 21 |
+
+**The four Step 10 rows above shipped inert and were repaired on 2026-09-28.** `UsePlatform()`
+registered no middleware, so nothing in that row was enforced in any app. Four further defects
+sat behind it: `AddPlatform` never called `AddPlatformAuth`; authorization was evaluated with
+an empty policy name, which throws; `[AllowAnonymous]` was invisible because the shim lookup
+matched static methods only, while every shim method is an instance method; and `CorsMiddleware`
+wrote headers after the response had started. Gate A missed all of it because `SampleApp` had
+no `authentication` section, which silently disables auth.
+
+Two more shipped broken and were repaired on 2026-09-29, both on the deployment path:
+`MigrationEntryPoint` never registered `IConfiguration`, so `--migrate` threw before reaching
+the database whenever a managed identity was used; and `infra/app.bicep` emitted
+`<server>..database.windows.net`, whose extra dot fails DNS and surfaces as a 500 after a
+~63 second timeout.
+
+**The lesson these share is worth more than the fixes.** Every one passed its step's tests,
+because those tests asserted that a type resolves from DI or that an attribute exists — never
+that a request through a running host produced the right status. Steps 23-28 must verify
+behaviour end to end, not construction.
 
 **Dropped rather than ported:** `TaskNotificationHub.cs`, `TaskNotificationHubEndpoint.cs`,
 the `@microsoft/signalr` dependency, `WebApp/Program.cs` and the npm MSBuild targets.
@@ -277,12 +328,18 @@ phase.
 endpoint, and get a working app with **zero files copied from StockAnalysis or SampleApp**.
 Target: under an hour from `dotnet new` to deployed.
 
-Auth expectation amended by §10 (A1): with no required role the gate is **401 without a
-token, 200 with one**. There is no 403 to observe unless `requiredRole` is set.
+Auth expectation, per §2(4): **401 without a token, 401 with a malformed one, 200 with a
+valid one.** There is no 403 to observe unless `requiredRole` is set.
 
 **Gate C (Step 28) â€” front-end freedom is real.**
 The React starter and the Angular starter both run background-task progress against the
 **same unmodified backend build**.
+
+Gate C needs a real sign-in, because the Notes routes it exercises are protected. `SampleApp`
+ships placeholder ids so it demonstrates default-deny without carrying a tenant identity in
+the repository, so supply real ids at run time through environment variables —
+`authentication__azureEntraId__clientId` (the API registration) and `webApp__auth__clientId`
+(the SPA registration) — or run Gate C against the deployed ScratchApp.
 
 ---
 
@@ -299,107 +356,3 @@ The React starter and the Angular starter both run background-task progress agai
   is read-only here.
 - **Rotating the leaked Cognitive Services key.** Flagged in Step 22, but the action is the
   operator's and happens in the StockAnalysis repo and the Azure portal.
-
----
-
-## 10. Amendments (2026-09-29)
-
-Recorded after reviewing the remaining plan against the repository. Each item either
-changes a locked decision or is a prerequisite that a later step assumes but nothing
-produces. The step documents themselves are unchanged except where noted.
-
-### A1. The authorization model is now authentication-only
-
-**Supersedes the App Role half of §4.1a and of Step 22.** The operator chose to let **any
-Microsoft account** — work, school or personal — use these apps. Two consequences:
-
-- Both app registrations are created with sign-in audience
-  `AzureADandPersonalMicrosoftAccount`, and `authentication:azureEntraId:tenantId` must be
-  `common`. A tenant GUID rejects personal accounts and other organizations.
-- `requiredRole` is empty. **The per-app App Role model is not used.** It remains supported
-  by the code, so an app that wants it can still set `requiredRole`.
-
-This is a deliberate trade: an App Role can only be assigned to a principal in your
-directory, so gating on one is incompatible with admitting arbitrary personal accounts.
-Authentication alone is the gate; every `/api/*` endpoint is still default-deny.
-
-Affected steps: **19** (Check 8 has no 403 to observe), **26** and **27** (the "role-aware
-403 page" is UI for a state that cannot occur while `requiredRole` is empty — keep the 403
-branch, since the platform still supports roles, but do not require a role to sign in),
-**22** (Part 2's App Role procedure is optional, not mandatory).
-
-### A2. TFM split: the platform is net9.0, not net10.0
-
-§3 states `net10.0`. Reality:
-
-| Project | TFM |
-|---|---|
-| `PS.AppPlatform`, `PS.AppPlatform.Functions`, `SampleApp`, tests | `net9.0` |
-| Apps generated from `dotnet new tinyapp` | `net10.0` |
-
-It builds because a `net10.0` app can consume a `net9.0` package, but the platform is not
-being built or tested on the framework its consumers run on. **Needs a decision before
-Phase 5:** either move the platform to `net10.0` and match §3, or change §3 to say the
-platform targets `net9.0` deliberately and consumers may go higher.
-
-### A3. Nothing produces the auth config the SPA needs
-
-`/configuration.json` is a passthrough of the `webApp` configuration key. Steps 23-27 expect
-`auth: { tenantId, clientId, scopes }` to arrive from it, but neither `SampleApp` nor the
-template writes a `webApp:auth` section — both contain only `api.root` and `title`.
-
-**Step 23 cannot be verified end to end until this exists.** It needs the **SPA**
-registration's client id (not the API's, which is what `authentication:azureEntraId:clientId`
-holds) and `tenantId: "common"`. Per §4.1a everything under `webApp` is public, and both
-ids are safe to serve; no secret is involved.
-
-Add it to the template and to `SampleApp` as part of Step 23.
-
-### A4. Gate C now genuinely requires working sign-in
-
-Step 28 checks "Notes list and create" through the starters. Those endpoints are protected,
-and until 2026-09-28 the authorization middleware never ran (see A5), so this would have
-passed unauthenticated. It no longer will.
-
-Gate C therefore needs `SampleApp` configured with **real** ids in both places — the API id
-under `authentication:azureEntraId` and the SPA id under `webApp:auth`. `SampleApp` currently
-holds deliberate placeholders, which exercise default-deny but cannot complete a sign-in.
-Decide at Step 26 whether Gate C runs against `SampleApp` with real ids or against the
-deployed ScratchApp.
-
-### A5. Step 10's outcome was never true until 2026-09-28
-
-The four Step 10 rows in §5 (default-deny, endpoint metadata, CORS ordering, scope leak) were
-implemented but **inert**: `UsePlatform()` registered no middleware, so no app built on this
-platform enforced anything. Fixed and verified against `SampleApp`; see the progress document
-for the five defects and why Gate A did not catch them.
-
-Two process lessons worth carrying into Phase 5:
-
-- **Step 10's own snippet does not compile.** `app.UseMiddleware<CorsMiddleware>()` needs
-  `using Microsoft.Extensions.Hosting;`; without it the ASP.NET Core `IApplicationBuilder`
-  overload is selected and the build fails. Treat snippets in these documents as sketches.
-- **A step is not done because its tests pass.** Every Step 10 test asserted that a type
-  resolves from DI or that an attribute exists. None invoked the middleware. Phase 5 steps
-  should verify behaviour through a running host, not just construction.
-
-### A6. Gate B is still open, so Phase 5 is formally blocked
-
-§8 says a failed gate is fixed forward before the next phase starts. Step 19 Check 7 needs
-redeploying against the fixed platform, and Check 8 has not run. Phase 5 should not start
-until Gate B closes, which needs: publish `0.1.1`, repoint ScratchApp, redeploy, then verify
-401 without a token and 200 with one (per A1).
-
-### A7. Open defects in `app-deploy.yaml`
-
-Found while fixing CI; left unfixed because they are Step 21 scope and need a decision:
-
-- The migration step runs `dotnet App.dll --migrate`. The assembly name is hard-coded and
-  wrong for every generated app. This step has never successfully run.
-- The RBAC fallback is gated on `env.AZURE_RBAC_CREDENTIALS`, which is never mapped into
-  `env`, so the condition is always false and the fallback is dead code.
-- OIDC login is gated on `github.event.repository.private == false`, which is a strange way
-  to select an authentication mechanism.
-
-Deploying via this workflow is part of Step 19 Check 7, so at least the first item must be
-resolved before Gate B can close through the workflow rather than by hand.

@@ -126,7 +126,7 @@ Note the app has no `wwwroot` yet, so static routes 404 — correct for a backen
 ## Check 7 — Deploy (needs Step 20)
 
 **Precondition added 2026-09-29:** the platform packages must be at a version that contains
-the authorization fixes (see container plan §10 A5). A build from `0.1.0` enforces nothing.
+the authorization fixes (see container plan §5). A build from `0.1.0` enforces nothing.
 Publish `0.1.1`, point the app at it, and deploy that — otherwise this check passes against
 a build whose `/api/*` routes are wide open.
 
@@ -182,7 +182,7 @@ and it is what the SPA would hit first.
 
 ## Check 8 — Auth end to end
 
-**Amended by the container plan §10 (A1): this app uses no App Role.** The authorization
+**Amended by the container plan §2(4): this app uses no App Role.** The authorization
 model is authentication-only so that any Microsoft account can sign in, so there is no
 `scratch.user` role to create and no 403 to observe.
 
