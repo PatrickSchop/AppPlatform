@@ -182,7 +182,10 @@ Sub-agents run as `claude -p` (print mode: non-interactive, exits when done). Th
 cd /c/Dev/AppPlatform   # repository root
 RUN=.plans/<plan>/runs/<ID>
 
-timeout <SECONDS> claude -p \
+env -u CLAUDECODE -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID \
+    -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN \
+    -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_CODE_ENTRYPOINT \
+  timeout <SECONDS> claude -p \
   --model <haiku|sonnet|opus> \
   --output-format json \
   --permission-mode <mode> \
@@ -193,6 +196,7 @@ timeout <SECONDS> claude -p \
 echo "exit=$?"
 ```
 
+- **Nested-session guard.** The controller is itself a Claude Code session, so its environment contains `CLAUDECODE=1`, and a child `claude` refuses to start ("cannot be launched inside another Claude Code session"). That run exits with code 0 but `is_error: true` in the JSON and produces no report. The `env -u ...` prefix removes that variable and the ones that tie a child to the parent session (session id, messaging socket and token, entrypoint), so each sub-agent is an independent process. Always use the prefix. Verified on 2026-09-30 with `--model haiku` and `--model opus`.
 - The prompt goes in through **stdin** from the prompt file. Do not pass long prompts as an argument.
 - `-p` never prompts for permissions. A tool that is not allowed is simply denied, so the allow-list must cover what the role needs (see the table). Do **not** use `--dangerously-skip-permissions`.
 - `--output-format json` prints one JSON object with `result`, `is_error`, `session_id`, `num_turns` and `total_cost_usd`. Parse it to detect failed runs.
