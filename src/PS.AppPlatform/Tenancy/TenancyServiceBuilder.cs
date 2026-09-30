@@ -59,7 +59,15 @@ public static class TenancyServiceBuilder
             case "management":
                 throw new NotSupportedException("ManagementApiTenantDirectory arrives in MT-09.");
             case "local":
-                throw new NotSupportedException("LocalRegistryTenantDirectory arrives in MT-08.");
+                // The app must register its own ITenantDirectory implementation (e.g. LocalRegistryTenantDirectory).
+                // We register a sentinel so that forgetting to do so produces a clear startup error instead of a
+                // cryptic "service not registered" DI exception.
+                services.TryAdd(ServiceDescriptor.Scoped<ITenantDirectory>(_ =>
+                    throw new InvalidOperationException(
+                        "tenancy:directory is 'local' but no ITenantDirectory was registered. " +
+                        "The app must call services.AddScoped<ITenantDirectory, LocalRegistryTenantDirectory>() " +
+                        "(or another implementation) after AddPlatformTenancy.")));
+                break;
             default:
                 throw new InvalidOperationException($"Unknown tenancy directory: {options.Directory}");
         }

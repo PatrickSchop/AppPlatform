@@ -53,6 +53,19 @@ public sealed class MigrateCommand : IPlatformCommand
             return 1;
         }
 
+        var steps = services.GetServices<IPostMigrationStep>();
+        foreach (var step in steps)
+        {
+            var exitCode = await step.RunAsync(services, ct);
+            if (exitCode != 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Post-migration step {step.GetType().Name} failed with exit code {exitCode}.");
+                Console.ResetColor();
+                return exitCode;
+            }
+        }
+
         return 0;
     }
 }

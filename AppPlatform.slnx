@@ -1,4 +1,7 @@
 ﻿<Solution>
+  <Folder Name="/apps/">
+    <Project Path="apps/Management/Management.csproj" />
+  </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/SampleApp/SampleApp.csproj" />
     <Project Path="samples/MultiTenantSample/MultiTenantSample.csproj" />
@@ -9,6 +12,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PS.AppPlatform.Tests/PS.AppPlatform.Tests.csproj" />
+    <Project Path="tests/Management.Tests/Management.Tests.csproj" />
   </Folder>
 </Solution>
 
