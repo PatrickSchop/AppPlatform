@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using PS.AppPlatform.Hosting;
 using PS.AppPlatform.Tenancy;
 using PS.Management.Registry;
@@ -16,23 +14,18 @@ public class LocalRegistryTenantDirectoryTests
                 .Options,
             new PlatformAssemblies().AddContaining<RegistryService>());
 
-    private static LocalRegistryTenantDirectory CreateDirectory(
-        RegistryDbContext db,
-        IMemoryCache cache,
-        string appKey = "management")
+    private static LocalRegistryTenantDirectory CreateDirectory(RegistryDbContext db)
     {
         var query = new MembershipQuery(db);
         var manifest = new Manifest();
-        var options = Options.Create(new TenancyOptions { CacheDuration = TimeSpan.FromMinutes(5) });
-        return new LocalRegistryTenantDirectory(query, manifest, cache, options);
+        return new LocalRegistryTenantDirectory(query, manifest);
     }
 
     [Fact]
     public async Task GetMembershipsAsync_ReturnsNull_WhenUserNotInDb()
     {
         await using var db = CreateContext();
-        using var cache = new MemoryCache(new MemoryCacheOptions());
-        var dir = CreateDirectory(db, cache);
+        var dir = CreateDirectory(db);
 
         var result = await dir.GetMembershipsAsync(
             new IdentityKey(Guid.NewGuid().ToString(), Guid.NewGuid().ToString()),
@@ -42,10 +35,9 @@ public class LocalRegistryTenantDirectoryTests
     }
 
     [Fact]
-    public async Task GetMembershipsAsync_CachesResult_SecondCallDoesNotReloadFromDb()
+    public async Task GetMembershipsAsync_ReturnsUserMemberships_WhenUserExists()
     {
         await using var db = CreateContext();
-        using var cache = new MemoryCache(new MemoryCacheOptions());
         var svc = new RegistryService(db);
 
         // Register the management app
@@ -57,20 +49,10 @@ public class LocalRegistryTenantDirectoryTests
         var identity = new IdentityKey(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
         await svc.EnsureAdminAsync(identity, "Test Admin", default);
 
-        var dir = CreateDirectory(db, cache);
+        var dir = CreateDirectory(db);
 
-        // First call — populates cache
-        var r1 = await dir.GetMembershipsAsync(identity, default);
-        Assert.NotNull(r1);
-
-        // Disable the user in DB — the cached result should still be returned
-        var user = await db.Users.SingleAsync();
-        user.IsDisabled = true;
-        await db.SaveChangesAsync();
-
-        // Second call — should return cached (non-null) result
-        var r2 = await dir.GetMembershipsAsync(identity, default);
-        Assert.NotNull(r2);
-        Assert.Equal(r1!.UserId, r2!.UserId);
+        var result = await dir.GetMembershipsAsync(identity, default);
+        Assert.NotNull(result);
+        Assert.Single(result!.Tenants);
     }
 }

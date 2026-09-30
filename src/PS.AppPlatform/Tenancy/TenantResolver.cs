@@ -18,6 +18,7 @@ public static class TenantErrors
     public const string NotRegistered = "not_registered";
     public const string TenantForbidden = "tenant_forbidden";
     public const string TenantRequired = "tenant_required";
+    public const string RegistryUnavailable = "registry_unavailable";
 }
 
 /// <summary>
@@ -44,7 +45,16 @@ public sealed class TenantResolver(IOptions<TenancyOptions> options, ITenantDire
             return new TenantResolution.Stop(StatusCodes.Status403Forbidden, TenantErrors.NotRegistered);
         }
 
-        var memberships = await directory.GetMembershipsAsync(identity, ct);
+        UserMemberships? memberships;
+        try
+        {
+            memberships = await directory.GetMembershipsAsync(identity, ct);
+        }
+        catch (TenantDirectoryUnavailableException)
+        {
+            http.Response.Headers["Retry-After"] = "5";
+            return new TenantResolution.Stop(StatusCodes.Status503ServiceUnavailable, TenantErrors.RegistryUnavailable);
+        }
         if (memberships is null || memberships.Tenants.Count == 0)
         {
             if (!tenantOptional)

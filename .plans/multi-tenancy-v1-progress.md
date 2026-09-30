@@ -223,3 +223,8 @@ self-registration, `--bootstrap-admin`.
 - cost MT-09/06-exec-a2.json claude-haiku-4-5-20251001 turns 30 usd 0.19
 - MT-09a: a2 COMPLETE (202 tests). Running verify + gated publish (no 2nd review).
 - cost 07-verify-a2.json claude-haiku-4-5-20251001 turns 27 usd 0.17
+- cost 09-publish-a2.json claude-haiku-4-5-20251001 turns 27 usd 0.14
+- MT-09a: DONE (05d6342, CI passed; publisher report commit 4a29456). Stray untracked build_management.log in repo root left by an executor (not committed); the MT-09b executor is told to delete it. State: MT-09b executing (a1, haiku); start commit 4a29456.
+- cost MT-09/10-exec-b1.json claude-haiku-4-5-20251001 turns 74 usd 0.66
+- MT-09b: b1 (haiku) COMPLETE. Running verify + gated publish (REVIEW no).
+- cost 11-verify-b1.json claude-haiku-4-5-20251001 turns 23 usd 0.16

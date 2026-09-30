@@ -327,6 +327,63 @@ public class TenantResolutionTests
         Assert.Same(first, second);
     }
 
+    [Fact]
+    public async Task Directory_throws_unavailable_returns_503_with_retry_after()
+    {
+        // Create a test harness with a failing directory
+        var values = DirectoryConfig();
+        values["tenancy:mode"] = "multi";
+        values["tenancy:directory"] = "config";
+        var config = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
+
+        var assemblies = new PlatformAssemblies();
+        assemblies.Add(typeof(TenantResolutionTests).Assembly);
+
+        var testServices = new ServiceCollection();
+        testServices.AddSingleton<IConfiguration>(config);
+        var environment = Substitute.For<IHostEnvironment>();
+        environment.EnvironmentName.Returns(Environments.Development);
+        testServices.AddSingleton(environment);
+        testServices.AddSingleton(assemblies);
+        testServices.AddLogging();
+        testServices.AddPlatformAuth(config);
+        testServices.AddPlatformTenancy(config);
+
+        testServices.AddSingleton<ITenantDirectory>(sp => new FailingTenantDirectory());
+        testServices.AddSingleton<IAuthenticationService, HeaderAuthenticationService>();
+
+        var root = testServices.BuildServiceProvider(validateScopes: true);
+        var middleware = new FunctionAuthorizationMiddleware();
+
+        await using var scope = root.CreateAsyncScope();
+        var http = new DefaultHttpContext();
+        http.Response.Body = new MemoryStream();
+        http.Request.Headers[HeaderAuthenticationService.OidHeader] = "u-oid";
+        http.Request.Headers[HeaderAuthenticationService.TidHeader] = Tid;
+
+        var definition = Substitute.For<FunctionDefinition>();
+        definition.Name.Returns(nameof(TenantShimEndpoints.Plain));
+        definition.EntryPoint.Returns($"{typeof(TenantShimEndpoints).FullName}.{nameof(TenantShimEndpoints.Plain)}");
+
+        var context = Substitute.For<FunctionContext>();
+        context.FunctionDefinition.Returns(definition);
+        context.InstanceServices.Returns(scope.ServiceProvider);
+        context.Items.Returns(new Dictionary<object, object> { ["HttpRequestContext"] = http });
+
+        await middleware.Invoke(context, ctx => Task.CompletedTask);
+
+        Assert.Equal(503, http.Response.StatusCode);
+        Assert.Equal("5", http.Response.Headers["Retry-After"].ToString());
+    }
+
+    private sealed class FailingTenantDirectory : ITenantDirectory
+    {
+        public Task<UserMemberships?> GetMembershipsAsync(IdentityKey identity, CancellationToken ct)
+        {
+            throw new TenantDirectoryUnavailableException("Directory service is unavailable");
+        }
+    }
+
     private sealed record InvokeResult(int Status, string? Error, bool NextCalled, ITenantContext? Tenant);
 
     private sealed class Harness : IDisposable

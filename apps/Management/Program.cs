@@ -2,6 +2,8 @@ using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PS.AppPlatform.Data;
 using PS.AppPlatform.Hosting;
 using PS.AppPlatform.Tenancy;
@@ -31,7 +33,13 @@ public static class Program
 
         builder.Services.Configure<RegistryOptions>(builder.Configuration.GetSection(RegistryOptions.SectionName));
 
-        builder.Services.AddScoped<ITenantDirectory, LocalRegistryTenantDirectory>();
+        builder.Services.AddScoped<LocalRegistryTenantDirectory>();
+        builder.Services.AddSingleton<ITenantDirectory>(sp =>
+            new CachingTenantDirectory(
+                sp.GetRequiredService<IServiceScopeFactory>(),
+                sp.GetRequiredService<IOptions<TenancyOptions>>(),
+                sp.GetRequiredService<ILogger<CachingTenantDirectory>>(),
+                typeof(LocalRegistryTenantDirectory)));
         builder.Services.AddScoped<MembershipQuery>();
         builder.Services.AddScoped<RegistryService>();
         builder.Services.AddScoped<RegistryEndpoints>();
