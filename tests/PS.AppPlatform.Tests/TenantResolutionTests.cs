@@ -334,6 +334,8 @@ public class TenantResolutionTests
         var values = DirectoryConfig();
         values["tenancy:mode"] = "multi";
         values["tenancy:directory"] = "config";
+        values["authentication:azureEntraId:tenantId"] = "entra-tenant";
+        values["authentication:azureEntraId:clientId"] = "entra-client";
         var config = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
 
         var assemblies = new PlatformAssemblies();

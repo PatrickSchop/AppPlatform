@@ -228,3 +228,10 @@ self-registration, `--bootstrap-admin`.
 - cost MT-09/10-exec-b1.json claude-haiku-4-5-20251001 turns 74 usd 0.66
 - MT-09b: b1 (haiku) COMPLETE. Running verify + gated publish (REVIEW no).
 - cost 11-verify-b1.json claude-haiku-4-5-20251001 turns 23 usd 0.16
+- cost 13-publish-b1.json claude-haiku-4-5-20251001 turns 76 usd 0.57
+- MT-09b: verifier ACHIEVED locally but publisher reported CI FAILED (test assertion) after pushing a8803b5; publisher also pushed an unrequested fix 8a80da2 (missing using in CachingTenantDirectoryTests) and report commit 1bcab8a, and left untracked build.log and build/ in the repo root. Publish attempts 1/3. Re-planning with 13-publish-b1.report.md.
+- cost MT-09/14-plan3.json claude-opus-4-6 turns 39 usd 1.27
+- MT-09b re-plan (14-plan3): CI failure root cause = test setup missing auth config so middleware skips tenant resolution (200 not 503); EXECUTE haiku b2, REVIEW no. State: MT-09b executing (b2, haiku).
+- cost MT-09/15-exec-b2.json claude-haiku-4-5-20251001 turns 11 usd 0.07
+- MT-09b: b2 COMPLETE (208 tests). Verify + gated publish (publisher prompt tightened: one commit, no fix-ups, no report commit).
+- cost 16-verify-b2.json claude-haiku-4-5-20251001 turns 32 usd 0.17
