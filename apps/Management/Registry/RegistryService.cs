@@ -183,6 +183,8 @@ public sealed class RegistryService(RegistryDbContext db)
                 }
             }
 
+            await db.SaveChangesAsync(ct); // persist re-enable / bind of an existing user
+
             // Resolve management app, Default tenant, Default team
             var app = await db.Applications.FirstOrDefaultAsync(a => a.Key == "management", ct)
                 ?? throw new InvalidOperationException(
