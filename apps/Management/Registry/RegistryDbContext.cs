@@ -47,7 +47,7 @@ public class RegistryDbContext(DbContextOptions<RegistryDbContext> options, Plat
             e.ToTable("Teams");
             e.HasIndex(t => new { t.TenantId, t.Name }).IsUnique();
             // Filtered unique index: only one IsDefault team per tenant
-            e.HasIndex(t => new { t.TenantId, t.IsDefault })
+            e.HasIndex(t => t.TenantId)
                 .IsUnique()
                 .HasFilter("[IsDefault] = 1");
             e.HasOne<Tenant>().WithMany().HasForeignKey(t => t.TenantId)

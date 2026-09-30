@@ -196,3 +196,6 @@ self-registration, `--bootstrap-admin`.
 
 - 2026-09-30 MT-08: first planner launch failed (nested-session guard); fixed by `env -u` prefix in the updated execution doc. Planner 1 returned SPLIT into MT-08a (scaffolding: projects, entities, RegistryDbContext, migration script, IPostMigrationStep), MT-08b (services, LocalRegistryTenantDirectory, self-registration, --bootstrap-admin), MT-08c (tests); executor model sonnet. Planner's Write(.plans/**) was denied, so its report was taken from the JSON `result` (summary only). Run dir `.plans/multi-tenancy-v1/runs/MT-08/`. Start commit 10cb25e. State: MT-08a executing (attempt 1, sonnet). Counters: executor sonnet 0/2, review rounds 0/2, publish 0/3.
 - MT-08a: executor a1 (sonnet) COMPLETE, verifier ACHIEVED (174 tests), reviewer ACCEPT-with-should. Open should: EF index on Teams should be `HasIndex(t => t.TenantId)` to mirror SQL (RegistryDbContext.cs). State: publishing.
+- MT-08a: DONE, commit 71f2666, CI passed. State: MT-08b executing (attempt 1, sonnet); start commit 71f2666.
+- MT-08b: executor b1 (sonnet) COMPLETE, verifier ACHIEVED, reviewer CHANGE (1 must: UpsertApplicationAsync not in a single transaction; should: EnsureAdminAsync transaction, AddPlatformTenancy order). Re-planning (review round 1/2).
+- MT-08b: b2 fixes COMPLETE, verifier ACHIEVED, reviewer ACCEPT (review round 2 done). Publishing.

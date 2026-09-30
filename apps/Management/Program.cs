@@ -13,7 +13,7 @@ public static class Program
     public static async Task<int> Main(string[] args)
     {
         if (PlatformCommandLine.IsCommandRun(args))
-            return await PlatformCommandLine.RunAsync<RegistryDbContext>(args);
+            return await PlatformCommandLine.RunAsync<RegistryDbContext>(args, configureServices: ManagementCommands.Register);
 
         var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -22,13 +22,14 @@ public static class Program
         var assemblies = new PlatformAssemblies();
 
         builder.Services.AddSingleton(assemblies);
-        builder.Services.AddPlatformTenancy(builder.Configuration);
 
         builder.Services.AddPlatform(builder.Configuration, assemblies);
         builder.Services.AddPlatformData<RegistryDbContext>(builder.Configuration);
+        builder.Services.AddPlatformTenancy(builder.Configuration);
 
-        // LocalRegistryTenantDirectory is registered in MT-08b.
-        // builder.Services.AddScoped<ITenantDirectory, LocalRegistryTenantDirectory>();
+        builder.Services.AddScoped<ITenantDirectory, LocalRegistryTenantDirectory>();
+        builder.Services.AddScoped<MembershipQuery>();
+        builder.Services.AddScoped<RegistryService>();
 
         builder.ConfigureFunctionsWebApplication().UsePlatform();
 
