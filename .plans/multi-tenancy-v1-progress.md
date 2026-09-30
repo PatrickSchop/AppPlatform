@@ -247,3 +247,11 @@ self-registration, `--bootstrap-admin`.
 - cost MT-09/21-exec-c2.json claude-haiku-4-5-20251001 turns 27 usd 0.23
 - MT-09c: c2 (haiku) COMPLETE (219 tests). All sub-steps done; running the single VERIFY of MT-09 + single PUBLISH of the remaining (c) changes via tail.sh.
 - cost 22-verify-c2.json claude-haiku-4-5-20251001 turns 36 usd 0.27
+- cost 24-publish-c2.json claude-haiku-4-5-20251001 turns 17 usd 0.12
+- MT-09: verifier ACHIEVED locally, pushed 38ddbec (MT-09c) but CI FAILED (publish attempt 1/3; see 24-publish-c2.report.md). Re-planning (26-plan5).
+is_error False
+- cost MT-09/26-plan5.json claude-opus-4-6 turns 26 usd 0.43
+- MT-09 re-plan 5: CI failure = gitleaks flagged hardcoded JWT-looking test token in ManagementApiTenantDirectoryTests.cs; EXECUTE haiku (d1), VERIFY light. State: MT-09 fix executing (d1, haiku); publish attempts 1/3.
+- cost MT-09/27-exec-d1.json claude-haiku-4-5-20251001 turns 17 usd 0.1
+- MT-09 d1 COMPLETE (219 tests). Light verify + publish (attempt 2 of 3).
+- cost 28-verify-d1.json claude-haiku-4-5-20251001 turns 22 usd 0.1

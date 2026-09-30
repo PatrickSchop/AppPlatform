@@ -19,7 +19,7 @@ public class ManagementApiTenantDirectoryTests
 
         public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
         {
-            var token = "eyJhbGciOiJIUzI1NiJ9.eyJvaWQiOiIxMjM0NTY3OS1hYmNkLWVmZ2gtaWprbCJ9.test";
+            var token = "test-token-not-a-secret";
             return new AccessToken(token, DateTimeOffset.UtcNow.AddHours(1));
         }
     }
