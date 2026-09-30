@@ -1,6 +1,6 @@
 ﻿# Multi-tenancy v1 — Progress
 
-**Updated:** 2026-09-29 · **Phase 1 complete (Gate D passed) · next: MT-08**
+**Updated:** 2026-09-30 · **MT-01–MT-08 done · next: MT-09**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -209,3 +209,17 @@ self-registration, `--bootstrap-admin`.
 - cost 20-exec-c3.json claude-haiku-4-5-20251001 turns 19 usd 0.11
 - cost 21-verify-c3.json claude-haiku-4-5-20251001 turns 23 usd 0.13
 - cost 21-verify-c3.json claude-haiku-4-5-20251001 turns 23 usd 0.13
+- cost 23-publish-c3.json claude-haiku-4-5-20251001 turns 21 usd 0.1
+- MT-08: DONE (a=71f2666, b=c22e2bc, c=2a440f5; CI passed on all). Note: publisher also committed its own report as 2ce660c (runs/MT-08/23-publish-c3.report.md); runs/ files are otherwise untracked. Open should items: none. State: MT-09 planning; start commit 2ce660c. Run dir runs/MT-09/. Scripts: runs/tail.sh (verify [+review if REVIEW=yes] + gated publish; set PYTHONUTF8=1).
+- cost MT-09/01-plan.json claude-opus-4-6,claude-haiku-4-5-20251001 turns 43 usd 1.61
+- MT-09 planned: SPLIT into MT-09a (registry API + caller auth; REVIEW yes), MT-09b (caching + resolver), MT-09c (ManagementApiTenantDirectory + --register + tests); all haiku, briefs in runs/MT-09/01-plan.report.md (a: lines 21-138, b: 139-285, c: 286-end). Helper: runs/exec.sh. State: MT-09a executing (a1, haiku); start commit 2ce660c.
+- cost MT-09/02-exec-a1.json claude-haiku-4-5-20251001 turns 94 usd 0.76
+- MT-09a: executor a1 (haiku) COMPLETE (201 tests). Running verify + review + gated publish (tail.sh, REVIEW=yes).
+- cost 03-verify-a1.json claude-haiku-4-5-20251001 turns 25 usd 0.15
+- cost 04-review-a1.json claude-sonnet-4-6 turns 23 usd 0.73
+- MT-09a: verifier ACHIEVED, reviewer CHANGE (1 must: RegistrationBody lacks ServicePrincipalId, PUT registers null principal so GET memberships always 403; see 04-review-a1.report.md). Re-planning (review round 1/1: no further code review, status reviewer verifies the fix).
+- cost MT-09/05-plan2.json claude-opus-4-6 turns 27 usd 0.56
+- MT-09a re-plan: EXECUTE haiku (a2), REVIEW no, brief = runs/MT-09/05-plan2.report.md (whole file). State: MT-09a executing (a2, haiku).
+- cost MT-09/06-exec-a2.json claude-haiku-4-5-20251001 turns 30 usd 0.19
+- MT-09a: a2 COMPLETE (202 tests). Running verify + gated publish (no 2nd review).
+- cost 07-verify-a2.json claude-haiku-4-5-20251001 turns 27 usd 0.17

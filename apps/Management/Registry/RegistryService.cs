@@ -233,4 +233,9 @@ public sealed class RegistryService(RegistryDbContext db)
             return user.Id;
         });
     }
+
+    public async Task<Application?> GetApplicationByKeyAsync(string key, CancellationToken ct)
+    {
+        return await db.Applications.FirstOrDefaultAsync(a => a.Key == key, ct);
+    }
 }

@@ -1,9 +1,11 @@
 using Microsoft.Azure.Functions.Worker.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PS.AppPlatform.Data;
 using PS.AppPlatform.Hosting;
 using PS.AppPlatform.Tenancy;
+using PS.Management.Api;
 using PS.Management.Registry;
 
 namespace PS.Management;
@@ -27,9 +29,20 @@ public static class Program
         builder.Services.AddPlatformData<RegistryDbContext>(builder.Configuration);
         builder.Services.AddPlatformTenancy(builder.Configuration);
 
+        builder.Services.Configure<RegistryOptions>(builder.Configuration.GetSection(RegistryOptions.SectionName));
+
         builder.Services.AddScoped<ITenantDirectory, LocalRegistryTenantDirectory>();
         builder.Services.AddScoped<MembershipQuery>();
         builder.Services.AddScoped<RegistryService>();
+        builder.Services.AddScoped<RegistryEndpoints>();
+
+        // Validate registry configuration in non-dev environments
+        if (!builder.Environment.IsDevelopment())
+        {
+            var registryOptions = builder.Configuration.GetSection(RegistryOptions.SectionName).Get<RegistryOptions>();
+            if (registryOptions?.TrustedTenantId == "")
+                throw new InvalidOperationException("RegistryOptions.TrustedTenantId must be configured in non-development environments");
+        }
 
         builder.ConfigureFunctionsWebApplication().UsePlatform();
 
