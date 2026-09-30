@@ -199,16 +199,6 @@ public class TenancyContractTests
             context.SetSystem(Guid.NewGuid()));
     }
 
-    private sealed class TestManifest : AppManifest
-    {
-        public string KeyValue { get; set; } = "testapp";
-        public IReadOnlyList<AppRoleDefinition> RolesValue { get; set; } = new[] { new AppRoleDefinition("editor", "Editor") };
-
-        public override string Key => KeyValue;
-        public override TenancyMode Tenancy => TenancyMode.Multi;
-        public override IReadOnlyList<AppRoleDefinition> Roles => RolesValue;
-    }
-
     private sealed class TestHostingEnvironment : IHostEnvironment
     {
         public bool IsProductionValue { get; set; }
@@ -262,4 +252,14 @@ public class TenancyContractTests
         public static NullDisposable Instance { get; } = new();
         public void Dispose() { }
     }
+}
+
+public sealed class TestManifest : AppManifest
+{
+    public string KeyValue { get; set; } = "testapp";
+    public IReadOnlyList<AppRoleDefinition> RolesValue { get; set; } = new[] { new AppRoleDefinition("editor", "Editor") };
+
+    public override string Key => KeyValue;
+    public override TenancyMode Tenancy => TenancyMode.Multi;
+    public override IReadOnlyList<AppRoleDefinition> Roles => RolesValue;
 }

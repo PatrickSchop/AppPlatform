@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PS.AppPlatform.Data;
+using PS.AppPlatform.Tenancy;
 
 namespace PS.AppPlatform.Hosting;
 
@@ -43,6 +44,8 @@ public static class PlatformCommandLine
 
         // Register built-in commands
         services.AddSingleton<IPlatformCommand, MigrateCommand>();
+        services.Configure<ManagementDirectoryOptions>(configuration.GetSection(ManagementDirectoryOptions.SectionName));
+        services.AddSingleton<IPlatformCommand, RegisterCommand>();
 
         // Allow caller to register additional commands
         configureServices?.Invoke(services, configuration);

@@ -2,6 +2,8 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PS.AppPlatform.Endpoints;
 using PS.AppPlatform.Hosting;
 
@@ -57,7 +59,21 @@ public static class TenancyServiceBuilder
                 services.AddSingleton<ITenantDirectory, ConfigTenantDirectory>();
                 break;
             case "management":
-                throw new NotSupportedException("ManagementApiTenantDirectory arrives in MT-09.");
+                services.Configure<ManagementDirectoryOptions>(configuration.GetSection(ManagementDirectoryOptions.SectionName));
+                // Validate Url and Audience at startup
+                var mgmtOpts = new ManagementDirectoryOptions();
+                configuration.GetSection(ManagementDirectoryOptions.SectionName).Bind(mgmtOpts);
+                if (string.IsNullOrWhiteSpace(mgmtOpts.Url) || string.IsNullOrWhiteSpace(mgmtOpts.Audience))
+                    throw new InvalidOperationException("tenancy:management:url and tenancy:management:audience are required when tenancy:directory is 'management'.");
+                services.AddHttpClient("ps-registry");
+                services.AddSingleton<ManagementApiTenantDirectory>();
+                services.AddSingleton<ITenantDirectory>(sp =>
+                    new CachingTenantDirectory(
+                        sp.GetRequiredService<IServiceScopeFactory>(),
+                        sp.GetRequiredService<IOptions<TenancyOptions>>(),
+                        sp.GetRequiredService<ILogger<CachingTenantDirectory>>(),
+                        typeof(ManagementApiTenantDirectory)));
+                break;
             case "local":
                 // The app must register its own ITenantDirectory implementation (e.g. LocalRegistryTenantDirectory).
                 // We register a sentinel so that forgetting to do so produces a clear startup error instead of a

@@ -1,6 +1,6 @@
 ﻿# Multi-tenancy v1 — Progress
 
-**Updated:** 2026-09-30 · **MT-01–MT-08 done · next: MT-09**
+**Updated:** 2026-09-30 · **MT-01–MT-08 done · MT-09 in progress (sub-steps a, b published; c being fixed) · next action: MT-09c fix executor (haiku), then verify + publish MT-09 once**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -10,10 +10,10 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 |---|---|---|
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
 | Phase 1 — Core tenancy | MT-02 – MT-07 | ✅ complete · **Gate D passed** |
-| Phase 2 — Management app | MT-08 – MT-12 | ⏳ not started · **Gate E** outstanding |
+| Phase 2 — Management app | MT-08 – MT-12 | 🔄 MT-08 ✅ · MT-09 in progress · **Gate E** outstanding |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**8 of 16 steps complete.**
+**8 of 16 steps complete** (MT-01–MT-08; MT-09 is in progress).
 
 ## Dependencies on the v1 plan
 
@@ -36,8 +36,8 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 | MT-05 | Tenant-aware background tasks | ✅ | ✅ | ✅ |
 | MT-06 | `/api/me/tenants`, conditional shims | ✅ | ✅ | ✅ |
 | MT-07 | **Gate D** — `MultiTenantSample` | ✅ | ✅ | ✅ |
-| MT-08 | Management backend, bootstrap | ⏳ | | |
-| MT-09 | Registry API, `--register` | ⏳ | | |
+| MT-08 | Management backend, bootstrap | ✅ | ✅ 194 | ✅ 71f2666, c22e2bc, 2a440f5 (CI passed) |
+| MT-09 | Registry API, `--register` | 🔄 a: 05d6342 ✅, b: 135e9eb ✅ (CI passed), c: fix in progress | | |
 | MT-10 | Admin API, invitations | ⏳ | | |
 | MT-11 | Management UI | ⏳ blocked on v1 Step 26 | | |
 | MT-12 | **Gate E** — management deployed | ⏳ | | |
@@ -235,3 +235,15 @@ self-registration, `--bootstrap-admin`.
 - cost MT-09/15-exec-b2.json claude-haiku-4-5-20251001 turns 11 usd 0.07
 - MT-09b: b2 COMPLETE (208 tests). Verify + gated publish (publisher prompt tightened: one commit, no fix-ups, no report commit).
 - cost 16-verify-b2.json claude-haiku-4-5-20251001 turns 32 usd 0.17
+- cost 18-publish-b2.json claude-haiku-4-5-20251001 turns 16 usd 0.1
+- MT-09b: DONE (135e9eb, CI passed after b2; earlier failed CI a8803b5 fixed). Stray build-verify.log and test-verify.log left by the verifier (untracked; MT-09c executor deletes them). State: MT-09c executing (c1, haiku); start commit 135e9eb.
+- cost MT-09/19-exec-c1.json claude-haiku-4-5-20251001 turns 91 usd 0.92
+- MT-09c: c1 (haiku) header COMPLETE but digest says 217/219 tests pass (2 failing); treated as unfinished, re-planning (20-plan4).
+- cost MT-09/20-plan4.json claude-opus-4-6 turns 15 usd 0.24
+- cost MT-09/20-plan4b.json (retry after usage-limit error on 20-plan4.json) claude-opus-4-6 turns 30 usd 1.03
+- USER INSTRUCTION 2026-09-30: update this progress document on completion of each step (status tables at the top + the step row + "Updated/next action" line, not only the run log). Done for MT-08; repeat for every step.
+- Execution doc re-read (2026-09-30 18:4x): verify and publish run ONCE PER STEP (not per sub-step); code review only once at the end (runs/FINAL/) or on request; MT-09a/b were published per sub-step before this rule, MT-09c is the last sub-step so MT-09 gets one final verify + one publish. Planner's `REVIEW: yes` for MT-09c is deferred to the FINAL review (security-relevant: ManagementApiTenantDirectory token handling, RegisterCommand; list for the final reviewer). Planner call for MT-09c hit the usage limit once ("resets 6pm"), retry succeeded.
+- MT-09c re-plan 4: EXECUTE haiku c2, brief = runs/MT-09/20-plan4.report.md (216 lines). No per-sub-step verify/publish (new rule). State: MT-09c executing (c2, haiku).
+- cost MT-09/21-exec-c2.json claude-haiku-4-5-20251001 turns 27 usd 0.23
+- MT-09c: c2 (haiku) COMPLETE (219 tests). All sub-steps done; running the single VERIFY of MT-09 + single PUBLISH of the remaining (c) changes via tail.sh.
+- cost 22-verify-c2.json claude-haiku-4-5-20251001 turns 36 usd 0.27
