@@ -92,6 +92,7 @@ Rules:
 - **One agent at a time.** Never run two sub-agents concurrently. Working tree conflicts are the main risk in this setup.
 - **The controller never does the work itself**, not even a small fix. If something is small, still dispatch it (to the executor via the planner).
 - **Working tree hygiene.** Before each task run `git status --short` (allowed for the controller, read-only). It must be clean apart from `.plans/**`. If not, treat it as a user-action stop unless the progress file explains the changes.
+- **Pre-splitting oversized tasks.** If a step appears to span too many areas (many teams, 50+ files, unclear boundaries), the controller may break it into smaller logical sub-steps **before calling the planner**, to ensure the planner can decompose the work within its time budget. The planner's job is to find sub-steps that fit a 15-minute executor window; the controller's job is to ensure the task itself fits in the planner's 8-minute window.
 
 ### Attempt and escalation limits
 
@@ -215,7 +216,9 @@ echo "exit=$?"
 - The Bash tool call itself is limited to 10 minutes. Executor runs (up to 20 min) **must** be started with `run_in_background: true`. The controller is notified when the process exits. Do not poll or sleep.
 - Wrap every run in `timeout`: executor `1200` (20 min: the agent's own 15-minute limit plus 5 minutes of margin for writing its report), planner `600`, status reviewer `600`, code reviewer `600`, publisher `1800` (includes waiting for CI).
 - **The agent's own time limit comes first.** A hard timeout must always be later than the limit the agent applies to itself, so the agent can stop cleanly and write its report. The controller's timeout is only a backstop for a hung or runaway process. The same holds for every role: the prompt states the agent's own limit (planner, reviewers: 8 minutes; executor: 15 minutes; publisher: 25 minutes including CI), which is always below the hard `timeout`.
-- Exit code `124` means the hard timeout fired, so the agent did not stop by itself. Read whatever interim report it managed to write, mark the run `TIMEOUT` in the progress file, and re-plan (the planner should consider splitting the task).
+- Exit code `124` means the hard timeout fired, so the agent did not stop by itself. Read whatever interim report it managed to write, mark the run `TIMEOUT` in the progress file.
+  - **Planner timeout**: The task is too large or complex for the planner to decompose in time. Do not re-plan the same task. Instead, manually break the task into smaller logical sub-steps before planning again, or (if the task is Phase/Gate level) consider splitting it into multiple separate steps in the plan. The planner's job is to find sub-steps that fit a 15-minute executor window; if the planner itself times out, the task should be split before it sees the planner.
+  - **Executor or reviewer timeout**: Re-plan with the reports available (the planner should consider splitting further, or escalating to a higher model for executor timeouts).
 - If `timeout` leaves orphaned child processes (dev servers, test hosts), have the next step's prompt start with a check for leftovers, or list them in the progress file for the user.
 
 ### Per-role settings
