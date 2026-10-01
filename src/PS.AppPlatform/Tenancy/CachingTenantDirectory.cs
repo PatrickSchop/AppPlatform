@@ -173,6 +173,12 @@ public sealed class CachingTenantDirectory : ITenantDirectory
         }
     }
 
+    public void Evict(IdentityKey key)
+    {
+        var cacheKey = $"{key.ObjectId}:{key.IssuerTenantId}";
+        _cache.TryRemove(cacheKey, out _);
+    }
+
     private ITenantDirectory GetInnerDirectory()
     {
         if (_inner != null)

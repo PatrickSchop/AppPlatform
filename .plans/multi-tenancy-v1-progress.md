@@ -1,6 +1,6 @@
 ﻿# Multi-tenancy v1 — Progress
 
-**Updated:** 2026-09-30 · **MT-01–MT-08 done · MT-09 in progress (sub-steps a, b published; c being fixed) · next action: MT-09c fix executor (haiku), then verify + publish MT-09 once**
+**Updated:** 2026-09-30 · **MT-01–MT-09 done · next action: MT-10 planner (admin API + invitations)**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -10,20 +10,20 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 |---|---|---|
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
 | Phase 1 — Core tenancy | MT-02 – MT-07 | ✅ complete · **Gate D passed** |
-| Phase 2 — Management app | MT-08 – MT-12 | 🔄 MT-08 ✅ · MT-09 in progress · **Gate E** outstanding |
+| Phase 2 — Management app | MT-08 – MT-12 | 🔄 MT-08 ✅ · MT-09 ✅ · MT-10 next · **Gate E** outstanding |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**8 of 16 steps complete** (MT-01–MT-08; MT-09 is in progress).
+**9 of 16 steps complete** (MT-01–MT-09).
 
 ## Dependencies on the v1 plan
 
 | This plan | Needs from v1 | v1 state (2026-09-29) |
 |---|---|---|
 | MT-01 – MT-10 | Phases 0–4 (platform `0.1.2`) | ✅ available |
-| MT-11 (management UI) | Step 26 — Angular starter, `@PS/app-client-angular` | ⏳ not started |
+| MT-11 (management UI) | Steps 23–24 — `@PS/app-client`, `@PS/app-client-angular` packages only. **Not** the Angular starter (Step 26): built from scratch to avoid a circular dependency (the starter needs the login flow this plan delivers) | ✅ available |
 | MT-13 onward | Step 28 — Gate C (clients and both starters) | ⏳ not started |
 
-Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 waits for v1 Step 26.
+All of Phases 0–2, including MT-11, can run without waiting for v1 Steps 26–28. Only MT-13 onward needs v1 Step 28 (and should not run concurrently with v1 work on the client packages).
 
 ## Steps
 
@@ -37,9 +37,9 @@ Phases 0–1 and MT-08 – MT-10 can run in parallel with v1 Phase 5. MT-11 wait
 | MT-06 | `/api/me/tenants`, conditional shims | ✅ | ✅ | ✅ |
 | MT-07 | **Gate D** — `MultiTenantSample` | ✅ | ✅ | ✅ |
 | MT-08 | Management backend, bootstrap | ✅ | ✅ 194 | ✅ 71f2666, c22e2bc, 2a440f5 (CI passed) |
-| MT-09 | Registry API, `--register` | 🔄 a: 05d6342 ✅, b: 135e9eb ✅ (CI passed), c: fix in progress | | |
+| MT-09 | Registry API, `--register` | ✅ | ✅ 219 | ✅ 05d6342, 135e9eb, 38ddbec, 1727d11 (CI passed; two CI fixes along the way) |
 | MT-10 | Admin API, invitations | ⏳ | | |
-| MT-11 | Management UI | ⏳ blocked on v1 Step 26 | | |
+| MT-11 | Management UI (from scratch, no starter) | ⏳ | | |
 | MT-12 | **Gate E** — management deployed | ⏳ | | |
 | MT-13 | `TenantSession` | ⏳ blocked on v1 Step 28 | | |
 | MT-14 | Angular/React tenancy components | ⏳ | | |
@@ -255,3 +255,18 @@ is_error False
 - cost MT-09/27-exec-d1.json claude-haiku-4-5-20251001 turns 17 usd 0.1
 - MT-09 d1 COMPLETE (219 tests). Light verify + publish (attempt 2 of 3).
 - cost 28-verify-d1.json claude-haiku-4-5-20251001 turns 22 usd 0.1
+- cost 30-publish-d1.json claude-haiku-4-5-20251001 turns 19 usd 0.15
+- MT-09: DONE. Final commit 1727d11, CI passed. Counters: executor haiku 6 runs (a1,a2,b1,b2,c1,c2,d1 incl. fixes), publish attempts 3 (2 CI failures: test auth config; gitleaks JWT-looking token), no per-step code review (FINAL review pending, see list below). Start commit for MT-10: 1727d11. Stray files: none in the repo root. Items for the FINAL code review: ManagementApiTenantDirectory token handling, RegisterCommand, RegistryFunctions authorization (trustedDeployers, principal matching), CachingTenantDirectory. State: MT-10 planning.
+is_error False
+- cost MT-10/01-plan.json claude-opus-4-6,claude-sonnet-4-6 turns 42 usd 1.7
+- MT-10 planned: SPLIT into MT-10a (lines 26-110), MT-10b (111-190), MT-10c (191-367) of runs/MT-10/01-plan.report.md; haiku; one VERIFY + one PUBLISH after MT-10c. State: MT-10a executing (a1, haiku); start commit 1727d11.
+- cost MT-10/02-exec-a1.json claude-haiku-4-5-20251001 turns 32 usd 0.26
+- MT-10a: a1 (haiku) COMPLETE (no verify/publish yet). State: MT-10b executing (a1, haiku).
+- cost MT-10/03-exec-b1.json claude-haiku-4-5-20251001 turns 74 usd 0.9
+- MT-10b: b1 (haiku) COMPLETE. State: MT-10c executing (c1, haiku).
+- cost MT-10/04-exec-c1.json claude-haiku-4-5-20251001 turns 96 usd 0.87
+- MT-10c: c1 (haiku) COMPLETE (36 Management tests). All sub-steps done; single VERIFY + single PUBLISH of MT-10 via tail.sh.
+- cost 05-verify-c1.json claude-haiku-4-5-20251001 turns 18 usd 0.13
+- MT-10 verify+publish attempt: API rate limit hit (resets 11:40pm CET). Will retry after short wait (attempting at ~00:00 UTC, ~45 min from now). State: MT-10 waiting for rate-limit reset.
+- MT-10 retry verify+publish (rate limit likely passed). State: MT-10 verify+publish attempt 2.
+- cost 05-verify-c1.json claude-haiku-4-5-20251001 turns 32 usd 0.23

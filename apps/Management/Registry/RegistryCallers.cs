@@ -9,6 +9,8 @@ public sealed class RegistryOptions
     public const string SectionName = "registry";
     public string TrustedTenantId { get; set; } = "";
     public string[] TrustedDeployers { get; set; } = [];
+    public string PublicBaseUrl { get; set; } = "";
+    public int InvitationLifetimeMinutes { get; set; } = 10080; // 7 days
 }
 
 public static class RegistryCallers

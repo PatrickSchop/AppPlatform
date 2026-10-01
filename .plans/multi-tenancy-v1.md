@@ -9,7 +9,7 @@
 - **A standard login flow with tenant selection** for identities that belong to more than one tenant.
 - **Tenant-aware EF Core**: a base-class convention, automatic filtering, and an explicit way to bypass the filter.
 
-This plan builds on the **end state** of v1, so it assumes Phase 5 is done: `@PS/app-client` with its Angular/React adapters and both starters. Phases 1 and 2 touch only the backend and can start before v1 Phase 5 closes. Phase 3 cannot: it modifies the Phase 5 packages.
+This plan builds on v1, but **not on the v1 starters**. Phase 3 delivers the complete login flow (tenant selection, invitations), which is exactly what a good starter needs, so the starters (v1 Steps 26–27) are finished *after* this plan and cannot be an input to it. Phases 1 and 2 need only the backend plus the already-available packages `@PS/app-client` and `@PS/app-client-angular` (v1 Steps 23–24, done); the management UI (MT-11) is built from scratch on those packages. Phase 3 modifies the packages themselves, so it must not run concurrently with v1 Phase 5 work on them.
 
 Step documents: [multi-tenancy-v1/](multi-tenancy-v1/). Progress: [multi-tenancy-v1-progress.md](multi-tenancy-v1-progress.md). The v1 execution rules (§7: strictly in order, green build and tests per step, commit and push, update progress) apply unchanged.
 
@@ -136,7 +136,7 @@ The step reuses the deploy workflow's existing `assembly_name` input, the same o
 - **Two API surfaces:**
   - `/api/admin/*` requires `[Authorize(Roles="admin")]`. It provides CRUD for applications (read and deprecate only, since roles come from code), tenants, teams, users, memberships, role assignments and invitations.
   - `/api/registry/v1/*` is for apps (memberships lookup, authorized by application principal) and deployers (register, authorized by `trustedDeployers`).
-- **Front-end:** Angular, based on the Angular starter and `@PS/app-client-angular`. Pages:
+- **Front-end:** a standalone Angular app built **from scratch** (`ng new`, its own minimal shell and styling), consuming `@PS/app-client` and `@PS/app-client-angular` as packages. It is deliberately **not** copied from the v1 Angular starter: that starter should showcase the finished tenant-aware login flow this plan delivers, so scaffolding the management UI from it would be circular. Once MT-13/MT-14 land, the management UI is a reference for the starter, not the other way round. Pages:
   - Applications list and detail (roles and tenants)
   - Tenant detail (teams)
   - Team detail (members and role assignments)
@@ -160,7 +160,7 @@ Each step links to its document in [multi-tenancy-v1/](multi-tenancy-v1/).
 | **2 Management app** | [MT-08](multi-tenancy-v1/step-MT-08-management-backend.md) | `apps/Management` backend: registry schema scripts, `LocalRegistryTenantDirectory`, self-registration, `--bootstrap-admin` |
 | | [MT-09](multi-tenancy-v1/step-MT-09-registry-api.md) | `/api/registry/v1`: register (trusted deployers) and memberships (app principals); `ManagementApiTenantDirectory` with cache; `--register` command |
 | | [MT-10](multi-tenancy-v1/step-MT-10-admin-api.md) | `/api/admin/*` CRUD + invitations |
-| | [MT-11](multi-tenancy-v1/step-MT-11-management-ui.md) | Management Angular UI |
+| | [MT-11](multi-tenancy-v1/step-MT-11-management-ui.md) | Management Angular UI, built from scratch on `@PS/app-client-angular` (no starter, not blocked on v1 Phase 5) |
 | | [MT-12](multi-tenancy-v1/step-MT-12-gate-e.md) | **Gate E:** management app deployed; bootstrap admin signs in; creates a tenant, a team and an invite for a second account; that account accepts |
 | **3 Front-end & template** | [MT-13](multi-tenancy-v1/step-MT-13-tenant-session.md) | `TenantSession` in `@PS/app-client` + tests |
 | | [MT-14](multi-tenancy-v1/step-MT-14-tenancy-components.md) | Angular + React tenancy components; starters get the picker route |

@@ -43,6 +43,8 @@ public static class Program
         builder.Services.AddScoped<MembershipQuery>();
         builder.Services.AddScoped<RegistryService>();
         builder.Services.AddScoped<RegistryEndpoints>();
+        builder.Services.AddScoped<AdminEndpoints>();
+        builder.Services.AddScoped<InvitationEndpoints>();
 
         // Validate registry configuration in non-dev environments
         if (!builder.Environment.IsDevelopment())

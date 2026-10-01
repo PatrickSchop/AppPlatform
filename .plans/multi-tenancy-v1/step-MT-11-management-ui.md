@@ -1,30 +1,38 @@
 # Step MT-11 — Management Angular UI
 
 **Phase:** 2 — Management app
-**Depends on:** MT-10, **and v1 Step 26** (the Angular starter and `@PS/app-client-angular`)
+**Depends on:** MT-10 and the packages `@PS/app-client` / `@PS/app-client-angular` (v1 Steps 23–24, already done). **Not** blocked on v1 Step 26.
 **Working directory:** `C:\Dev\AppPlatform\apps\Management\WebApp`
 
 ## Goal
 
 A complete front-end for every MT-10 route, so no management task needs SQL, Postman or the
-Azure portal. It is built from the v1 Angular starter so it shares the design system, sign-in
-and API client with every other app.
+Azure portal. It is built **from scratch** as its own Angular app on the published client
+packages, so it shares the API client and sign-in with every other app without depending on a
+starter.
 
-**Blocked** until v1 Step 26 is complete. If Phase 2 reaches this step first, record the block
-in the progress document and wait. Do not build a parallel client.
+**Why no starter:** the v1 Angular starter (Step 26) should demonstrate the finished
+tenant-aware login flow, which this plan delivers (MT-13/MT-14). Scaffolding the management
+UI from it would be circular. This UI is built first; the starter later borrows from it.
+Do not wait for Step 26, and do not copy `starters/angular`.
 
 ## Tasks
 
-### 1. Scaffold from the starter
+### 1. Scaffold from scratch
 
-Copy `starters/angular` to `apps/Management/WebApp` (a copy, not a reference: the starter is
-the template for apps, and this is an app). Strip the starter's sample pages. Keep the shell,
-design system, `provideAppClient`/sign-in wiring, the background-task popover (harmless and
-unused), and the 401/403 handling.
+Create `apps/Management/WebApp` with `ng new` (standalone components, strict templates,
+routing, SCSS). Install `@PS/app-client` and `@PS/app-client-angular` and wire
+`provideAppClient`/sign-in per the package README and v1 §4.1a. Build a small shell of your own:
+top bar with the signed-in account and sign-out, a side nav, a shared confirm dialog, a toast/
+banner component, and 401/403 handling via the client's error hooks. Keep styling minimal and
+consistent (CSS variables, no UI framework dependency beyond what Angular ships, unless one is
+clearly worth it). Do not add background-task UI; this app does not use it.
 
 `configuration.json` for local dev comes from the management app's `webApp` section
 (`api.root`, `title: "Application management"`, `auth` as in v1 §4.1a). `tenancy` is added
-automatically (MT-06, mode `Single`).
+automatically (MT-06, mode `Single`). The app has no tenant picker (Single mode); the
+`TenantSession`/picker work in MT-13/MT-14 is not a prerequisite, and the admin gate below
+calls `GET /api/me/tenants` directly.
 
 ### 2. Admin gate
 
@@ -109,6 +117,7 @@ errors. The real second-identity accept is Gate E.
 
 ## Done when
 
+- [ ] The app is its own `ng new` project: nothing copied from `starters/angular`
 - [ ] Every MT-10 capability is reachable from the UI
 - [ ] A non-admin sees "No access" with their oid/tid, never a broken page
 - [ ] The invite link is shown exactly once and the accept page handles every error code
