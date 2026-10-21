@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { TeamSummary } from '../../services/models';
 import { ToastService } from '../../shared/toast.service';
@@ -34,13 +34,13 @@ import { getErrorMessage } from '../../shared/error-messages';
               <tr (click)="navigateToTeam(team.id)" class="clickable">
                 <td>
                   {{ team.name }}
-                  @if (team.name === 'Default') {
+                  @if (team.isDefault) {
                     <span class="badge badge-default">Default</span>
                   }
                 </td>
                 <td><span class="badge badge-enabled">Enabled</span></td>
                 <td>
-                  @if (team.name !== 'Default') {
+                  @if (!team.isDefault) {
                     <button (click)="onRenameTeam($event, team)" class="btn-sm">Rename</button>
                     <button (click)="onDeleteTeam($event, team)" class="btn-danger btn-sm">Delete</button>
                   }
@@ -108,6 +108,7 @@ export class TenantDetailComponent implements OnInit {
   private adminService = inject(AdminService);
   private toastService = inject(ToastService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   appId = '';
   tenantId = '';
@@ -119,6 +120,7 @@ export class TenantDetailComponent implements OnInit {
     this.tenantId = this.route.snapshot.paramMap.get('tenantId') || '';
     this.breadcrumbs.set([
       { label: 'Applications', routerLink: ['/applications'] },
+      { label: 'Application', routerLink: ['/applications', this.appId] },
       { label: 'Tenant' }
     ]);
     await this.loadTeams();
@@ -184,6 +186,6 @@ export class TenantDetailComponent implements OnInit {
   }
 
   navigateToTeam(teamId: string): void {
-    // Router navigation will be handled by route configuration
+    this.router.navigate(['/applications', this.appId, 'tenants', this.tenantId, 'teams', teamId]);
   }
 }

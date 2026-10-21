@@ -54,7 +54,7 @@ import { ApplicationSummary, UserSummary } from '../../services/models';
         <div class="form-row">
           <input [(ngModel)]="newUserDisplayName" placeholder="Display Name" required />
           <input [(ngModel)]="newUserEmail" placeholder="Email (optional)" />
-          <button (click)="createUser()" [disabled]="!newUserDisplayName" class="btn-primary">Create</button>
+          <button (click)="createUser()" [disabled]="!newUserDisplayName()" class="btn-primary">Create</button>
         </div>
       </div>
 
@@ -75,7 +75,7 @@ import { ApplicationSummary, UserSummary } from '../../services/models';
                 <tr (click)="selectUser(user.id)" class="clickable">
                   <td>{{ user.displayName }}</td>
                   <td>{{ user.email || '-' }}</td>
-                  <td><span class="badge badge-enabled">Active</span></td>
+                  <td><span class="badge" [class.badge-enabled]="user.status === 'active'">{{ user.status }}</span></td>
                 </tr>
               }
             </tbody>
@@ -220,8 +220,10 @@ export class UserListComponent implements OnInit {
 
   filteredUsers = computed(() => {
     const term = this.searchTerm().toLowerCase();
+    const status = this.statusFilter();
     return this.users().filter(u =>
-      u.displayName.toLowerCase().includes(term)
+      u.displayName.toLowerCase().includes(term) &&
+      (status === 'all' || u.status === status)
     );
   });
 

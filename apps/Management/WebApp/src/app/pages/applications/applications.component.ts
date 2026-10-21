@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { ApplicationSummary } from '../../services/models';
 import { ToastService } from '../../shared/toast.service';
@@ -19,7 +19,6 @@ import { getErrorMessage } from '../../shared/error-messages';
         <table>
           <thead>
             <tr>
-              <th>Key</th>
               <th>Name</th>
               <th>Tenancy</th>
               <th>Tenants</th>
@@ -30,12 +29,16 @@ import { getErrorMessage } from '../../shared/error-messages';
           <tbody>
             @for (app of applications(); track app.id) {
               <tr (click)="navigate(app.id)" class="clickable">
-                <td>{{ app.id }}</td>
-                <td>{{ app.name }}</td>
-                <td><span class="badge">{{ getTenancyType(app.id) }}</span></td>
-                <td>-</td>
-                <td>-</td>
-                <td><span class="badge badge-enabled">Enabled</span></td>
+                <td>
+                  {{ app.displayName }}
+                  <span class="key" title="Application key">{{ app.key }}</span>
+                </td>
+                <td><span class="badge">{{ app.tenancy }}</span></td>
+                <td>{{ app.tenantCount }}</td>
+                <td>{{ app.userCount }}</td>
+                <td>
+                  <span class="badge" [class.badge-enabled]="!app.isDisabled">{{ app.isDisabled ? 'Disabled' : 'Enabled' }}</span>
+                </td>
               </tr>
             }
           </tbody>
@@ -78,11 +81,17 @@ import { getErrorMessage } from '../../shared/error-messages';
       background-color: #dcfce7;
       color: #166534;
     }
+    .key {
+      display: block;
+      font-size: 12px;
+      color: #9ca3af;
+    }
   `]
 })
 export class ApplicationListComponent implements OnInit {
   private adminService = inject(AdminService);
   private toastService = inject(ToastService);
+  private router = inject(Router);
 
   applications = signal<ApplicationSummary[]>([]);
 
@@ -96,11 +105,6 @@ export class ApplicationListComponent implements OnInit {
   }
 
   navigate(appId: string): void {
-    // Router navigation will be handled by the route configuration
-  }
-
-  getTenancyType(appId: string): string {
-    // This would be populated from application details in a real implementation
-    return 'Multi';
+    this.router.navigate(['/applications', appId]);
   }
 }

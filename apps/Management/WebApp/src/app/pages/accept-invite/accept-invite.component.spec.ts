@@ -5,7 +5,6 @@ import { AcceptInviteComponent } from './accept-invite.component';
 import { AdminService } from '../../services/admin.service';
 import { ToastService } from '../../shared/toast.service';
 import { AUTH_CLIENT, API_CLIENT } from '@PS/app-client-angular';
-import type { MyTenantsResponse } from '../../services/models';
 
 describe('AcceptInviteComponent', () => {
   let component: AcceptInviteComponent;
@@ -18,6 +17,7 @@ describe('AcceptInviteComponent', () => {
 
   beforeEach(async () => {
     mockAuthClient = {
+      getAccount: () => null,
       signIn: vi.fn().mockResolvedValue(undefined)
     };
 
@@ -51,14 +51,11 @@ describe('AcceptInviteComponent', () => {
     vi.spyOn(router, 'navigate');
   });
 
-  it('should map 410 status to expiration message', async () => {
-    const error = { status: 410, error: {} };
-    vi.spyOn(adminService, 'getMyTenants').mockResolvedValue({
-      registered: true,
-      tenants: []
-    } as MyTenantsResponse);
+  const signedIn = () => { mockAuthClient.getAccount = () => ({ username: 'q@example.com', name: 'Q' }); };
 
-    vi.spyOn(adminService, 'previewInvitation').mockRejectedValue(error);
+  it('should map 410 status to expiration message', async () => {
+    signedIn();
+    vi.spyOn(adminService, 'previewInvitation').mockRejectedValue({ status: 410, body: { } });
 
     await component.ngOnInit();
     fixture.detectChanges();
@@ -67,16 +64,11 @@ describe('AcceptInviteComponent', () => {
   });
 
   it('should map 409 identity_already_registered error', async () => {
-    const error = {
+    signedIn();
+    vi.spyOn(adminService, 'previewInvitation').mockRejectedValue({
       status: 409,
-      error: { code: 'identity_already_registered' }
-    };
-    vi.spyOn(adminService, 'getMyTenants').mockResolvedValue({
-      registered: true,
-      tenants: []
-    } as MyTenantsResponse);
-
-    vi.spyOn(adminService, 'previewInvitation').mockRejectedValue(error);
+      body: { error: 'identity_already_registered' }
+    });
 
     await component.ngOnInit();
     fixture.detectChanges();
@@ -85,16 +77,11 @@ describe('AcceptInviteComponent', () => {
   });
 
   it('should map 409 already_bound error', async () => {
-    const error = {
+    signedIn();
+    vi.spyOn(adminService, 'previewInvitation').mockRejectedValue({
       status: 409,
-      error: { code: 'already_bound' }
-    };
-    vi.spyOn(adminService, 'getMyTenants').mockResolvedValue({
-      registered: true,
-      tenants: []
-    } as MyTenantsResponse);
-
-    vi.spyOn(adminService, 'previewInvitation').mockRejectedValue(error);
+      body: { error: 'already_bound' }
+    });
 
     await component.ngOnInit();
     fixture.detectChanges();
@@ -102,32 +89,47 @@ describe('AcceptInviteComponent', () => {
     expect(component.error()).toContain('already linked');
   });
 
-  it('should show application names on success', async () => {
-    const tenantResponse: MyTenantsResponse = {
-      registered: true,
-      tenants: [
-        { id: 'tenant-1', name: 'App 1', roles: ['member'] },
-        { id: 'tenant-2', name: 'App 2', roles: ['member'] }
-      ]
-    };
-
-    vi.spyOn(adminService, 'getMyTenants').mockResolvedValue(tenantResponse);
-    vi.spyOn(adminService, 'previewInvitation').mockResolvedValue({
-      displayName: 'Test User',
-      email: 'test@example.com'
-    });
-    vi.spyOn(adminService, 'acceptInvitation').mockResolvedValue({ success: true });
+  it('should sign in first when there is no identity-provider session', async () => {
+    mockAuthClient.getAccount = () => null;
+    const preview = vi.spyOn(adminService, 'previewInvitation');
 
     await component.ngOnInit();
-    fixture.detectChanges();
 
+    expect(mockAuthClient.signIn).toHaveBeenCalled();
+    expect(preview).not.toHaveBeenCalled();
+  });
+
+  it('should preview the invitation for a signed-in user who is not registered yet', async () => {
+    // An invitee is unregistered by definition; being unregistered must not send them back to sign-in.
+    signedIn();
+    const registeredCheck = vi.spyOn(adminService, 'getMyTenants');
+    vi.spyOn(adminService, 'previewInvitation').mockResolvedValue({
+      displayName: 'Q',
+      applications: ['management'],
+      expiresUtc: '2026-11-01T00:00:00Z'
+    });
+
+    await component.ngOnInit();
+
+    expect(mockAuthClient.signIn).not.toHaveBeenCalled();
+    expect(registeredCheck).not.toHaveBeenCalled();
+    expect(component.previewApps()).toEqual(['management']);
+  });
+
+  it('should show the granted applications after accepting', async () => {
+    signedIn();
+    vi.spyOn(adminService, 'previewInvitation').mockResolvedValue({
+      displayName: 'Q',
+      applications: ['management', 'recipes'],
+      expiresUtc: '2026-11-01T00:00:00Z'
+    });
+    vi.spyOn(adminService, 'acceptInvitation').mockResolvedValue({ displayName: 'Q' });
+
+    await component.ngOnInit();
     await component.acceptInvitation();
-    fixture.detectChanges();
 
-    const apps = component.applications();
-    expect(apps.length).toBe(2);
-    expect(apps).toContain('App 1');
-    expect(apps).toContain('App 2');
+    expect(component.accepted()).toBe(true);
+    expect(component.applications()).toEqual(['management', 'recipes']);
   });
 
   it('should handle missing token', async () => {

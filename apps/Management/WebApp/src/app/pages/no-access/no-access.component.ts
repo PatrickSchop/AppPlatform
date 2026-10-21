@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AUTH_CLIENT } from '@PS/app-client-angular';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Injectable, inject } from '@angular/core';
 import { API_CLIENT } from '@PS/app-client-angular';
 import type { ApiClient } from '@PS/app-client';
@@ -11,8 +10,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
-  // @ts-ignore
-  private api = inject(API_CLIENT) as any;
+  private api = inject(API_CLIENT) as unknown as ApiClient;
 
   // Applications
   getApplications(): Promise<ApplicationSummary[]> {

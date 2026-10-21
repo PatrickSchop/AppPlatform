@@ -317,4 +317,13 @@ describe('TaskPoller', () => {
     const api = new ApiClient({ baseUrl: '/api', fetch: mockFetch as any });
     await expect(api.get('x')).rejects.toMatchObject({ status: 502, body: '<html>bad gateway</html>' });
   });
+  it('sends PATCH with a JSON body', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+    const api = new ApiClient({ baseUrl: '/api', fetch: mockFetch as any });
+    await api.patch('admin/x', { isDisabled: true });
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toBe('/api/admin/x');
+    expect(init.method).toBe('PATCH');
+    expect(init.body).toBe('{"isDisabled":true}');
+  });
 });

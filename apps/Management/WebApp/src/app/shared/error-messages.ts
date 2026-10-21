@@ -18,9 +18,13 @@ export function getErrorMessage(error: unknown): string {
 
   if (typeof error === 'object') {
     const err = error as any;
-    const code = err.error?.code || err.code;
+    // ApiError keeps the server's JSON body in `body`: { error: '<code>' }.
+    const code = err.body?.error || err.body?.code || err.error?.code || err.code;
     if (code && errorCodeMap[code]) {
       return errorCodeMap[code];
+    }
+    if (typeof err.body?.error === 'string') {
+      return err.body.error;
     }
     if (err.error?.error) {
       return err.error.error;

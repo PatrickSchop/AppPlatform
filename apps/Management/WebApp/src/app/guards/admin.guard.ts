@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { API_CLIENT, AUTH_CLIENT } from '@PS/app-client-angular';

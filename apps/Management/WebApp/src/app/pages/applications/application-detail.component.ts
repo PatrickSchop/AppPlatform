@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { ApplicationDetail, RoleSummary, TenantSummary } from '../../services/models';
 import { ToastService } from '../../shared/toast.service';
@@ -28,13 +28,20 @@ import { getErrorMessage } from '../../shared/error-messages';
         <div class="form-group">
           <label>Name</label>
           <input [(ngModel)]="editName" type="text" />
-          <button (click)="saveSettings()" [disabled]="!editName" class="btn-primary">Save</button>
+        </div>
+        <div class="form-group">
+          <label>Key</label>
+          <code>{{ application()?.key }}</code>
+        </div>
+        <div class="form-group">
+          <label>Tenancy</label>
+          <span class="badge">{{ application()?.tenancy }}</span>
         </div>
         <div class="form-group">
           <label>Disabled</label>
           <input [(ngModel)]="editDisabled" type="checkbox" />
-          <button (click)="saveSettings()" class="btn-primary">Save</button>
         </div>
+        <button (click)="saveSettings()" [disabled]="!editName" class="btn-primary">Save</button>
       </div>
     }
 
@@ -54,15 +61,15 @@ import { getErrorMessage } from '../../shared/error-messages';
             @for (role of application()?.roles || []; track role.id) {
               <tr>
                 <td>{{ role.name }}</td>
-                <td>{{ role.name }}</td>
+                <td>{{ role.displayName }}</td>
                 <td>
-                  @if (role.id === 'deprecated') {
+                  @if (role.isDeprecated) {
                     <span class="badge badge-deprecated">Deprecated</span>
                   }
                 </td>
-                <td>-</td>
+                <td>{{ role.assignmentCount }}</td>
                 <td>
-                  @if (role.id === 'deprecated') {
+                  @if (role.isDeprecated) {
                     <button (click)="onDeleteRole(role)" class="btn-danger btn-sm">Delete</button>
                   }
                 </td>
@@ -92,9 +99,13 @@ import { getErrorMessage } from '../../shared/error-messages';
             @for (tenant of tenants(); track tenant.id) {
               <tr (click)="navigateToTenant(tenant.id)" class="clickable">
                 <td>{{ tenant.name }}</td>
-                <td><span class="badge badge-enabled">Enabled</span></td>
                 <td>
-                  <button (click)="onDeleteTenant($event, tenant)" class="btn-danger btn-sm">Delete</button>
+                  <span class="badge" [class.badge-enabled]="!tenant.isDisabled">{{ tenant.isDisabled ? 'Disabled' : 'Enabled' }}</span>
+                </td>
+                <td>
+                  @if (!isSingleTenant()) {
+                    <button (click)="onDeleteTenant($event, tenant)" class="btn-danger btn-sm">Delete</button>
+                  }
                 </td>
               </tr>
             }
@@ -218,6 +229,7 @@ export class ApplicationDetailComponent implements OnInit {
   private adminService = inject(AdminService);
   private toastService = inject(ToastService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   appId = '';
   application = signal<ApplicationDetail | null>(null);
@@ -244,6 +256,7 @@ export class ApplicationDetailComponent implements OnInit {
       const app = await this.adminService.getApplication(this.appId);
       this.application.set(app);
       this.editName = app.displayName;
+      this.editDisabled = app.isDisabled;
       this.breadcrumbs.set([
         { label: 'Applications', routerLink: ['/applications'] },
         { label: app.displayName }
@@ -266,7 +279,8 @@ export class ApplicationDetailComponent implements OnInit {
   async saveSettings(): Promise<void> {
     try {
       await this.adminService.patchApplication(this.appId, {
-        displayName: this.editName
+        displayName: this.editName,
+        isDisabled: this.editDisabled
       });
       this.toastService.show('Changes can take up to 5 minutes to reach running apps', 'info');
       await this.loadApplication();
@@ -326,10 +340,10 @@ export class ApplicationDetailComponent implements OnInit {
   }
 
   navigateToTenant(tenantId: string): void {
-    // Router navigation will be handled by route configuration
+    this.router.navigate(['/applications', this.appId, 'tenants', tenantId]);
   }
 
   isSingleTenant(): boolean {
-    return false; // Would check application tenancy type
+    return this.application()?.tenancy === 'Single';
   }
 }

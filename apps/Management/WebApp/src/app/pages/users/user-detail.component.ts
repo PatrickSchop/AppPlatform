@@ -44,13 +44,19 @@ import { InviteDialogComponent } from './invite-dialog.component';
           <table>
             <thead>
               <tr>
-                <th>Role</th>
+                <th>Application</th>
+                <th>Tenant</th>
+                <th>Team</th>
+                <th>Roles</th>
               </tr>
             </thead>
             <tbody>
-              @for (membership of user()?.memberships || []; track membership.id) {
+              @for (membership of user()?.memberships || []; track membership.memberId) {
                 <tr>
-                  <td>{{ membership.role }}</td>
+                  <td>{{ membership.appKey }}</td>
+                  <td>{{ membership.tenantName }}</td>
+                  <td>{{ membership.teamName }}</td>
+                  <td>{{ membership.roles.length ? membership.roles.join(', ') : 'No role' }}</td>
                 </tr>
               }
             </tbody>
@@ -69,7 +75,6 @@ import { InviteDialogComponent } from './invite-dialog.component';
           <table style="margin-top: 20px;">
             <thead>
               <tr>
-                <th>Created</th>
                 <th>Expires</th>
                 <th>Status</th>
               </tr>
@@ -77,9 +82,8 @@ import { InviteDialogComponent } from './invite-dialog.component';
             <tbody>
               @for (inv of invitations(); track inv.id) {
                 <tr>
-                  <td>{{ formatDate(inv.createdAt) }}</td>
-                  <td>{{ formatDate(inv.expiresAt) }}</td>
-                  <td><span class="badge">Open</span></td>
+                  <td>{{ formatDate(inv.expiresUtc) }}</td>
+                  <td><span class="badge">{{ inv.status }}</span></td>
                 </tr>
               }
             </tbody>
@@ -242,8 +246,8 @@ export class UserDetailComponent implements OnInit {
   async createInvite(): Promise<void> {
     try {
       const response = await this.adminService.createInvitation(this.userId);
-      this.inviteUrl.set(response.token);
-      this.inviteExpires.set(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString());
+      this.inviteUrl.set(response.url);
+      this.inviteExpires.set(new Date(response.expiresUtc).toLocaleString());
       this.showInviteDialog.set(true);
       await this.loadInvitations();
     } catch (error) {

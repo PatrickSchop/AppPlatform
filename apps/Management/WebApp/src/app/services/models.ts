@@ -1,46 +1,66 @@
+// These mirror apps/Management/Api/Contracts/*.cs (System.Text.Json, camelCase).
+// Keep them in step with the C# records: a renamed field fails silently at runtime.
+
+export type TenancyMode = 'None' | 'Single' | 'Multi';
+
 // Applications
 export interface RoleSummary {
   id: string;
   name: string;
-  isDeprecated?: boolean;
+  displayName: string;
+  isDeprecated: boolean;
+  assignmentCount: number;
 }
 
 export interface ApplicationSummary {
   id: string;
-  name: string;
+  key: string;
   displayName: string;
-  disabled?: boolean;
+  tenancy: TenancyMode;
+  tenantCount: number;
+  userCount: number;
+  isDisabled: boolean;
 }
 
-export interface ApplicationDetail extends ApplicationSummary {
+export interface ApplicationDetail {
+  id: string;
+  key: string;
+  displayName: string;
+  tenancy: TenancyMode;
+  isDisabled: boolean;
   roles: RoleSummary[];
-  tenancy?: 'None' | 'Single' | 'Multi';
+  tenants: TenantSummary[];
 }
 
 // Tenants
 export interface TenantSummary {
   id: string;
   name: string;
-  disabled?: boolean;
+  isDisabled: boolean;
 }
 
 // Teams
 export interface TeamSummary {
   id: string;
   name: string;
-  isDefault?: boolean;
+  isDefault: boolean;
 }
 
 // Users
 export interface UserMembershipInfo {
-  id: string;
-  role: string;
+  appKey: string;
+  tenantName: string;
+  teamName: string;
+  memberId: string;
+  roles: string[];
 }
 
 export interface UserSummary {
   id: string;
   displayName: string;
-  email?: string;
+  email?: string | null;
+  status: string;
+  createdUtc: string;
 }
 
 export interface UserDetail extends UserSummary {
@@ -49,37 +69,38 @@ export interface UserDetail extends UserSummary {
 
 // Members
 export interface MemberSummary {
-  id: string;
+  memberId: string;
+  userId: string;
   displayName: string;
-  roles: RoleSummary[];
+  roles: string[];
 }
 
 // Invitations
 export interface InvitationCreatedResponse {
-  id: string;
-  token: string;
+  invitationId: string;
+  url: string;
+  expiresUtc: string;
 }
 
 export interface InvitationSummary {
   id: string;
-  createdAt: string;
-  expiresAt: string;
-  status?: 'open' | 'accepted' | 'expired' | 'revoked';
-  acceptedAt?: string;
+  expiresUtc: string;
+  acceptedUtc?: string | null;
+  revokedUtc?: string | null;
+  status: string;
 }
 
 export interface InvitationPreviewResponse {
-  email?: string;
-  displayName?: string;
-  applications?: string[];
+  displayName: string;
+  applications: string[];
+  expiresUtc: string;
 }
 
 export interface InvitationAcceptedResponse {
-  success: boolean;
-  tenants?: MyTenantResponse[];
+  displayName: string;
 }
 
-// Admin gate
+// Admin gate (GET api/me/tenants)
 export interface MyTenantResponse {
   id: string;
   name: string;
@@ -88,18 +109,19 @@ export interface MyTenantResponse {
 
 export interface MyTenantsResponse {
   registered: boolean;
+  displayName?: string | null;
   tenants: MyTenantResponse[];
 }
 
 // Request types
 export interface PatchApplicationRequest {
   displayName?: string;
-  disabled?: boolean;
+  isDisabled?: boolean;
 }
 
 export interface PatchTenantRequest {
   name?: string;
-  disabled?: boolean;
+  isDisabled?: boolean;
 }
 
 export interface PatchUserRequest {

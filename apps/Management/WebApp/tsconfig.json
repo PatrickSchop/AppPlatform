@@ -21,7 +21,7 @@
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": false,
     "strictInputAccessModifiers": true,
-    "strictTemplates": false
+    "strictTemplates": true
   },
   "files": [],
   "references": [

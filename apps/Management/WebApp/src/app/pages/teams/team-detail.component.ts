@@ -1,9 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
-import { MemberSummary, RoleSummary } from '../../services/models';
+import { MemberSummary, RoleSummary, UserSummary } from '../../services/models';
 import { ToastService } from '../../shared/toast.service';
 import { BreadcrumbComponent, BreadcrumbItem } from '../../shared/breadcrumb.component';
 import { getErrorMessage } from '../../shared/error-messages';
@@ -19,8 +19,13 @@ import { getErrorMessage } from '../../shared/error-messages';
     <div class="add-member">
       <h3>Add Member</h3>
       <div class="form-group">
-        <label>User ID</label>
-        <input [(ngModel)]="newMemberId" type="text" placeholder="User ID" />
+        <label>User</label>
+        <select [(ngModel)]="newMemberId">
+          <option value="">Select a user…</option>
+          @for (user of availableUsers(); track user.id) {
+            <option [value]="user.id">{{ user.displayName }}</option>
+          }
+        </select>
       </div>
       <div class="roles-checkboxes">
         @for (role of roles(); track role.id) {
@@ -50,18 +55,18 @@ import { getErrorMessage } from '../../shared/error-messages';
             </tr>
           </thead>
           <tbody>
-            @for (member of members(); track member.id) {
+            @for (member of members(); track member.memberId) {
               <tr>
                 <td>{{ member.displayName }}</td>
                 @for (role of roles(); track role.id) {
                   <td>
                     <input type="checkbox"
-                           [checked]="member.roles.some(r => r.id === role.id)"
-                           (change)="onMemberRoleChange(member.id, role.id, $event)" />
+                           [checked]="member.roles.includes(role.name)"
+                           (change)="onMemberRoleChange(member.memberId, role.id, $event)" />
                   </td>
                 }
                 <td>
-                  <button (click)="onRemoveMember(member.id)" class="btn-danger btn-sm">Remove</button>
+                  <button (click)="onRemoveMember(member.memberId)" class="btn-danger btn-sm">Remove</button>
                 </td>
               </tr>
             }
@@ -155,6 +160,11 @@ export class TeamDetailComponent implements OnInit {
 
   members = signal<MemberSummary[]>([]);
   roles = signal<RoleSummary[]>([]);
+  users = signal<UserSummary[]>([]);
+  availableUsers = computed(() => {
+    const memberIds = new Set(this.members().map(m => m.userId));
+    return this.users().filter(u => !memberIds.has(u.id) && u.status !== 'disabled');
+  });
   breadcrumbs = signal<BreadcrumbItem[]>([]);
 
   newMemberId = '';
@@ -174,12 +184,14 @@ export class TeamDetailComponent implements OnInit {
 
   private async loadData(): Promise<void> {
     try {
-      const [members, app] = await Promise.all([
+      const [members, app, users] = await Promise.all([
         this.adminService.getMembers(this.appId, this.tenantId, this.teamId),
-        this.adminService.getApplication(this.appId)
+        this.adminService.getApplication(this.appId),
+        this.adminService.getUsers(this.appId)
       ]);
       this.members.set(members);
-      this.roles.set(app.roles);
+      this.roles.set(app.roles.filter(r => !r.isDeprecated));
+      this.users.set(users);
     } catch (error) {
       this.toastService.show(getErrorMessage(error), 'error');
     }
@@ -215,10 +227,11 @@ export class TeamDetailComponent implements OnInit {
 
   async onMemberRoleChange(memberId: string, roleId: string, event: Event): Promise<void> {
     const checked = (event.target as HTMLInputElement).checked;
-    const member = this.members().find(m => m.id === memberId);
+    const member = this.members().find(m => m.memberId === memberId);
     if (!member) return;
 
-    const newRoles = member.roles.map(r => r.id);
+    // The API reports a member's roles by name and takes role ids when saving.
+    const newRoles = this.roles().filter(r => member.roles.includes(r.name)).map(r => r.id);
     if (checked) {
       newRoles.push(roleId);
     } else {

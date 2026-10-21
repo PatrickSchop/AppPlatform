@@ -14,22 +14,15 @@ describe('TeamDetailComponent', () => {
   let toastService: ToastService;
 
   const mockMembers: MemberSummary[] = [
-    {
-      id: 'member-1',
-      displayName: 'User One',
-      roles: [{ id: 'role-1', name: 'Admin' }]
-    },
-    {
-      id: 'member-2',
-      displayName: 'User Two',
-      roles: [{ id: 'role-2', name: 'Viewer' }]
-    }
+    { memberId: 'member-1', userId: 'user-1', displayName: 'User One', roles: ['Admin'] },
+    { memberId: 'member-2', userId: 'user-2', displayName: 'User Two', roles: ['Viewer'] }
   ];
 
   const mockRoles: RoleSummary[] = [
-    { id: 'role-1', name: 'Admin' },
-    { id: 'role-2', name: 'Viewer' },
-    { id: 'role-3', name: 'Editor' }
+    { id: 'role-1', name: 'Admin', displayName: 'Admin', isDeprecated: false, assignmentCount: 1 },
+    { id: 'role-2', name: 'Viewer', displayName: 'Viewer', isDeprecated: false, assignmentCount: 1 },
+    { id: 'role-3', name: 'Editor', displayName: 'Editor', isDeprecated: false, assignmentCount: 0 },
+    { id: 'role-4', name: 'Old', displayName: 'Old', isDeprecated: true, assignmentCount: 0 }
   ];
 
   beforeEach(async () => {
@@ -69,9 +62,10 @@ describe('TeamDetailComponent', () => {
 
   it('should render a checkbox for each available role per member', async () => {
     vi.spyOn(adminService, 'getMembers').mockResolvedValue(mockMembers);
+    vi.spyOn(adminService, 'getUsers').mockResolvedValue([]);
     vi.spyOn(adminService, 'getApplication').mockResolvedValue({
       id: 'app-1',
-      name: 'Test App',
+      displayName: 'Test App',
       roles: mockRoles
     } as any);
 
@@ -79,15 +73,16 @@ describe('TeamDetailComponent', () => {
     fixture.detectChanges();
 
     const checkboxes = fixture.nativeElement.querySelectorAll('table input[type="checkbox"]');
-    // 2 members * 3 roles = 6 checkboxes
+    // 2 members * 3 active roles = 6 checkboxes (the deprecated role gets no column)
     expect(checkboxes.length).toBe(6);
   });
 
   it('should call setMemberRoles when checkbox is toggled', async () => {
     vi.spyOn(adminService, 'getMembers').mockResolvedValue(mockMembers);
+    vi.spyOn(adminService, 'getUsers').mockResolvedValue([]);
     vi.spyOn(adminService, 'getApplication').mockResolvedValue({
       id: 'app-1',
-      name: 'Test App',
+      displayName: 'Test App',
       roles: mockRoles
     } as any);
     vi.spyOn(adminService, 'setMemberRoles').mockResolvedValue({});
@@ -113,9 +108,10 @@ describe('TeamDetailComponent', () => {
 
   it('should send correct roleIds array when checkbox is checked', async () => {
     vi.spyOn(adminService, 'getMembers').mockResolvedValue(mockMembers);
+    vi.spyOn(adminService, 'getUsers').mockResolvedValue([]);
     vi.spyOn(adminService, 'getApplication').mockResolvedValue({
       id: 'app-1',
-      name: 'Test App',
+      displayName: 'Test App',
       roles: mockRoles
     } as any);
     vi.spyOn(adminService, 'setMemberRoles').mockResolvedValue({});
@@ -141,9 +137,10 @@ describe('TeamDetailComponent', () => {
 
   it('should show cache banner after role change', async () => {
     vi.spyOn(adminService, 'getMembers').mockResolvedValue(mockMembers);
+    vi.spyOn(adminService, 'getUsers').mockResolvedValue([]);
     vi.spyOn(adminService, 'getApplication').mockResolvedValue({
       id: 'app-1',
-      name: 'Test App',
+      displayName: 'Test App',
       roles: mockRoles
     } as any);
     vi.spyOn(adminService, 'setMemberRoles').mockResolvedValue({});
@@ -165,9 +162,10 @@ describe('TeamDetailComponent', () => {
 
   it('should handle member not found gracefully', async () => {
     vi.spyOn(adminService, 'getMembers').mockResolvedValue(mockMembers);
+    vi.spyOn(adminService, 'getUsers').mockResolvedValue([]);
     vi.spyOn(adminService, 'getApplication').mockResolvedValue({
       id: 'app-1',
-      name: 'Test App',
+      displayName: 'Test App',
       roles: mockRoles
     } as any);
     vi.spyOn(adminService, 'setMemberRoles').mockResolvedValue({});

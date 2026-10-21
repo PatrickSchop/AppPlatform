@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,6 +5,7 @@ import { AdminService } from '../../services/admin.service';
 import { ToastService } from '../../shared/toast.service';
 import { getErrorMessage } from '../../shared/error-messages';
 import { AUTH_CLIENT } from '@PS/app-client-angular';
+import { InvitationPreviewResponse } from '../../services/models';
 
 @Component({
   selector: 'app-accept-invite',
@@ -37,7 +37,7 @@ import { AUTH_CLIENT } from '@PS/app-client-angular';
       <div class="preview-container">
         <h2>Accept Invitation</h2>
         <div class="preview-info">
-          <p><strong>For:</strong> {{ preview()?.displayName || preview()?.email || 'User' }}</p>
+          <p><strong>For:</strong> {{ preview()?.displayName || 'User' }}</p>
           <p><strong>Applications:</strong></p>
           <ul>
             @for (app of previewApps(); track app) {
@@ -122,7 +122,7 @@ export class AcceptInviteComponent implements OnInit {
 
   loading = signal(true);
   error = signal<string>('');
-  preview = signal<{ displayName?: string; email?: string } | null>(null);
+  preview = signal<InvitationPreviewResponse | null>(null);
   accepted = signal(false);
   previewApps = signal<string[]>([]);
   applications = signal<string[]>([]);
@@ -139,12 +139,10 @@ export class AcceptInviteComponent implements OnInit {
     }
 
     try {
-      // Check if user is signed in
-      const isSignedIn = await this.isUserSignedIn();
-
-      if (!isSignedIn) {
-        // Redirect to sign in (auth will redirect back to this page)
-        await this.authClient.signIn();
+      // The invitee is not registered yet (that is what accepting does), so "signed in" means
+      // an identity-provider session, not a registry user. Sign-in returns to this page.
+      if (!this.authClient?.getAccount()) {
+        await this.authClient?.signIn();
         return;
       }
 
@@ -157,23 +155,12 @@ export class AcceptInviteComponent implements OnInit {
     }
   }
 
-  private async isUserSignedIn(): Promise<boolean> {
-    try {
-      const tenant = await this.adminService.getMyTenants();
-      return tenant.registered;
-    } catch {
-      return false;
-    }
-  }
-
   private async loadPreview(): Promise<void> {
     try {
       const response = await this.adminService.previewInvitation(this.token);
       this.preview.set(response);
 
-      // Extract app names from preview (assuming they come in the response)
-      // For now, we'll set empty array
-      this.previewApps.set(['Application']);
+      this.previewApps.set(response.applications);
     } catch (error) {
       this.handleError(error);
     }
@@ -182,22 +169,13 @@ export class AcceptInviteComponent implements OnInit {
   async acceptInvitation(): Promise<void> {
     this.loading.set(true);
     try {
-      const response = await this.adminService.acceptInvitation(this.token);
+      await this.adminService.acceptInvitation(this.token);
 
-      if (response.success) {
-        // Check if user is admin
-        const myTenants = await this.adminService.getMyTenants();
-        const isAdmin = myTenants.tenants.some(t => t.roles.includes('admin'));
-
-        if (isAdmin) {
-          // Redirect to applications
-          this.router.navigate(['/applications']);
-        } else {
-          // Show success message with application names
-          this.applications.set(myTenants.tenants.map(t => t.name));
-          this.accepted.set(true);
-        }
-      }
+      // A non-2xx response throws, so reaching here means the invitation was accepted.
+      // Role changes can take a minute to be visible, so do not decide what to show from
+      // a fresh role lookup; show what the invitation granted.
+      this.applications.set(this.previewApps());
+      this.accepted.set(true);
     } catch (error) {
       this.handleError(error);
     } finally {
@@ -211,7 +189,7 @@ export class AcceptInviteComponent implements OnInit {
     if (error?.status === 410) {
       message = 'This invitation has expired or has already been used';
     } else if (error?.status === 409) {
-      const code = error?.error?.code;
+      const code = error?.body?.error;
       if (code === 'identity_already_registered') {
         message = 'Your identity is already registered in the system';
       } else if (code === 'already_bound') {

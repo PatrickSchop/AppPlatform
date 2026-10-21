@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace PS.Management.Api.Contracts;
 
 // Requests
@@ -12,8 +14,8 @@ public record AddMemberRequest(Guid UserId, List<Guid> RoleIds);
 public record SetRolesRequest(List<Guid> RoleIds);
 
 // Responses
-public record ApplicationSummary(Guid Id, string Key, string DisplayName, PS.AppPlatform.Tenancy.TenancyMode Tenancy, int TenantCount, int UserCount, bool IsDisabled);
-public record ApplicationDetail(Guid Id, string Key, string DisplayName, PS.AppPlatform.Tenancy.TenancyMode Tenancy, bool IsDisabled, List<RoleSummary> Roles, List<TenantSummary> Tenants);
+public record ApplicationSummary(Guid Id, string Key, string DisplayName, [property: JsonConverter(typeof(JsonStringEnumConverter))] PS.AppPlatform.Tenancy.TenancyMode Tenancy, int TenantCount, int UserCount, bool IsDisabled);
+public record ApplicationDetail(Guid Id, string Key, string DisplayName, [property: JsonConverter(typeof(JsonStringEnumConverter))] PS.AppPlatform.Tenancy.TenancyMode Tenancy, bool IsDisabled, List<RoleSummary> Roles, List<TenantSummary> Tenants);
 public record RoleSummary(Guid Id, string Name, string DisplayName, bool IsDeprecated, int AssignmentCount);
 public record TenantSummary(Guid Id, string Name, bool IsDisabled);
 public record TeamSummary(Guid Id, string Name, bool IsDefault);
