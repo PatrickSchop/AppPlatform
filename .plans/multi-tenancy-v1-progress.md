@@ -1,6 +1,6 @@
 # Multi-tenancy v1 — Progress
 
-**Updated:** 2026-10-21 · **MT-01–MT-14 done · next action: MT-15 (template `--Tenancy`, deploy registration, 0.2.0)**
+**Updated:** 2026-10-21 · **MT-01–MT-14 done · MT-15 code complete, release of 0.2.0 awaiting operator go · then MT-16 (Gate F)**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -11,7 +11,7 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
 | Phase 1 — Core tenancy | MT-02 – MT-07 | ✅ complete · **Gate D passed** |
 | Phase 2 — Management app | MT-08 – MT-12 | ✅ complete · **Gate E passed** (2026-10-21) |
-| Phase 3 — Front-end and template | MT-13 – MT-16 | 🔄 MT-13 ✅ · MT-14 ✅ · MT-15 next · **Gate F** outstanding |
+| Phase 3 — Front-end and template | MT-13 – MT-16 | 🔄 MT-13 ✅ · MT-14 ✅ · MT-15 code ✅, release pending · **Gate F** outstanding |
 
 **14 of 16 steps complete** (MT-01–MT-14).
 
@@ -43,7 +43,7 @@ All of Phases 0–2, including MT-11, can run without waiting for v1 Steps 26–
 | MT-12 | **Gate E** — management deployed | ✅ | ✅ Management 49, platform 196, client 19, WebApp 43; CI `build` + new `frontend` job green | ✅ 72f0b2e … ba36aea (25 commits since 496603e; record in ba36aea; deploys succeeded on every push) |
 | MT-13 | `TenantSession` | ✅ | ✅ client 51 (new: 31); Angular lib, React and Management WebApp rebuilt and green | ✅ (CI + deploy passed) |
 | MT-14 | Angular/React tenancy components | ✅ (no starters, see note) | ✅ client 52, Angular lib 38 (new runner), React 19, Management WebApp 46; CI runs all | ✅ (CI + deploy passed) |
-| MT-15 | Template `--Tenancy`, deploy registration, `0.2.0` | ⏳ | | |
+| MT-15 | Template `--tenancy`, deploy registration, `0.2.0` | 🔄 code, docs and CI done; **0.2.0 not yet published** (operator go) | ✅ platform 196, Management 49, client 52, Angular 38, React 19, WebApp 46, template script (3 variants build); CI green incl. actionlint | ✅ (CI passed; see run log) |
 | MT-16 | **Gate F** — template app end to end | ⏳ | | |
 
 ## Gates
@@ -197,7 +197,12 @@ the way and the open points are in the section **MT-12 / GATE E: PASSED** at the
 
 ## Next
 
-**MT-15** — template `--Tenancy`, deploy registration, `0.2.0`. The dependency on v1 Step 28
+**MT-15 release, then MT-16.** MT-15's code, docs and CI are done. What remains is publishing
+`0.2.0` (NuGet `PS.AppPlatform`, `PS.AppPlatform.Functions`, `PS.AppPlatform.Templates` through
+`publish.yaml`; the repository is public and versions cannot be replaced), which needs the operator's
+go. A generated app restores `0.2.0` from GitHub Packages, so MT-16 (Gate F) cannot start before it.
+MT-16 also needs the operator actions listed above (create `PatrickSchop/TenantScratch`, add its
+origin to the SPA redirect URIs, trust its deploy principal on the management app). The dependency on v1 Step 28
 (starters) was dropped by the operator on 2026-10-21 as circular: the starters are meant to show the
 login flow this plan delivers. Whatever they would have supplied is built from scratch. The final code review (`runs/FINAL/`) listed in the MT-09 and MT-10 entries is still
 pending.
@@ -308,6 +313,7 @@ is_error False
 - cost 00-verify-d3.json claude-haiku-4-5-20251001 turns 52 usd 0.26
 - cost -publish-d3.json claude-haiku-4-5-20251001 turns 17 usd 0.13
 - MT-11: DONE. Final commit ea3fe03, CI passed. Counters: planner 1 initial + 2 re-plans; executor haiku 4 sub-steps (a,b,c,d1) + d2 config fix + d3 async fix (3 iterations to reach 100% test pass); one verify, one publish. Start commit for MT-12: ea3fe03. State: MT-12 planning.
+- 2026-10-21 MT-15: code, docs and CI DONE (interactive); **release not published**. Template: `--tenancy none|single|multi` (the CLI name follows the host file, so `--tenancy`, not the plan's `--Tenancy`), `--management-url`, `--management-audience`; `Manifest`, an example tenant-owned `Item` (entity, migration `110`, endpoints), tenancy wiring, a registering deploy workflow, README and deployment docs; `PlatformVersion` default `0.2.0`. `templates/test-template.sh` (run in CI as the `template` job) generates all three variants in a throwaway hive, checks files/settings/docs, builds each against locally packed packages and checks `functions.metadata`. It found two real defects on its first runs: a generated v1 app (`--tenancy none`) did not restore because `System.Security.Cryptography.Pkcs 10.0.0` fails NuGet audit under warnings-as-errors (pinned to 10.0.13 in the template's `Directory.Packages.props`), and the tenancy `Program.cs` lacked a `using`. `app-deploy.yaml`: `register`, `management_url`, `management_audience`; inputs are checked before any change and registration runs before the new code is published. `infra/app.bicep`: `managementUrl`/`managementAudience` -> `tenancy__management__*` settings (the management app passes neither). `docs/multi-tenancy.md` is now the complete reference (concepts, quick start, anonymous endpoints, login flow, registration, operator runbook, caching) and is linked from the README, auth-setup and provisioning docs. `VersionPrefix` 0.2.0; npm packages 0.2.0 (npm packages are not published anywhere: consumers use `file:` paths). Not done: publishing; the starters (still do not exist); `--register` through a real deployment (first exercised by Gate F: it is also the first use of a deploy principal's token against the registry, the open observation from Gate E). The template's `Frontend` option still points at starter folders that do not exist.
 - 2026-10-21 MT-14: DONE (interactive). Angular: `TenantService`, `tenantGuard`, `provideTenancy`, `ps-tenant-picker`/`-switcher`/`ps-not-registered`, `TENANT_SESSION`, `TENANT_SWITCHED` (default: reload the page after a switch); the library got a Vitest + Angular-plugin test runner (it had none; its old spec was never run and was written for a design that no longer existed). React: `TenantProvider`, `useTenant`, `TenantGate`, `TenantPicker`, `TenantSwitcher`; `PlatformProvider` supplies the session. `TenantSession.ready()` added. Management UI: `adminGuard` now uses `TenantService.hasRole('admin')` (no second `me/tenants` call), `provideTenancy()`, switcher in the header (hidden in Single mode); Vitest needs `preserveSymlinks` + `dedupe` for the linked libraries. Deviations: **no starters exist** (v1 Steps 26–27), so the step's starter edits and the manual flow against MultiTenantSample with a starter were not done; the Angular components are exercised by the Management app (Single mode) and by tests, the React ones by tests only. Picker/switcher styling: components carry `ps-*` class names and no styles of their own, since there is no design system to borrow from. Packages `@PS/app-client-angular` and `@PS/app-client-react` are 0.2.0.
 - 2026-10-21 MT-13: DONE (interactive, no subagents). `TenantSession` + `ApiClient.getHeaders/onErrorCode` + `createPlatformClient` wiring in `@PS/app-client` 0.2.0 (Angular/React peer ranges now `^0.2.0`). Found and fixed on the way: `TaskPoller` requested `/api/tasks` against an API root of `/api` (`/api/api/tasks` in every real app; the tests used a base URL without `/api` and hid it), and a poller that was never started polled on `visibilitychange`. The management UI's `MyTenantResponse` used `id`; the API sends `tenantId`. Operator dropped the v1 Step 28 dependency as circular.
 - 2026-10-21 MT-12: DONE. Not run through the controller: done interactively with the operator (deployment, workflow, 25 commits on `main`, start 496603e). Gate E passed, 12/12. Counters: no planner or executor subagents; every push deployed and CI passed. The MT-01–MT-11 code needed fixes in the platform, the Angular client and the management UI before the gate could pass (listed in the Gate E section), which suggests the FINAL code review should look at the same areas. State: MT-13 blocked on v1 Step 28.
