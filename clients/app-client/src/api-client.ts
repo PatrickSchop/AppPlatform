@@ -45,6 +45,11 @@ export class ApiClient {
     return this.request<T>(path, { ...init, method: 'DELETE' });
   }
 
+  /** Joins baseUrl and path with exactly one slash, whether or not either side has one. */
+  private url(path: string): string {
+    return `${this.baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+  }
+
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
     const token = await this.getAccessToken();
     const headers = new Headers(init?.headers);
@@ -54,7 +59,7 @@ export class ApiClient {
     }
     headers.set('Content-Type', 'application/json');
 
-    const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
+    const response = await this.fetchImpl(this.url(path), {
       ...init,
       headers,
     });

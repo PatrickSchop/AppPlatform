@@ -300,4 +300,14 @@ describe('TaskPoller', () => {
       global.fetch = original;
     }
   });
+  it.each([
+    ['/api', 'me/tenants'],
+    ['/api', '/me/tenants'],
+    ['/api/', 'me/tenants'],
+  ])('joins baseUrl %s and path %s with one slash', async (baseUrl, path) => {
+    const mockFetch = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+    const api = new ApiClient({ baseUrl, fetch: mockFetch as any });
+    await api.get(path);
+    expect(mockFetch.mock.calls[0][0]).toBe('/api/me/tenants');
+  });
 });
