@@ -123,3 +123,16 @@
   font-size: 0.85rem;
   overflow-wrap: anywhere;
 }
+
+.no-access-content .sign-out-btn + .sign-out-btn {
+  margin-top: 0.75rem;
+}
+
+.no-access-content .sign-out-btn.secondary {
+  background-color: #e5e7eb;
+  color: #1f2937;
+
+  &:hover {
+    background-color: #d1d5db;
+  }
+}

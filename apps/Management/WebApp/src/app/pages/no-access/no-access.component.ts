@@ -40,6 +40,17 @@ export class NoAccessComponent implements OnInit {
     }
   }
 
+  switchAccount() {
+    if (this.auth) {
+      this.auth.switchAccount();
+    }
+  }
+
+  /** AADSTS500011: the account's organisation has not been given access to the app yet. */
+  get notConsented(): boolean {
+    return !!this.authError && this.authError.includes('AADSTS500011');
+  }
+
   signOut() {
     if (this.auth) {
       this.auth.signOut();

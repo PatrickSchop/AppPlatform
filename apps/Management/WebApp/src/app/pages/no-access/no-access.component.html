@@ -5,6 +5,9 @@
 
     <div class="message" *ngIf="authError">
       <p>Sign-in failed.</p>
+      @if (notConsented) {
+        <p>This account's organisation has not been given access to the management portal yet. Ask an administrator of that organisation to grant access, or sign in with a different account.</p>
+      }
       <p class="auth-error">{{ authError }}</p>
     </div>
 
@@ -27,6 +30,7 @@
       </div>
     </div>
 
-    <button class="sign-out-btn" (click)="signOut()">Sign Out</button>
+    <button class="sign-out-btn" (click)="switchAccount()">Sign in with a different account</button>
+    <button class="sign-out-btn secondary" (click)="signOut()">Sign Out</button>
   </div>
 </div>

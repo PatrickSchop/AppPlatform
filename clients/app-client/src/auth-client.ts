@@ -90,6 +90,18 @@ export class AuthClient {
     await this.msal.loginRedirect({ scopes: this.scopes });
   }
 
+  /**
+   * Forget the account cached in this browser and let the user pick one at the identity
+   * provider. For when the remembered account is the wrong one (several Microsoft accounts
+   * signed in, or an account whose organisation has not granted access to the app).
+   */
+  async switchAccount(): Promise<void> {
+    this.account = null;
+    this.error = null;
+    await this.msal.clearCache();
+    await this.msal.loginRedirect({ scopes: this.scopes, prompt: 'select_account' });
+  }
+
   async signOut(): Promise<void> {
     await this.msal.logout();
     this.account = null;
