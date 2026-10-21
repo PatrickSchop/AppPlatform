@@ -1,6 +1,6 @@
 # Multi-tenancy v1 — Progress
 
-**Updated:** 2026-10-21 · **MT-01–MT-11 done · next action: MT-12 planner (Gate E - deploy + bootstrap + user flow)**
+**Updated:** 2026-10-21 · **MT-01–MT-12 done · Gate E passed · next action: MT-13 (blocked on v1 Step 28 — Gate C)**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -10,10 +10,10 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 |---|---|---|
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
 | Phase 1 — Core tenancy | MT-02 – MT-07 | ✅ complete · **Gate D passed** |
-| Phase 2 — Management app | MT-08 – MT-12 | 🔄 MT-08 ✅ · MT-09 ✅ · MT-10 ✅ · MT-11 ✅ · **Gate E** next |
+| Phase 2 — Management app | MT-08 – MT-12 | ✅ complete · **Gate E passed** (2026-10-21) |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**11 of 16 steps complete** (MT-01–MT-11).
+**12 of 16 steps complete** (MT-01–MT-12).
 
 ## Dependencies on the v1 plan
 
@@ -40,7 +40,7 @@ All of Phases 0–2, including MT-11, can run without waiting for v1 Steps 26–
 | MT-09 | Registry API, `--register` | ✅ | ✅ 219 | ✅ 05d6342, 135e9eb, 38ddbec, 1727d11 (CI passed; two CI fixes along the way) |
 | MT-10 | Admin API + invitations | ✅ | ✅ 36 | ✅ 32b26e9 (CI passed) |
 | MT-11 | Management Angular UI | ✅ | ✅ 226+ | ✅ ea3fe03 (CI passed; 4 sub-steps + test config fixes) |
-| MT-12 | **Gate E** — management deployed | ⏳ | | |
+| MT-12 | **Gate E** — management deployed | ✅ | ✅ Management 49, platform 196, client 19, WebApp 43; CI `build` + new `frontend` job green | ✅ 72f0b2e … ba36aea (25 commits since 496603e; record in ba36aea; deploys succeeded on every push) |
 | MT-13 | `TenantSession` | ⏳ blocked on v1 Step 28 | | |
 | MT-14 | Angular/React tenancy components | ⏳ | | |
 | MT-15 | Template `--Tenancy`, deploy registration, `0.2.0` | ⏳ | | |
@@ -159,7 +159,10 @@ live only in the gitignored `samples/MultiTenantSample/local.settings.json` — 
 committed. `appsettings.development.json` (committed) has the tenant metadata only; the
 `devDirectory:users` entry with the real oid is local-only, since this repo is public.
 
-**Gate E (MT-12) — outstanding.** 12 checks; results go here.
+**Gate E (MT-12) — passed 2026-10-21.** All 12 checks pass against the deployed app at
+`https://psmanagement-api.azurewebsites.net` with two real identities (P = operator personal
+account, Q = a member of the operator's own tenant). Full results, deviations, the defects fixed on
+the way and the open points are in the section **MT-12 / GATE E: PASSED** at the end of this file.
 
 **Gate F (MT-16) — outstanding.** 15 checks and the scaffold-to-deploy time; results go here.
 
@@ -176,21 +179,29 @@ committed. `appsettings.development.json` (committed) has the tenant metadata on
 | `[TenantOptional]` with `requiredRole` | Tenant-less callers have no roles; such endpoints use `PlatformPolicies.AuthenticatedOnly` | D3, MT-04 → MT-06 |
 | `TaskExecutionManager`'s own task bookkeeping reads | Read the claimed row directly via the unscoped factory instead of `IBackgroundTaskService.GetTaskStatusAsync`, since the manager's own scope has no request tenant and may run tasks for several tenants at once (the tenant-scoped read stays correct for `BackgroundTaskEndpoints`, which always has a resolved request tenant) | D4, MT-05 |
 | Bootstrap admin ids | Repository variables, not secrets | D5, MT-12 |
+| Creating a user | One call creates the user, places them in a team with roles and issues the first invitation; "create new invite link" only for an outstanding invitation | Gate E (MT-12), `RegistryService.CreateInvitedUserAsync` |
+| Last-admin guard | Counts the other enabled, accepted admins, not the user being changed | Gate E (MT-12) |
+| Registered tenancy mode | `AddPlatformTenancy` replaces the default `TenancyMode.None` that `AddPlatformData` registers, so call order does not matter | Gate E (MT-12) |
+| Sign-in authority | `common` (any account); a user from another Entra tenant needs that tenant's admin to consent. B2B guests with a tenant-specific authority were considered and not adopted | Gate E (MT-12) |
 | Background task dispatch | Polling-driven (task read endpoints claim-and-execute before answering) plus a timer safety net, not a fire-and-forget self-POST or a standing worker loop — must scale to zero on Consumption when idle | Gate D (MT-07) finding, `TaskExecutionManager`/`BackgroundTaskService` |
 
 ## Operator actions (when their steps arrive)
 
 - MT-07: ✅ done — used `az ad signed-in-user show` / `az account show` instead of a decoded
   token; both give the same `oid`/`tid`.
-- MT-12: create the `Management` resource group and deploy; set app settings; add the SPA
-  redirect URI; set the `BOOTSTRAP_ADMIN_*` repository variables; grant the deploy principal
-  `db_owner` on the `management` database; have a second Microsoft account ready.
+- MT-12: ✅ done (2026-10-21) — resource group `Management`, deployment as `psmanagement`, app
+  settings, SPA redirect URI, `BOOTSTRAP_ADMIN_*` repository variables, deploy principal
+  `appplatform-deploy` (OIDC, roles, `db_owner`), second identity from the operator's own tenant.
+  See the Gate E section for what differed from the step.
 - MT-16: create `PatrickSchop/TenantScratch`; add its origin to the SPA redirect URIs.
 
 ## Next
 
-Start **MT-08** — Management backend: registry schema scripts, `LocalRegistryTenantDirectory`,
-self-registration, `--bootstrap-admin`.
+**MT-13** — `TenantSession`, blocked on v1 Step 28 (Gate C: clients and both starters). Phases 0–2
+are complete and Gate E has passed. Before starting Phase 3, re-read the code changed during MT-12
+(see "Open points" in the Gate E section): platform tenancy registration (`TenancyServiceBuilder`),
+`CachingTenantDirectory`, `ApiClient`, and the `@PS/app-client-angular` build (now `ng-packagr`).
+The final code review (`runs/FINAL/`) listed in the MT-09 and MT-10 entries is still pending.
 
 ## Controller run log
 
@@ -298,6 +309,7 @@ is_error False
 - cost 00-verify-d3.json claude-haiku-4-5-20251001 turns 52 usd 0.26
 - cost -publish-d3.json claude-haiku-4-5-20251001 turns 17 usd 0.13
 - MT-11: DONE. Final commit ea3fe03, CI passed. Counters: planner 1 initial + 2 re-plans; executor haiku 4 sub-steps (a,b,c,d1) + d2 config fix + d3 async fix (3 iterations to reach 100% test pass); one verify, one publish. Start commit for MT-12: ea3fe03. State: MT-12 planning.
+- 2026-10-21 MT-12: DONE. Not run through the controller: done interactively with the operator (deployment, workflow, 25 commits on `main`, start 496603e). Gate E passed, 12/12. Counters: no planner or executor subagents; every push deployed and CI passed. The MT-01–MT-11 code needed fixes in the platform, the Angular client and the management UI before the gate could pass (listed in the Gate E section), which suggests the FINAL code review should look at the same areas. State: MT-13 blocked on v1 Step 28.
 
 ---
 
