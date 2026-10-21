@@ -40,6 +40,9 @@ export class AuthClient {
       },
     });
 
+    // msal-browser v3 requires initialize() before any other call.
+    await msal.initialize();
+
     // Handle redirect promise before returning
     await msal.handleRedirectPromise();
 

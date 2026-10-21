@@ -2,17 +2,6 @@
   "name": "@PS/app-client-angular",
   "version": "0.1.0",
   "type": "module",
-  "main": "./dist/public-api.js",
-  "types": "./dist/public-api.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/public-api.d.ts",
-      "import": "./dist/public-api.js"
-    }
-  },
-  "files": [
-    "dist"
-  ],
   "peerDependencies": {
     "@angular/common": ">=19.0.0",
     "@angular/core": ">=19.0.0",
@@ -22,12 +11,13 @@
     "@angular/common": "^21.0.0",
     "@angular/core": "^21.0.0",
     "@PS/app-client": "file:../app-client",
+    "ng-packagr": "^21.2.7",
     "rxjs": "^7.8.2",
     "tslib": "^2.7.0",
     "typescript": "^5.6.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "ng-packagr -p ng-package.json",
     "lint": "tsc --noEmit"
   }
 }

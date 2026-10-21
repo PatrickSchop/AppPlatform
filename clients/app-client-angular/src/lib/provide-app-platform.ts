@@ -15,13 +15,24 @@ export interface AppPlatformConfig {
   required?: boolean;
 }
 
-let clientInstance: ReturnType<typeof createPlatformClient> | null = null;
+type PlatformClient = Awaited<ReturnType<typeof createPlatformClient>>;
 
+let clientPromise: Promise<PlatformClient> | null = null;
+let client: PlatformClient | null = null;
+
+// Resolved by APP_INITIALIZER before bootstrap completes, so the providers below can
+// hand out the client itself. An async useFactory would inject a Promise instead.
 const initializeClient = async (configUrl?: string) => {
-  if (!clientInstance) {
-    clientInstance = createPlatformClient({ configUrl });
+  clientPromise ??= createPlatformClient({ configUrl });
+  client = await clientPromise;
+  return client;
+};
+
+const requireClient = (): PlatformClient => {
+  if (!client) {
+    throw new Error('Platform client is not initialized; provideAppPlatform() must run before it is injected.');
   }
-  return clientInstance;
+  return client;
 };
 
 export function provideAppPlatform(config?: AppPlatformConfig): EnvironmentProviders {
@@ -35,31 +46,19 @@ export function provideAppPlatform(config?: AppPlatformConfig): EnvironmentProvi
     },
     {
       provide: APP_CONFIG,
-      useFactory: async () => {
-        const client = await initializeClient(config?.configUrl);
-        return client.config;
-      },
+      useFactory: () => requireClient().config,
     },
     {
       provide: API_CLIENT,
-      useFactory: async () => {
-        const client = await initializeClient(config?.configUrl);
-        return client.api;
-      },
+      useFactory: () => requireClient().api,
     },
     {
       provide: AUTH_CLIENT,
-      useFactory: async () => {
-        const client = await initializeClient(config?.configUrl);
-        return client.auth;
-      },
+      useFactory: () => requireClient().auth,
     },
     {
       provide: 'TASK_POLLER',
-      useFactory: async () => {
-        const client = await initializeClient(config?.configUrl);
-        return client.tasks;
-      },
+      useFactory: () => requireClient().tasks,
     },
     {
       provide: HTTP_INTERCEPTORS,

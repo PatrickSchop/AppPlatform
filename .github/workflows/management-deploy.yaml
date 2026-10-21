@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'apps/Management/**'
+      - 'clients/**'
       - '.github/workflows/management-deploy.yaml'
       - '.github/workflows/app-build.yaml'
       - '.github/workflows/app-deploy.yaml'
