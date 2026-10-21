@@ -1,0 +1,34 @@
+name: Deploy Management
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/Management/**'
+      - '.github/workflows/management-deploy.yaml'
+      - '.github/workflows/app-build.yaml'
+      - '.github/workflows/app-deploy.yaml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/app-build.yaml
+    with:
+      app_project_path: apps/Management
+      frontend_path: apps/Management/WebApp
+      frontend_dist_path: dist/WebApp/browser
+
+  deploy:
+    needs: build
+    uses: ./.github/workflows/app-deploy.yaml
+    secrets: inherit
+    with:
+      # 'management' is taken globally as a storage account name, so resources derive from psmanagement.
+      app_name: psmanagement
+      resource_group: Management
+      assembly_name: Management
+      deploy_frontend: true
+      # Identifiers, not credentials: repository variables, not secrets (container plan D5).
+      post_migrate_args: >-
+        --bootstrap-admin --oid ${{ vars.BOOTSTRAP_ADMIN_OID }}
+        --tid ${{ vars.BOOTSTRAP_ADMIN_TID }} --name "${{ vars.BOOTSTRAP_ADMIN_NAME }}"

@@ -47,6 +47,11 @@ on:
         required: false
         type: boolean
         default: true
+      post_migrate_args:
+        required: false
+        type: string
+        default: ''
+        description: 'Extra command run after --migrate, e.g. "--bootstrap-admin --oid … --tid … --name …"'
     secrets:
       AZURE_CLIENT_ID:
         required: false
@@ -122,6 +127,12 @@ jobs:
         run: |
           cd app-output
           dotnet "${{ inputs.assembly_name }}.dll" --migrate
+
+      - name: Post-migration command
+        if: ${{ inputs.run_migrations && inputs.post_migrate_args != '' }}
+        run: |
+          cd app-output
+          dotnet "${{ inputs.assembly_name }}.dll" ${{ inputs.post_migrate_args }}
 
       - name: Remove SQL firewall rule
         if: always()
