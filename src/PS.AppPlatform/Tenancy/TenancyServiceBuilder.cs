@@ -88,7 +88,9 @@ public static class TenancyServiceBuilder
                 throw new InvalidOperationException($"Unknown tenancy directory: {options.Directory}");
         }
 
-        services.TryAdd(ServiceDescriptor.Singleton(typeof(TenancyMode), manifest.Tenancy));
+        // Replace, not TryAdd: AddPlatformData registers TenancyMode.None as a default, and an app
+        // that calls it first would otherwise keep None and run with tenancy silently off.
+        services.Replace(ServiceDescriptor.Singleton(typeof(TenancyMode), manifest.Tenancy));
 
         return services;
     }
