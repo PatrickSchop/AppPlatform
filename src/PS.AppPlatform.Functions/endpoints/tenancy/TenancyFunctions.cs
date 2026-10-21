@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
+using PS.AppPlatform.Auth;
 using PS.AppPlatform.Endpoints;
 using PS.AppPlatform.Tenancy;
 
@@ -15,7 +16,8 @@ namespace PS.AppPlatform.Generated;
 public class TenancyFunctions(ITenancyEndpoints inner)
 {
     [Function("GetMyTenants")]
-    [Authorize]
+    // AuthenticatedOnly: with requiredRole set, a user who holds no role must still get an answer.
+    [Authorize(Policy = PlatformPolicies.AuthenticatedOnly)]
     [TenantOptional]
     public Task<IActionResult> GetMyTenants(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/me/tenants")] HttpRequest req)

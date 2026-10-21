@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/Management/**'
       - 'clients/**'
+      - 'src/**'
       - '.github/workflows/management-deploy.yaml'
       - '.github/workflows/app-build.yaml'
       - '.github/workflows/app-deploy.yaml'
