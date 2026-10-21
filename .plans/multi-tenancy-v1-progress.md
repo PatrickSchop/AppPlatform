@@ -1,6 +1,6 @@
 # Multi-tenancy v1 — Progress
 
-**Updated:** 2026-10-21 · **MT-01–MT-13 done · next action: MT-14 (Angular/React tenancy components)**
+**Updated:** 2026-10-21 · **MT-01–MT-14 done · next action: MT-15 (template `--Tenancy`, deploy registration, 0.2.0)**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -11,9 +11,9 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
 | Phase 1 — Core tenancy | MT-02 – MT-07 | ✅ complete · **Gate D passed** |
 | Phase 2 — Management app | MT-08 – MT-12 | ✅ complete · **Gate E passed** (2026-10-21) |
-| Phase 3 — Front-end and template | MT-13 – MT-16 | 🔄 MT-13 ✅ · MT-14 next · **Gate F** outstanding |
+| Phase 3 — Front-end and template | MT-13 – MT-16 | 🔄 MT-13 ✅ · MT-14 ✅ · MT-15 next · **Gate F** outstanding |
 
-**13 of 16 steps complete** (MT-01–MT-13).
+**14 of 16 steps complete** (MT-01–MT-14).
 
 ## Dependencies on the v1 plan
 
@@ -42,7 +42,7 @@ All of Phases 0–2, including MT-11, can run without waiting for v1 Steps 26–
 | MT-11 | Management Angular UI | ✅ | ✅ 226+ | ✅ ea3fe03 (CI passed; 4 sub-steps + test config fixes) |
 | MT-12 | **Gate E** — management deployed | ✅ | ✅ Management 49, platform 196, client 19, WebApp 43; CI `build` + new `frontend` job green | ✅ 72f0b2e … ba36aea (25 commits since 496603e; record in ba36aea; deploys succeeded on every push) |
 | MT-13 | `TenantSession` | ✅ | ✅ client 51 (new: 31); Angular lib, React and Management WebApp rebuilt and green | ✅ (CI + deploy passed) |
-| MT-14 | Angular/React tenancy components | ⏳ | | |
+| MT-14 | Angular/React tenancy components | ✅ (no starters, see note) | ✅ client 52, Angular lib 38 (new runner), React 19, Management WebApp 46; CI runs all | ✅ (CI + deploy passed) |
 | MT-15 | Template `--Tenancy`, deploy registration, `0.2.0` | ⏳ | | |
 | MT-16 | **Gate F** — template app end to end | ⏳ | | |
 
@@ -197,10 +197,9 @@ the way and the open points are in the section **MT-12 / GATE E: PASSED** at the
 
 ## Next
 
-**MT-14** — Angular and React tenancy components on top of `TenantSession`. The dependency on v1
-Step 28 (starters) was dropped by the operator on 2026-10-21 as circular: the starters are meant to
-show the login flow this plan delivers. Whatever the starters would have supplied is built from
-scratch here. The final code review (`runs/FINAL/`) listed in the MT-09 and MT-10 entries is still
+**MT-15** — template `--Tenancy`, deploy registration, `0.2.0`. The dependency on v1 Step 28
+(starters) was dropped by the operator on 2026-10-21 as circular: the starters are meant to show the
+login flow this plan delivers. Whatever they would have supplied is built from scratch. The final code review (`runs/FINAL/`) listed in the MT-09 and MT-10 entries is still
 pending.
 
 ## Controller run log
@@ -309,6 +308,7 @@ is_error False
 - cost 00-verify-d3.json claude-haiku-4-5-20251001 turns 52 usd 0.26
 - cost -publish-d3.json claude-haiku-4-5-20251001 turns 17 usd 0.13
 - MT-11: DONE. Final commit ea3fe03, CI passed. Counters: planner 1 initial + 2 re-plans; executor haiku 4 sub-steps (a,b,c,d1) + d2 config fix + d3 async fix (3 iterations to reach 100% test pass); one verify, one publish. Start commit for MT-12: ea3fe03. State: MT-12 planning.
+- 2026-10-21 MT-14: DONE (interactive). Angular: `TenantService`, `tenantGuard`, `provideTenancy`, `ps-tenant-picker`/`-switcher`/`ps-not-registered`, `TENANT_SESSION`, `TENANT_SWITCHED` (default: reload the page after a switch); the library got a Vitest + Angular-plugin test runner (it had none; its old spec was never run and was written for a design that no longer existed). React: `TenantProvider`, `useTenant`, `TenantGate`, `TenantPicker`, `TenantSwitcher`; `PlatformProvider` supplies the session. `TenantSession.ready()` added. Management UI: `adminGuard` now uses `TenantService.hasRole('admin')` (no second `me/tenants` call), `provideTenancy()`, switcher in the header (hidden in Single mode); Vitest needs `preserveSymlinks` + `dedupe` for the linked libraries. Deviations: **no starters exist** (v1 Steps 26–27), so the step's starter edits and the manual flow against MultiTenantSample with a starter were not done; the Angular components are exercised by the Management app (Single mode) and by tests, the React ones by tests only. Picker/switcher styling: components carry `ps-*` class names and no styles of their own, since there is no design system to borrow from. Packages `@PS/app-client-angular` and `@PS/app-client-react` are 0.2.0.
 - 2026-10-21 MT-13: DONE (interactive, no subagents). `TenantSession` + `ApiClient.getHeaders/onErrorCode` + `createPlatformClient` wiring in `@PS/app-client` 0.2.0 (Angular/React peer ranges now `^0.2.0`). Found and fixed on the way: `TaskPoller` requested `/api/tasks` against an API root of `/api` (`/api/api/tasks` in every real app; the tests used a base URL without `/api` and hid it), and a poller that was never started polled on `visibilitychange`. The management UI's `MyTenantResponse` used `id`; the API sends `tenantId`. Operator dropped the v1 Step 28 dependency as circular.
 - 2026-10-21 MT-12: DONE. Not run through the controller: done interactively with the operator (deployment, workflow, 25 commits on `main`, start 496603e). Gate E passed, 12/12. Counters: no planner or executor subagents; every push deployed and CI passed. The MT-01–MT-11 code needed fixes in the platform, the Angular client and the management UI before the gate could pass (listed in the Gate E section), which suggests the FINAL code review should look at the same areas. State: MT-13 blocked on v1 Step 28.
 
