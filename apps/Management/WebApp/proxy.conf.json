@@ -1,0 +1,4 @@
+{
+  "/api": { "target": "http://localhost:7071", "secure": false },
+  "/configuration.json": { "target": "http://localhost:7071", "secure": false }
+}

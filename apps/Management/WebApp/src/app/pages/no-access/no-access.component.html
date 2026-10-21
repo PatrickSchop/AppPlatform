@@ -1,0 +1,27 @@
+<div class="no-access-container">
+  <div class="no-access-content">
+    <h1>No Access</h1>
+    <p class="account-info">Signed in as: <strong>{{ accountName }}</strong></p>
+
+    <div class="message">
+      <p>You are not authorized to access the management portal.</p>
+      <p>Ask an administrator to invite you.</p>
+    </div>
+
+    <div class="info-section">
+      <h3>Your Information</h3>
+      <div class="info-item">
+        <label>Object ID (OID):</label>
+        <code *ngIf="oid" class="copyable" (click)="copyToClipboard(oid)">{{ oid }}</code>
+        <span *ngIf="!oid" class="placeholder">Loading...</span>
+      </div>
+      <div class="info-item">
+        <label>Tenant ID (TID):</label>
+        <code *ngIf="tid" class="copyable" (click)="copyToClipboard(tid)">{{ tid }}</code>
+        <span *ngIf="!tid" class="placeholder">Loading...</span>
+      </div>
+    </div>
+
+    <button class="sign-out-btn" (click)="signOut()">Sign Out</button>
+  </div>
+</div>

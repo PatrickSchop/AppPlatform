@@ -1,0 +1,41 @@
+// @ts-nocheck
+import { inject } from '@angular/core';
+import { Router, CanActivateFn } from '@angular/router';
+import { API_CLIENT, AUTH_CLIENT } from '@PS/app-client-angular';
+import type { ApiClient, AuthClient } from '@PS/app-client';
+import { MyTenantsResponse } from '../services/models';
+
+export const adminGuard: CanActivateFn = async (route, state) => {
+  // @ts-ignore
+  const auth = inject(AUTH_CLIENT);
+  // @ts-ignore
+  const api = inject(API_CLIENT);
+  const router = inject(Router);
+
+  // Check if auth is available and user is signed in
+  if (!auth) {
+    return router.createUrlTree(['/no-access']);
+  }
+
+  const account = auth.getAccount();
+  if (!account) {
+    auth.signIn();
+    return false;
+  }
+
+  try {
+    // Call GET api/me/tenants
+    const response = await api.get<MyTenantsResponse>('me/tenants');
+
+    // Check if user is registered and has admin role in any tenant
+    if (response.registered && response.tenants.some((t: { roles: string[] }) => t.roles.includes('admin'))) {
+      return true;
+    }
+
+    // Redirect to no-access
+    return router.createUrlTree(['/no-access']);
+  } catch (error) {
+    console.error('Admin guard error:', error);
+    return router.createUrlTree(['/no-access']);
+  }
+};

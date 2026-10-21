@@ -1,6 +1,6 @@
 ﻿# Multi-tenancy v1 — Progress
 
-**Updated:** 2026-09-30 · **MT-01–MT-09 done · next action: MT-10 planner (admin API + invitations)**
+**Updated:** 2026-10-01 · **MT-01–MT-10 done · next action: MT-11 planner (management UI)**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -10,10 +10,10 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 |---|---|---|
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
 | Phase 1 — Core tenancy | MT-02 – MT-07 | ✅ complete · **Gate D passed** |
-| Phase 2 — Management app | MT-08 – MT-12 | 🔄 MT-08 ✅ · MT-09 ✅ · MT-10 next · **Gate E** outstanding |
+| Phase 2 — Management app | MT-08 – MT-12 | 🔄 MT-08 ✅ · MT-09 ✅ · MT-10 ✅ · MT-11 next · **Gate E** outstanding |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**9 of 16 steps complete** (MT-01–MT-09).
+**10 of 16 steps complete** (MT-01–MT-10).
 
 ## Dependencies on the v1 plan
 
@@ -38,7 +38,7 @@ All of Phases 0–2, including MT-11, can run without waiting for v1 Steps 26–
 | MT-07 | **Gate D** — `MultiTenantSample` | ✅ | ✅ | ✅ |
 | MT-08 | Management backend, bootstrap | ✅ | ✅ 194 | ✅ 71f2666, c22e2bc, 2a440f5 (CI passed) |
 | MT-09 | Registry API, `--register` | ✅ | ✅ 219 | ✅ 05d6342, 135e9eb, 38ddbec, 1727d11 (CI passed; two CI fixes along the way) |
-| MT-10 | Admin API, invitations | ⏳ | | |
+| MT-10 | Admin API + invitations | ✅ | ✅ 36 | ✅ 32b26e9 (CI passed) |
 | MT-11 | Management UI (from scratch, no starter) | ⏳ | | |
 | MT-12 | **Gate E** — management deployed | ⏳ | | |
 | MT-13 | `TenantSession` | ⏳ blocked on v1 Step 28 | | |
@@ -270,3 +270,29 @@ is_error False
 - MT-10 verify+publish attempt: API rate limit hit (resets 11:40pm CET). Will retry after short wait (attempting at ~00:00 UTC, ~45 min from now). State: MT-10 waiting for rate-limit reset.
 - MT-10 retry verify+publish (rate limit likely passed). State: MT-10 verify+publish attempt 2.
 - cost 05-verify-c1.json claude-haiku-4-5-20251001 turns 32 usd 0.23
+- cost 07-publish-c1.json claude-haiku-4-5-20251001 turns 19 usd 0.16
+- MT-10: DONE. Final commit 32b26e9, CI passed. Counters: executor haiku 3 runs (a1, b1, c1, all COMPLETE), one verify, one publish attempt. No per-step code review (FINAL review pending). Start commit for MT-11: 32b26e9. State: MT-11 planning.
+is_error False
+- cost MT-11/01-plan.json claude-opus-4-6,claude-haiku-4-5-20251001 turns 34 usd 1.32
+- MT-11 planned: SPLIT into 4 sub-steps: a (scaffold/shell/service/gate, lines 18-180), b (app/tenant/team pages, 181-261), c (users/invites, 262-324), d (tests, 325-408); haiku; one VERIFY + one PUBLISH after d. State: MT-11a executing (a1, haiku).
+- cost MT-11/02-exec-a1.json claude-haiku-4-5-20251001 turns 144 usd 1.56
+- MT-11a: a1 (haiku) COMPLETE. Angular app built. State: MT-11b executing (b1, haiku).
+- cost MT-11/03-exec-b1.json claude-haiku-4-5-20251001 turns 69 usd 0.64
+- MT-11b: b1 (haiku) COMPLETE. State: MT-11c executing (c1, haiku).
+- cost MT-11/04-exec-c1.json claude-haiku-4-5-20251001 turns 85 usd 0.65
+- MT-11c: c1 (haiku) COMPLETE. State: MT-11d executing (d1, haiku - final sub-step).
+- cost MT-11/05-exec-d1.json claude-haiku-4-5-20251001 turns 68 usd 0.7
+- MT-11d: PARTIAL (tests not fully running; TestBed issue). Re-planning (02-plan2).
+is_error False
+- cost MT-11/02-plan2.json claude-opus-4-6 turns 22 usd 0.64
+- MT-11 re-plan 2: EXECUTE haiku d2 to fix TestBed/Vitest config (.plans/multi-tenancy-v1/runs/MT-11/02-plan2.report.md lines 70+). State: MT-11 d2 executing.
+- cost MT-11/06-exec-d2.json claude-haiku-4-5-20251001 turns 96 usd 0.92
+- MT-11 d2: PARTIAL (11/20 tests passing; 9 fail in accept-invite and team-detail). Re-planning (03-plan3).
+is_error True
+- cost MT-11/03-plan3.json claude-opus-4-6 turns 8 usd 0.28
+is_error False
+- cost MT-11/03-plan3.json claude-opus-4-6 turns 10 usd 0.58
+- MT-11 plan 3: single root cause found (async ngOnInit not awaited); EXECUTE d3 to fix all 9 tests with pattern change. State: MT-11 d3 executing.
+- cost MT-11/07-exec-d3.json claude-haiku-4-5-20251001 turns 30 usd 0.21
+- MT-11 d3: COMPLETE (all 226 tests pass). All sub-steps done; single VERIFY + PUBLISH of MT-11 via tail.sh.
+- cost 00-verify-d3.json claude-haiku-4-5-20251001 turns 52 usd 0.26

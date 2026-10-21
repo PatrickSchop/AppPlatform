@@ -1,0 +1,119 @@
+.no-access-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem;
+}
+
+.no-access-content {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 3rem;
+  max-width: 500px;
+  width: 100%;
+
+  h1 {
+    margin: 0 0 1rem 0;
+    font-size: 2rem;
+    color: #1f2937;
+  }
+
+  .account-info {
+    margin: 0 0 2rem 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+
+    strong {
+      color: #1f2937;
+    }
+  }
+
+  .message {
+    background-color: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: 1rem;
+    margin: 2rem 0;
+    border-radius: 0.25rem;
+
+    p {
+      margin: 0.5rem 0;
+      color: #92400e;
+
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .info-section {
+    margin: 2rem 0;
+
+    h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1rem;
+      color: #1f2937;
+    }
+
+    .info-item {
+      margin-bottom: 1.5rem;
+
+      label {
+        display: block;
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+
+      code {
+        display: block;
+        background-color: #f3f4f6;
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.75rem;
+        word-break: break-all;
+        color: #1f2937;
+
+        &.copyable {
+          cursor: pointer;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background-color: #e5e7eb;
+          }
+        }
+      }
+
+      .placeholder {
+        display: block;
+        color: #9ca3af;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .sign-out-btn {
+    width: 100%;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #1d4ed8;
+    }
+  }
+}

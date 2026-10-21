@@ -1,0 +1,127 @@
+// @ts-nocheck
+import { Injectable, inject } from '@angular/core';
+import { API_CLIENT } from '@PS/app-client-angular';
+import type { ApiClient } from '@PS/app-client';
+import {
+  ApplicationSummary, ApplicationDetail, TenantSummary, TeamSummary,
+  UserSummary, UserDetail, MemberSummary, InvitationCreatedResponse,
+  InvitationSummary, InvitationPreviewResponse, InvitationAcceptedResponse,
+  MyTenantsResponse, PatchApplicationRequest, PatchTenantRequest, PatchUserRequest
+} from './models';
+
+@Injectable({ providedIn: 'root' })
+export class AdminService {
+  // @ts-ignore
+  private api = inject(API_CLIENT) as any;
+
+  // Applications
+  getApplications(): Promise<ApplicationSummary[]> {
+    return this.api.get('admin/applications');
+  }
+
+  getApplication(appId: string): Promise<ApplicationDetail> {
+    return this.api.get(`admin/applications/${appId}`);
+  }
+
+  patchApplication(appId: string, body: PatchApplicationRequest): Promise<void> {
+    return this.api.patch(`admin/applications/${appId}`, body);
+  }
+
+  deleteRole(appId: string, roleId: string): Promise<void> {
+    return this.api.delete(`admin/applications/${appId}/roles/${roleId}`);
+  }
+
+  // Tenants
+  getTenants(appId: string): Promise<TenantSummary[]> {
+    return this.api.get(`admin/applications/${appId}/tenants`);
+  }
+
+  createTenant(appId: string, name: string): Promise<void> {
+    return this.api.post(`admin/applications/${appId}/tenants`, { name });
+  }
+
+  patchTenant(appId: string, tenantId: string, body: PatchTenantRequest): Promise<void> {
+    return this.api.patch(`admin/applications/${appId}/tenants/${tenantId}`, body);
+  }
+
+  deleteTenant(appId: string, tenantId: string): Promise<void> {
+    return this.api.delete(`admin/applications/${appId}/tenants/${tenantId}`);
+  }
+
+  // Teams
+  getTeams(appId: string, tenantId: string): Promise<TeamSummary[]> {
+    return this.api.get(`admin/applications/${appId}/tenants/${tenantId}/teams`);
+  }
+
+  createTeam(appId: string, tenantId: string, name: string): Promise<void> {
+    return this.api.post(`admin/applications/${appId}/tenants/${tenantId}/teams`, { name });
+  }
+
+  patchTeam(appId: string, tenantId: string, teamId: string, name: string): Promise<void> {
+    return this.api.patch(`admin/applications/${appId}/tenants/${tenantId}/teams/${teamId}`, { name });
+  }
+
+  deleteTeam(appId: string, tenantId: string, teamId: string): Promise<void> {
+    return this.api.delete(`admin/applications/${appId}/tenants/${tenantId}/teams/${teamId}`);
+  }
+
+  // Users
+  getUsers(appId: string): Promise<UserSummary[]> {
+    return this.api.get(`admin/applications/${appId}/users`);
+  }
+
+  createUser(appId: string, displayName: string, email?: string): Promise<void> {
+    return this.api.post(`admin/applications/${appId}/users`, { displayName, email });
+  }
+
+  getUser(appId: string, userId: string): Promise<UserDetail> {
+    return this.api.get(`admin/applications/${appId}/users/${userId}`);
+  }
+
+  patchUser(appId: string, userId: string, body: PatchUserRequest): Promise<void> {
+    return this.api.patch(`admin/applications/${appId}/users/${userId}`, body);
+  }
+
+  // Members
+  getMembers(appId: string, tenantId: string, teamId: string): Promise<MemberSummary[]> {
+    return this.api.get(`admin/applications/${appId}/tenants/${tenantId}/teams/${teamId}/members`);
+  }
+
+  addMember(appId: string, tenantId: string, teamId: string, userId: string, roleIds: string[]): Promise<void> {
+    return this.api.post(`admin/applications/${appId}/tenants/${tenantId}/teams/${teamId}/members`, { userId, roleIds });
+  }
+
+  setMemberRoles(appId: string, tenantId: string, teamId: string, memberId: string, roleIds: string[]): Promise<void> {
+    return this.api.patch(`admin/applications/${appId}/tenants/${tenantId}/teams/${teamId}/members/${memberId}/roles`, { roleIds });
+  }
+
+  removeMember(appId: string, tenantId: string, teamId: string, memberId: string): Promise<void> {
+    return this.api.delete(`admin/applications/${appId}/tenants/${tenantId}/teams/${teamId}/members/${memberId}`);
+  }
+
+  // Invitations
+  createInvitation(userId: string): Promise<InvitationCreatedResponse> {
+    return this.api.post(`admin/users/${userId}/invitations`, {});
+  }
+
+  getInvitations(userId: string): Promise<InvitationSummary[]> {
+    return this.api.get(`admin/users/${userId}/invitations`);
+  }
+
+  revokeInvitation(invitationId: string): Promise<void> {
+    return this.api.delete(`admin/invitations/${invitationId}`);
+  }
+
+  previewInvitation(token: string): Promise<InvitationPreviewResponse> {
+    return this.api.get(`invitations/${token}`);
+  }
+
+  acceptInvitation(token: string): Promise<InvitationAcceptedResponse> {
+    return this.api.post(`invitations/${token}/accept`, {});
+  }
+
+  // My tenants (admin gate)
+  getMyTenants(): Promise<MyTenantsResponse> {
+    return this.api.get('me/tenants');
+  }
+}

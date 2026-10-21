@@ -2,9 +2,9 @@
   "name": "@PS/app-client-angular",
   "version": "0.1.0",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "main": "./dist/public-api.js",
+  "types": "./dist/public-api.d.ts",
+  "exports": { ".": { "types": "./dist/public-api.d.ts", "import": "./dist/public-api.js" } },
   "files": ["dist"],
   "peerDependencies": {
     "@angular/core": ">=19.0.0",
