@@ -89,6 +89,8 @@ export class ApiClient {
       throw new ApiError(response.status, body);
     }
 
-    return response.json();
+    // Many endpoints answer success with an empty 200; that is a result, not a parse error.
+    const text = await response.text();
+    return (text ? JSON.parse(text) : undefined) as T;
   }
 }

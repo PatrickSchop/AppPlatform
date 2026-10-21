@@ -3,6 +3,8 @@ import { loadConfig, resetConfigCache } from './config.js';
 import { ApiClient, ApiError } from './api-client.js';
 import { TaskPoller, type BackgroundTask } from './task-poller.js';
 
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+
 describe('loadConfig', () => {
   beforeEach(() => resetConfigCache());
 
@@ -31,11 +33,7 @@ describe('loadConfig', () => {
 
 describe('ApiClient', () => {
   it('sets the bearer header when a token is supplied', async () => {
-    const mockFetch = vi.fn(async (url, init) => ({
-      ok: true,
-      status: 200,
-      json: async () => ({ data: 'test' }),
-    }));
+    const mockFetch = vi.fn(async (url, init) => json(({ data: 'test' })));
 
     const client = new ApiClient({
       baseUrl: 'http://api.test',
@@ -51,11 +49,7 @@ describe('ApiClient', () => {
   });
 
   it('omits the bearer header when null', async () => {
-    const mockFetch = vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      json: async () => ({ data: 'test' }),
-    }));
+    const mockFetch = vi.fn(async () => json(({ data: 'test' })));
 
     const client = new ApiClient({
       baseUrl: 'http://api.test',
@@ -130,11 +124,7 @@ describe('TaskPoller', () => {
   });
 
   it('starts polling and calls listeners', async () => {
-    const mockFetch = vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      json: async () => [{ id: '1', createdDate: '2026-09-29' }] as BackgroundTask[],
-    }));
+    const mockFetch = vi.fn(async () => json([{ id: '1', createdDate: '2026-09-29' }] as BackgroundTask[]));
 
     const api = new ApiClient({
       baseUrl: 'http://api.test',
@@ -158,11 +148,7 @@ describe('TaskPoller', () => {
   });
 
   it('createTask POSTs to /api/tasks', async () => {
-    const mockFetch = vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      json: async () => ({ id: 'task-123' }),
-    }));
+    const mockFetch = vi.fn(async () => json(({ id: 'task-123' })));
 
     const api = new ApiClient({
       baseUrl: 'http://api.test',
@@ -183,11 +169,7 @@ describe('TaskPoller', () => {
   });
 
   it('subscribe returns unsubscribe function', async () => {
-    const mockFetch = vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      json: async () => [] as BackgroundTask[],
-    }));
+    const mockFetch = vi.fn(async () => json([] as BackgroundTask[]));
 
     const api = new ApiClient({
       baseUrl: 'http://api.test',
@@ -248,10 +230,7 @@ describe('TaskPoller', () => {
   });
 
   it('exposes tasks as readonly', async () => {
-    const mockFetch = vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      json: async () => [
+    const mockFetch = vi.fn(async () => json([
         {
           id: '1',
           taskType: 'Test',
@@ -265,8 +244,7 @@ describe('TaskPoller', () => {
           startedDate: null,
           completedDate: null,
         } as BackgroundTask,
-      ],
-    }));
+      ]));
 
     const api = new ApiClient({
       baseUrl: 'http://api.test',
@@ -325,5 +303,10 @@ describe('TaskPoller', () => {
     expect(url).toBe('/api/admin/x');
     expect(init.method).toBe('PATCH');
     expect(init.body).toBe('{"isDisabled":true}');
+  });
+  it('treats an empty 200 as success', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(new Response('', { status: 200 }));
+    const api = new ApiClient({ baseUrl: '/api', fetch: mockFetch as any });
+    await expect(api.patch('admin/x', { a: 1 })).resolves.toBeUndefined();
   });
 });

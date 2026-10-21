@@ -64,6 +64,7 @@ import { getErrorMessage } from '../../shared/error-messages';
                 @for (role of roles(); track role.id) {
                   <td>
                     <input type="checkbox"
+                           [disabled]="savingMemberId() === member.memberId"
                            [checked]="member.roles.includes(role.name)"
                            (change)="onMemberRoleChange(member.memberId, role.id, $event)" />
                   </td>
@@ -169,6 +170,7 @@ export class TeamDetailComponent implements OnInit {
   members = signal<MemberSummary[]>([]);
   roles = signal<RoleSummary[]>([]);
   users = signal<UserSummary[]>([]);
+  savingMemberId = signal<string>('');
   availableUsers = computed(() => {
     const memberIds = new Set(this.members().map(m => m.userId));
     return this.users().filter(u => !memberIds.has(u.id) && u.status !== 'disabled');
@@ -234,7 +236,8 @@ export class TeamDetailComponent implements OnInit {
   }
 
   async onMemberRoleChange(memberId: string, roleId: string, event: Event): Promise<void> {
-    const checked = (event.target as HTMLInputElement).checked;
+    const input = event.target as HTMLInputElement;
+    const checked = input.checked;
     const member = this.members().find(m => m.memberId === memberId);
     if (!member) return;
 
@@ -246,6 +249,7 @@ export class TeamDetailComponent implements OnInit {
       newRoles.splice(newRoles.indexOf(roleId), 1);
     }
 
+    this.savingMemberId.set(memberId);
     try {
       await this.adminService.setMemberRoles(
         this.appId,
@@ -255,10 +259,14 @@ export class TeamDetailComponent implements OnInit {
         newRoles
       );
       this.toastService.show('Changes can take up to 5 minutes to reach running apps', 'info');
-      await this.loadData();
     } catch (error) {
+      // The browser has already flipped the checkbox. Put it back, then show what the server holds.
+      input.checked = !checked;
       this.toastService.show(getErrorMessage(error), 'error');
+    } finally {
+      this.savingMemberId.set('');
     }
+    await this.loadData();
   }
 
   async onRemoveMember(memberId: string): Promise<void> {

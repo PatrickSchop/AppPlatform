@@ -208,4 +208,46 @@ describe('TeamDetailComponent', () => {
     expect(options).toEqual(['Select a user…', 'Q']);
     expect(fixture.nativeElement.querySelector('.hint')).toBeNull();
   });
+  it('puts the checkbox back and reloads when the server refuses a role change', async () => {
+    const getMembers = vi.spyOn(adminService, 'getMembers').mockResolvedValue(mockMembers);
+    vi.spyOn(adminService, 'getUsers').mockResolvedValue([]);
+    vi.spyOn(adminService, 'getApplication').mockResolvedValue({ id: 'app-1', displayName: 'Test App', roles: mockRoles } as any);
+    vi.spyOn(adminService, 'setMemberRoles').mockRejectedValue({ status: 409, body: { error: 'last_admin' } });
+
+    await component.ngOnInit();
+    fixture.detectChanges();
+    getMembers.mockClear();
+
+    // member-1 holds Admin (first checkbox). Untick it: the browser flips the box before the call.
+    const box: HTMLInputElement = fixture.nativeElement.querySelector('table input[type="checkbox"]');
+    expect(box.checked).toBe(true);
+    box.click();
+    expect(box.checked).toBe(false);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(box.checked).toBe(true);
+    expect(toastService.show).toHaveBeenCalledWith('This would leave no administrator', 'error');
+    expect(getMembers).toHaveBeenCalled();
+  });
+
+  it('disables the member checkboxes while a change is being saved', async () => {
+    vi.spyOn(adminService, 'getMembers').mockResolvedValue(mockMembers);
+    vi.spyOn(adminService, 'getUsers').mockResolvedValue([]);
+    vi.spyOn(adminService, 'getApplication').mockResolvedValue({ id: 'app-1', displayName: 'Test App', roles: mockRoles } as any);
+    let finish!: () => void;
+    vi.spyOn(adminService, 'setMemberRoles').mockReturnValue(new Promise<void>(r => (finish = r)));
+
+    await component.ngOnInit();
+    fixture.detectChanges();
+    const first: HTMLInputElement = fixture.nativeElement.querySelector('table input[type="checkbox"]');
+    const pending = component.onMemberRoleChange('member-1', 'role-2', { target: { checked: true } } as any);
+    fixture.detectChanges();
+
+    expect(first.disabled).toBe(true);
+    finish();
+    await pending;
+    fixture.detectChanges();
+    expect(first.disabled).toBe(false);
+  });
 });
