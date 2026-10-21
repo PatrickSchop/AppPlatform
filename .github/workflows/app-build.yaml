@@ -25,6 +25,11 @@ on:
         type: string
         default: ''
         description: 'Build output relative to frontend_path, e.g. dist/WebApp/browser'
+      frontend_prebuild_command:
+        required: false
+        type: string
+        default: ''
+        description: 'Shell command run from the repo root before the front-end install, e.g. to build file: dependencies'
 
 permissions:
   contents: read
@@ -72,6 +77,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node_version }}
+
+      - name: Pre-build command
+        if: ${{ inputs.frontend_prebuild_command != '' }}
+        run: ${{ inputs.frontend_prebuild_command }}
 
       - name: Install dependencies
         working-directory: ${{ inputs.frontend_path }}
