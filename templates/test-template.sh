@@ -20,10 +20,10 @@ exists(){ [ -e "$1" ] || fail "missing $1"; }
 absent(){ [ ! -e "$1" ] || fail "unexpected $1"; }
 
 version="$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' "$repo/Directory.Build.props" | head -1)"
-platform="$version-local"
+platform="$version-templatetest"   # explicit, so it does not depend on the CI/local suffix rules
 echo "Packing PS.AppPlatform $platform into a local feed"
-dotnet pack "$repo/src/PS.AppPlatform/PS.AppPlatform.csproj" -c Release -o "$work/feed" >/dev/null
-dotnet pack "$repo/src/PS.AppPlatform.Functions/PS.AppPlatform.Functions.csproj" -c Release -o "$work/feed" >/dev/null
+dotnet pack "$repo/src/PS.AppPlatform/PS.AppPlatform.csproj" -c Release -p:Version="$platform" -o "$work/feed" >/dev/null
+dotnet pack "$repo/src/PS.AppPlatform.Functions/PS.AppPlatform.Functions.csproj" -c Release -p:Version="$platform" -o "$work/feed" >/dev/null
 
 hive="$(native "$work/hive")"
 dotnet new install "$(native "$repo/templates")" --debug:custom-hive "$hive" >/dev/null
