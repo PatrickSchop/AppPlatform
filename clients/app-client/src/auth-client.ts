@@ -12,10 +12,12 @@ export interface AccountInfo {
 
 export class AuthClient {
   private msal: any;
+  private scopes: string[];
   private account: AccountInfo | null = null;
 
-  private constructor(msal: any) {
+  private constructor(msal: any, scopes: string[]) {
     this.msal = msal;
+    this.scopes = scopes;
     const account = msal.getActiveAccount();
     if (account) {
       this.account = {
@@ -43,10 +45,19 @@ export class AuthClient {
     // msal-browser v3 requires initialize() before any other call.
     await msal.initialize();
 
-    // Handle redirect promise before returning
-    await msal.handleRedirectPromise();
+    // Complete a returning redirect sign-in, then make sure some account is active so that
+    // token acquisition works after a reload.
+    const redirectResult = await msal.handleRedirectPromise();
+    if (redirectResult?.account) {
+      msal.setActiveAccount(redirectResult.account);
+    } else if (!msal.getActiveAccount()) {
+      const accounts = msal.getAllAccounts();
+      if (accounts.length > 0) {
+        msal.setActiveAccount(accounts[0]);
+      }
+    }
 
-    const client = new AuthClient(msal);
+    const client = new AuthClient(msal, options.scopes);
     return client;
   }
 
@@ -58,15 +69,10 @@ export class AuthClient {
     return this.account !== null;
   }
 
+  // Redirect, not popup: sign-in is triggered without a user gesture (route guard, 401
+  // handler), and browsers block popups opened that way.
   async signIn(): Promise<void> {
-    await this.msal.loginPopup();
-    const account = this.msal.getActiveAccount();
-    if (account) {
-      this.account = {
-        username: account.username,
-        name: account.name,
-      };
-    }
+    await this.msal.loginRedirect({ scopes: this.scopes });
   }
 
   async signOut(): Promise<void> {
@@ -82,7 +88,7 @@ export class AuthClient {
 
     try {
       const response = await this.msal.acquireTokenSilent({
-        scopes: this.msal.config.scopes || [],
+        scopes: this.scopes,
         account,
       });
       return response.accessToken;
@@ -91,7 +97,7 @@ export class AuthClient {
       if (error instanceof InteractionRequiredAuthError) {
         try {
           const response = await this.msal.acquireTokenRedirect({
-            scopes: this.msal.config.scopes || [],
+            scopes: this.scopes,
             account,
           });
           return response?.accessToken || null;
