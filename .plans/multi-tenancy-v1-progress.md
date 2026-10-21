@@ -1,4 +1,4 @@
-﻿# Multi-tenancy v1 — Progress
+# Multi-tenancy v1 — Progress
 
 **Updated:** 2026-10-21 · **MT-01–MT-11 done · next action: MT-12 planner (Gate E - deploy + bootstrap + user flow)**
 
@@ -301,22 +301,109 @@ is_error False
 
 ---
 
-## EXECUTION PAUSED - AWAITING MANUAL GATE E VERIFICATION (MT-12)
+## MT-12 / GATE E: PASSED (2026-10-21)
 
-**Status:** MT-01 through MT-11 **COMPLETE**. All backend (MT-08–10), registry API (MT-09), and management UI (MT-11) are implemented, tested (226+ tests passing), and published.
+The management app is deployed at `https://psmanagement-api.azurewebsites.net` and all 12 checks
+pass. The first admin was created by the deployment (`--bootstrap-admin` after `--migrate`).
 
-**Next action:** **Operator must manually perform MT-12 Gate E verification:**
-1. Deploy the management app to Azure (`infra/app.bicep` → app-deploy workflow)
-2. Run `--bootstrap-admin` command during deploy to create first admin (P = operator identity)
-3. Manually test the full 12-point checklist in `step-MT-12-gate-e.md` with two identities
-4. Record results in this progress file
+### Checklist
 
-**After MT-12 gate passes:** MT-13–16 (frontend tenant session, components, template, Gate F) can proceed.
+P = the operator, a personal Microsoft account. Q = a second identity from the operator's own
+Entra tenant. Verified by the operator in a browser unless noted.
 
-**Current blockers for MT-12:**
-- Azure subscription and resource deployment
-- GitHub Actions workflow (management-deploy.yaml) setup and trigger
-- Two Microsoft identities for testing (operator P, guest Q)
+| # | Check | Result |
+|---|---|---|
+| 1 | Workflow run | PASS. Migrate applied 4 scripts incl. `100_CreateRegistry`; self-registration created `management`; bootstrap created the admin. Re-run: "Database is up to date", "already registered", admin re-assigned idempotently. |
+| 2 | `/api/health`, `/configuration.json` anonymous | PASS. 200; config has `auth` and `tenancy.mode = Single`. (Mode was `None` until the registration-order bug below was fixed.) |
+| 3 | Admin API without a token | PASS. 401. |
+| 4 | P signs in | PASS. `/applications` lists `management`. |
+| 5 | P creates Q with no role and an invite link | PASS. |
+| 6 | Q opens the link, signs in, accepts | PASS. |
+| 7 | Q without `admin` | PASS. "No Access" page with Q's oid/tid. |
+| 8 | Q's token on `GET /api/admin/applications` | PASS. 403. |
+| 9 | P grants Q `admin` | PASS. Q gets access; removing it removes access again. |
+| 10 | Remove P's admin, then Q's | PASS. The second removal is refused with `last_admin`. |
+| 11 | Invite link opened again | PASS. Refused as already used. |
+| 12 | Easy Auth | PASS. `az webapp auth show` reports `enabled: false`. |
 
-**Code readiness:** All code for MT-12 gate is complete. No further implementation needed.
+### Observations the step asked to record
 
+- Token version: the API registration has `requestedAccessTokenVersion: 2`. Sign-in with a personal
+  account and with a work account from the home tenant both validated against the `common`
+  configuration.
+- A managed-identity call to this API was not made in this step; the registry lookup used by other
+  apps arrives in Phase 3. The issuer check for managed-identity tokens is therefore still untested.
+
+### Deviations from the step
+
+- **App name `psmanagement`, not `management`.** The storage account name `managementstorage` is
+  taken globally. Resources: `psmanagement-api`, `psmanagementstorage`, database `psmanagement`,
+  identity `id-psmanagement`, resource group `Management`. Public URL
+  `https://psmanagement-api.azurewebsites.net`. `management-deploy.yaml` passes
+  `app_name: psmanagement`.
+- **Deploy principal.** A new Entra app `appplatform-deploy` was created for GitHub OIDC (federated
+  credentials for `environment:prod`, once by name and once by the repo's immutable-id subject
+  `repo:PatrickSchop@74044319/AppPlatform@1373337033:environment:prod`). Roles: Contributor and
+  Storage Blob Data Contributor on `Management`, SQL Server Contributor on `ApplicationsShared`.
+  Repo secrets `AZURE_CLIENT_ID/TENANT_ID/SUBSCRIPTION_ID`; `registry__trustedDeployers__0` is its
+  object id. `db_owner` for it and read/write/ddladmin for `id-psmanagement` were granted by SQL, as
+  `infra/sql-user.sql` describes.
+- **Bootstrap identity.** The first bootstrap used the oid/tid of the `az` login
+  (`d9118bef-…` / `6f033fd3-…`), which is not what the app sees for a personal account. Corrected to
+  the identity the app sees (`00000000-…-fe3e675110b9` / `9188040d-…`) by changing the repo
+  variables and re-running the deployment. The wrong user row was then deleted by SQL, in a
+  transaction. This is the one manual database edit outside the step.
+- **"No manual SQL or portal steps" is not strictly met.** The Azure setup above (deploy principal,
+  role assignments, SQL users) is manual, as is the wrong-bootstrap cleanup.
+- **Q is a member of the operator's own tenant**, not a personal account or another organisation.
+  A user from a different tenant (`p.schop@devtalents.nl`) cannot sign in until that tenant's admin
+  consents to the app (AADSTS500011); see "Open points".
+
+### Defects found and fixed to get through the gate (all in `main`)
+
+The step could not pass with MT-01..MT-11 as delivered. Fixed forward:
+
+- CI/build: NuGet source mapping (`nuget.config`, NU1507); `@emnapi/*` pinned in the WebApp
+  lockfile; `rxjs` declared for the Angular client; client libraries built before the frontend
+  (`frontend_prebuild_command`); `--yes` removed from `az sql server firewall-rule delete`; the
+  migration steps now get a database connection and `azureIdentity__type=azureCli`; caller
+  workflow permissions; `clients/**` and `src/**` trigger a deploy. CI now also runs the client
+  tests and the Management WebApp tests and build (new `frontend` job).
+- Platform: `AddPlatformTenancy` used `TryAdd` for `TenancyMode`, so an app calling
+  `AddPlatformData` first ran with tenancy off and the registry roles were never applied;
+  `CachingTenantDirectory` disposed its DI scope before the lookup ran; `GET /api/me/tenants`
+  enforced `requiredRole` (now `AuthenticatedOnly`, as the docs require); the SPA fallback was
+  served as `application/octet-stream` with a one-year `immutable` cache header.
+- Management API: the invitation endpoint looked the acting admin up by Entra oid as if it were
+  the registry user id (always 401); creating a user left them without a team, so they were
+  invisible and could not be added or invited. `POST admin/applications/{appId}/users` now
+  validates, creates the user, adds them to a team with roles and returns the first invitation
+  link. The last-admin guard counted the user being changed. `Tenancy` is serialised as a string.
+- Angular client: `ng-packagr` build for `@PS/app-client-angular` (the `tsc` build had no Angular
+  metadata and needed the JIT compiler); `zone.js` polyfill; MSAL `initialize()`; redirect
+  sign-in instead of popup; active account restored; configured scopes; `fetch` called as a method
+  ("Illegal invocation"); base URL and path joined with one slash; an error body read once; an
+  empty 200 treated as success; `ApiClient.patch`; "sign in with a different account".
+- Management UI: models aligned with the API contracts and strict template checking on (no
+  `@ts-nocheck`); stubbed pages completed (row navigation, tenancy, counts, disabled flag, roles);
+  sidebar links (`routerLink` was not imported); accept-invite looped through sign-in for an
+  unregistered invitee; create-user button was always disabled; error codes were read from the
+  wrong field; role checkboxes now show the server state after a refused change; failures other
+  than sign-in show an error page instead of "No Access".
+
+### Open points
+
+- The application has no Application Insights, so a server-side exception is only visible if it
+  can be reproduced. One 500 on `PATCH .../members/{id}/roles` (enabling `admin`) was seen once and
+  could not be reproduced against a local SQL Server with the real migrations; it did not recur
+  after the fixes above. Consider adding Application Insights to `infra/app.bicep`.
+- Signing in from another Entra tenant needs that tenant's admin to consent. Alternatives
+  (B2B guests with the SPA signing in against the home tenant) were discussed and not adopted.
+- Browsers that cached the earlier octet-stream responses (one-year immutable) needed their site
+  data cleared once.
+- Phase 3 (MT-13 onward) starts from code that changed during this step (platform tenancy
+  registration, `CachingTenantDirectory`, `ApiClient`, the Angular client build). Re-read those
+  before relying on earlier step notes.
+- The untracked `.plans/multi-tenancy-v1/runs/**` files were not committed.
+
+**Next:** MT-13.
