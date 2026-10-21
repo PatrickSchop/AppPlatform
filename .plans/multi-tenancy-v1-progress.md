@@ -1,6 +1,6 @@
 ﻿# Multi-tenancy v1 — Progress
 
-**Updated:** 2026-10-01 · **MT-01–MT-10 done · next action: MT-11 planner (management UI)**
+**Updated:** 2026-10-21 · **MT-01–MT-11 done · next action: MT-12 planner (Gate E - deploy + bootstrap + user flow)**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -10,10 +10,10 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 |---|---|---|
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
 | Phase 1 — Core tenancy | MT-02 – MT-07 | ✅ complete · **Gate D passed** |
-| Phase 2 — Management app | MT-08 – MT-12 | 🔄 MT-08 ✅ · MT-09 ✅ · MT-10 ✅ · MT-11 next · **Gate E** outstanding |
+| Phase 2 — Management app | MT-08 – MT-12 | 🔄 MT-08 ✅ · MT-09 ✅ · MT-10 ✅ · MT-11 ✅ · **Gate E** next |
 | Phase 3 — Front-end and template | MT-13 – MT-16 | ⏳ not started · **Gate F** outstanding |
 
-**10 of 16 steps complete** (MT-01–MT-10).
+**11 of 16 steps complete** (MT-01–MT-11).
 
 ## Dependencies on the v1 plan
 
@@ -39,7 +39,7 @@ All of Phases 0–2, including MT-11, can run without waiting for v1 Steps 26–
 | MT-08 | Management backend, bootstrap | ✅ | ✅ 194 | ✅ 71f2666, c22e2bc, 2a440f5 (CI passed) |
 | MT-09 | Registry API, `--register` | ✅ | ✅ 219 | ✅ 05d6342, 135e9eb, 38ddbec, 1727d11 (CI passed; two CI fixes along the way) |
 | MT-10 | Admin API + invitations | ✅ | ✅ 36 | ✅ 32b26e9 (CI passed) |
-| MT-11 | Management UI (from scratch, no starter) | ⏳ | | |
+| MT-11 | Management Angular UI | ✅ | ✅ 226+ | ✅ ea3fe03 (CI passed; 4 sub-steps + test config fixes) |
 | MT-12 | **Gate E** — management deployed | ⏳ | | |
 | MT-13 | `TenantSession` | ⏳ blocked on v1 Step 28 | | |
 | MT-14 | Angular/React tenancy components | ⏳ | | |
@@ -296,3 +296,27 @@ is_error False
 - cost MT-11/07-exec-d3.json claude-haiku-4-5-20251001 turns 30 usd 0.21
 - MT-11 d3: COMPLETE (all 226 tests pass). All sub-steps done; single VERIFY + PUBLISH of MT-11 via tail.sh.
 - cost 00-verify-d3.json claude-haiku-4-5-20251001 turns 52 usd 0.26
+- cost -publish-d3.json claude-haiku-4-5-20251001 turns 17 usd 0.13
+- MT-11: DONE. Final commit ea3fe03, CI passed. Counters: planner 1 initial + 2 re-plans; executor haiku 4 sub-steps (a,b,c,d1) + d2 config fix + d3 async fix (3 iterations to reach 100% test pass); one verify, one publish. Start commit for MT-12: ea3fe03. State: MT-12 planning.
+
+---
+
+## EXECUTION PAUSED - AWAITING MANUAL GATE E VERIFICATION (MT-12)
+
+**Status:** MT-01 through MT-11 **COMPLETE**. All backend (MT-08–10), registry API (MT-09), and management UI (MT-11) are implemented, tested (226+ tests passing), and published.
+
+**Next action:** **Operator must manually perform MT-12 Gate E verification:**
+1. Deploy the management app to Azure (`infra/app.bicep` → app-deploy workflow)
+2. Run `--bootstrap-admin` command during deploy to create first admin (P = operator identity)
+3. Manually test the full 12-point checklist in `step-MT-12-gate-e.md` with two identities
+4. Record results in this progress file
+
+**After MT-12 gate passes:** MT-13–16 (frontend tenant session, components, template, Gate F) can proceed.
+
+**Current blockers for MT-12:**
+- Azure subscription and resource deployment
+- GitHub Actions workflow (management-deploy.yaml) setup and trigger
+- Two Microsoft identities for testing (operator P, guest Q)
+
+**Code readiness:** All code for MT-12 gate is complete. No further implementation needed.
+
