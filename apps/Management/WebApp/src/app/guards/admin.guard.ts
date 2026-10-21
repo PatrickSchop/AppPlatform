@@ -17,6 +17,11 @@ export const adminGuard: CanActivateFn = async (route, state) => {
     return router.createUrlTree(['/no-access']);
   }
 
+  // A failed sign-in is shown, not retried: retrying would loop through the identity provider.
+  if (auth.getError()) {
+    return router.createUrlTree(['/no-access']);
+  }
+
   const account = auth.getAccount();
   if (!account) {
     auth.signIn();

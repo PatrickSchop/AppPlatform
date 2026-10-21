@@ -1,14 +1,19 @@
 <div class="no-access-container">
   <div class="no-access-content">
     <h1>No Access</h1>
-    <p class="account-info">Signed in as: <strong>{{ accountName }}</strong></p>
+    <p class="account-info" *ngIf="accountName">Signed in as: <strong>{{ accountName }}</strong></p>
 
-    <div class="message">
+    <div class="message" *ngIf="authError">
+      <p>Sign-in failed.</p>
+      <p class="auth-error">{{ authError }}</p>
+    </div>
+
+    <div class="message" *ngIf="!authError">
       <p>You are not authorized to access the management portal.</p>
       <p>Ask an administrator to invite you.</p>
     </div>
 
-    <div class="info-section">
+    <div class="info-section" *ngIf="!authError">
       <h3>Your Information</h3>
       <div class="info-item">
         <label>Object ID (OID):</label>

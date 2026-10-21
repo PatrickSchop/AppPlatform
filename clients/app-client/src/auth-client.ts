@@ -14,10 +14,12 @@ export class AuthClient {
   private msal: any;
   private scopes: string[];
   private account: AccountInfo | null = null;
+  private error: string | null = null;
 
-  private constructor(msal: any, scopes: string[]) {
+  private constructor(msal: any, scopes: string[], error: string | null) {
     this.msal = msal;
     this.scopes = scopes;
+    this.error = error;
     const account = msal.getActiveAccount();
     if (account) {
       this.account = {
@@ -47,7 +49,15 @@ export class AuthClient {
 
     // Complete a returning redirect sign-in, then make sure some account is active so that
     // token acquisition works after a reload.
-    const redirectResult = await msal.handleRedirectPromise();
+    // A failed sign-in (consent missing, wrong tenant, ...) must not stop the app from starting;
+    // it is kept on the client so the UI can show it instead of looping back to sign-in.
+    let redirectResult: any = null;
+    let error: string | null = null;
+    try {
+      redirectResult = await msal.handleRedirectPromise();
+    } catch (e: any) {
+      error = e?.message || String(e);
+    }
     if (redirectResult?.account) {
       msal.setActiveAccount(redirectResult.account);
     } else if (!msal.getActiveAccount()) {
@@ -57,12 +67,17 @@ export class AuthClient {
       }
     }
 
-    const client = new AuthClient(msal, options.scopes);
+    const client = new AuthClient(msal, options.scopes, error);
     return client;
   }
 
   getAccount(): AccountInfo | null {
     return this.account;
+  }
+
+  /** Message of a sign-in that failed on return from the identity provider, if any. */
+  getError(): string | null {
+    return this.error;
   }
 
   isSignedIn(): boolean {

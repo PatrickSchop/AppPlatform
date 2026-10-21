@@ -18,11 +18,13 @@ export class NoAccessComponent implements OnInit {
   accountName: string | null = null;
   oid: string | null = null;
   tid: string | null = null;
+  authError: string | null = null;
 
   ngOnInit() {
     if (this.auth) {
       const account = this.auth.getAccount();
       this.accountName = account?.name || null;
+      this.authError = this.auth.getError();
 
       // Get OID and TID from JWT token
       this.auth.getAccessToken().then((token: string | null) => {

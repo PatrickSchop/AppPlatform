@@ -6,9 +6,32 @@ import { API_CLIENT, AUTH_CLIENT } from '@PS/app-client-angular';
 import type { MyTenantsResponse } from '../services/models';
 
 describe('adminGuard', () => {
+  it('should show a failed sign-in instead of retrying it', async () => {
+    const mockAuth = {
+      getAccount: () => null,
+      getError: () => 'AADSTS500011: resource principal not found',
+      signIn: vi.fn()
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AUTH_CLIENT, useValue: mockAuth },
+        { provide: API_CLIENT, useValue: { get: vi.fn() } }
+      ]
+    });
+
+    const result: any = await TestBed.runInInjectionContext(async () => {
+      return await adminGuard({} as any, {} as any);
+    });
+
+    expect(mockAuth.signIn).not.toHaveBeenCalled();
+    expect(TestBed.inject(Router).serializeUrl(result)).toBe('/no-access');
+  });
+
   it('should allow admin user (registered with admin role)', async () => {
     const mockAuth = {
-      getAccount: () => ({ oid: 'user-123' })
+      getAccount: () => ({ oid: 'user-123' }),
+      getError: () => null
     };
 
     const mockApi = {
@@ -35,7 +58,8 @@ describe('adminGuard', () => {
 
   it('should redirect non-admin user to /no-access', async () => {
     const mockAuth = {
-      getAccount: () => ({ oid: 'user-123' })
+      getAccount: () => ({ oid: 'user-123' }),
+      getError: () => null
     };
 
     const mockApi = {
@@ -64,7 +88,8 @@ describe('adminGuard', () => {
 
   it('should redirect unregistered user to /no-access', async () => {
     const mockAuth = {
-      getAccount: () => ({ oid: 'user-123' })
+      getAccount: () => ({ oid: 'user-123' }),
+      getError: () => null
     };
 
     const mockApi = {
@@ -93,7 +118,8 @@ describe('adminGuard', () => {
 
   it('should handle API errors and redirect to /no-access', async () => {
     const mockAuth = {
-      getAccount: () => ({ oid: 'user-123' })
+      getAccount: () => ({ oid: 'user-123' }),
+      getError: () => null
     };
 
     const mockApi = {
