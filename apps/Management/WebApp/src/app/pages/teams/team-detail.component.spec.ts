@@ -180,4 +180,32 @@ describe('TeamDetailComponent', () => {
     // Should return early without calling the service
     expect(adminService.setMemberRoles).not.toHaveBeenCalled();
   });
+  it('points to the Users page when there is nobody left to add', async () => {
+    vi.spyOn(adminService, 'getMembers').mockResolvedValue(mockMembers);
+    vi.spyOn(adminService, 'getUsers').mockResolvedValue([]);
+    vi.spyOn(adminService, 'getApplication').mockResolvedValue({ id: 'app-1', displayName: 'Test App', roles: mockRoles } as any);
+
+    await component.ngOnInit();
+    fixture.detectChanges();
+
+    const hint = fixture.nativeElement.querySelector('.hint');
+    expect(hint.textContent).toContain('create a user');
+    expect(hint.querySelector('a').getAttribute('href')).toBe('/users');
+  });
+
+  it('lists users who are not in the team yet', async () => {
+    vi.spyOn(adminService, 'getMembers').mockResolvedValue(mockMembers);
+    vi.spyOn(adminService, 'getUsers').mockResolvedValue([
+      { id: 'user-1', displayName: 'User One', status: 'active', createdUtc: '' },
+      { id: 'user-9', displayName: 'Q', status: 'invited', createdUtc: '' }
+    ]);
+    vi.spyOn(adminService, 'getApplication').mockResolvedValue({ id: 'app-1', displayName: 'Test App', roles: mockRoles } as any);
+
+    await component.ngOnInit();
+    fixture.detectChanges();
+
+    const options = Array.from<HTMLOptionElement>(fixture.nativeElement.querySelectorAll('select option')).map(o => o.textContent!.trim());
+    expect(options).toEqual(['Select a user…', 'Q']);
+    expect(fixture.nativeElement.querySelector('.hint')).toBeNull();
+  });
 });

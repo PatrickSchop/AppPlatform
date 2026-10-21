@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AUTH_CLIENT } from '@PS/app-client-angular';
 import type { AuthClient } from '@PS/app-client';
@@ -7,7 +7,7 @@ import { ToastComponent } from './shared/toast.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CommonModule, ToastComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, ToastComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

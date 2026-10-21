@@ -26,6 +26,9 @@ import { getErrorMessage } from '../../shared/error-messages';
             <option [value]="user.id">{{ user.displayName }}</option>
           }
         </select>
+        @if (availableUsers().length === 0) {
+          <p class="hint">Everyone is already a member of this team. To add someone else, <a routerLink="/users">create a user</a> first.</p>
+        }
       </div>
       <div class="roles-checkboxes">
         @for (role of roles(); track role.id) {
@@ -76,6 +79,11 @@ import { getErrorMessage } from '../../shared/error-messages';
     </div>
   `,
   styles: [`
+    .hint {
+      margin: 8px 0 0;
+      font-size: 14px;
+      color: #6b7280;
+    }
     .add-member {
       background: white;
       padding: 16px;
