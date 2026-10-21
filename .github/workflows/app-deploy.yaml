@@ -124,12 +124,24 @@ jobs:
 
       - name: Run migrations
         if: ${{ inputs.run_migrations }}
+        env:
+          # The runner has no app settings. Point the migration at the app's database and
+          # authenticate with the az login from the OIDC step.
+          database__connectionString: Server=tcp:${{ inputs.sql_server_name }}.database.windows.net,1433;Database=${{ inputs.app_name }};Encrypt=True;
+          database__useManagedIdentity: 'true'
+          azureIdentity__type: azureCli
         run: |
           cd app-output
           dotnet "${{ inputs.assembly_name }}.dll" --migrate
 
       - name: Post-migration command
         if: ${{ inputs.run_migrations && inputs.post_migrate_args != '' }}
+        env:
+          # The runner has no app settings. Point the migration at the app's database and
+          # authenticate with the az login from the OIDC step.
+          database__connectionString: Server=tcp:${{ inputs.sql_server_name }}.database.windows.net,1433;Database=${{ inputs.app_name }};Encrypt=True;
+          database__useManagedIdentity: 'true'
+          azureIdentity__type: azureCli
         run: |
           cd app-output
           dotnet "${{ inputs.assembly_name }}.dll" ${{ inputs.post_migrate_args }}
