@@ -1,165 +1,130 @@
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { provideRouter, Router, UrlTree } from '@angular/router';
+import { describe, it, expect, vi } from 'vitest';
+import { TenantSession, type MyTenantsResponse } from '@PS/app-client';
+import { AUTH_CLIENT, TENANT_SESSION } from '@PS/app-client-angular';
 import { adminGuard } from './admin.guard';
-import { API_CLIENT, AUTH_CLIENT } from '@PS/app-client-angular';
-import type { MyTenantsResponse } from '../services/models';
+
+const TENANT = { tenantId: 'tenant-1', name: 'Default', roles: [] as string[] };
+
+function storage() {
+  const data = new Map<string, string>();
+  return {
+    getItem: (k: string) => data.get(k) ?? null,
+    setItem: (k: string, v: string) => void data.set(k, v),
+    removeItem: (k: string) => void data.delete(k),
+  };
+}
+
+function session(response: MyTenantsResponse | Error) {
+  const get = vi.fn(async () => {
+    if (response instanceof Error) throw response;
+    return response;
+  });
+  return {
+    get,
+    session: new TenantSession({ api: { get } as any, header: 'X-Tenant-Id', storageKey: 'spec', storage: storage() }),
+  };
+}
+
+const registered = (roles: string[]): MyTenantsResponse => ({
+  registered: true,
+  displayName: 'P',
+  tenants: [{ ...TENANT, roles }],
+});
+
+interface Setup {
+  tenant?: ReturnType<typeof session>['session'] | null;
+  auth?: unknown;
+}
+
+async function run({ tenant = null, auth = { getAccount: () => ({ username: 'p' }), getError: () => null, signIn: vi.fn() } }: Setup) {
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      { provide: AUTH_CLIENT, useValue: auth },
+      { provide: TENANT_SESSION, useValue: tenant },
+    ],
+  });
+  const result = await TestBed.runInInjectionContext(() => adminGuard({} as any, {} as any));
+  return { result, router: TestBed.inject(Router) };
+}
+
+const where = (r: { result: unknown; router: Router }) => r.router.serializeUrl(r.result as UrlTree);
 
 describe('adminGuard', () => {
-  it('should send API failures to /error, not /no-access', async () => {
-    const mockAuth = { getAccount: () => ({ oid: 'user-123' }), getError: () => null };
-    const mockApi = { get: vi.fn().mockRejectedValue({ status: 500 }) };
+  it('lets an administrator in', async () => {
+    const { session: tenant } = session(registered(['admin']));
 
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: AUTH_CLIENT, useValue: mockAuth },
-        { provide: API_CLIENT, useValue: mockApi }
-      ]
-    });
-
-    const result: any = await TestBed.runInInjectionContext(async () => {
-      return await adminGuard({} as any, {} as any);
-    });
-
-    expect(TestBed.inject(Router).serializeUrl(result)).toContain('/error?message=');
+    expect((await run({ tenant })).result).toBe(true);
   });
 
-  it('should show a failed sign-in instead of retrying it', async () => {
-    const mockAuth = {
-      getAccount: () => null,
-      getError: () => 'AADSTS500011: resource principal not found',
-      signIn: vi.fn()
-    };
+  it('sends a registered user without the admin role to /no-access', async () => {
+    const { session: tenant } = session(registered([]));
 
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: AUTH_CLIENT, useValue: mockAuth },
-        { provide: API_CLIENT, useValue: { get: vi.fn() } }
-      ]
-    });
-
-    const result: any = await TestBed.runInInjectionContext(async () => {
-      return await adminGuard({} as any, {} as any);
-    });
-
-    expect(mockAuth.signIn).not.toHaveBeenCalled();
-    expect(TestBed.inject(Router).serializeUrl(result)).toBe('/no-access');
+    expect(where(await run({ tenant }))).toBe('/no-access');
   });
 
-  it('should allow admin user (registered with admin role)', async () => {
-    const mockAuth = {
-      getAccount: () => ({ oid: 'user-123' }),
-      getError: () => null
-    };
+  it('does not accept a different role as admin', async () => {
+    const { session: tenant } = session(registered(['viewer']));
 
-    const mockApi = {
-      get: vi.fn().mockResolvedValue({
-        registered: true,
-        tenants: [{ roles: ['admin'], name: 'Test App' }]
-      } as MyTenantsResponse)
-    };
-
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: AUTH_CLIENT, useValue: mockAuth },
-        { provide: API_CLIENT, useValue: mockApi }
-      ]
-    });
-
-    const result = await TestBed.runInInjectionContext(async () => {
-      return await adminGuard({} as any, {} as any);
-    });
-
-    expect(result).toBe(true);
-    expect(mockApi.get).toHaveBeenCalledWith('me/tenants');
+    expect(where(await run({ tenant }))).toBe('/no-access');
   });
 
-  it('should redirect non-admin user to /no-access', async () => {
-    const mockAuth = {
-      getAccount: () => ({ oid: 'user-123' }),
-      getError: () => null
-    };
+  it('sends an unregistered user to /no-access', async () => {
+    const { session: tenant } = session({ registered: false, displayName: null, tenants: [] });
 
-    const mockApi = {
-      get: vi.fn().mockResolvedValue({
-        registered: true,
-        tenants: [{ roles: ['member'], name: 'Test App' }]
-      } as MyTenantsResponse)
-    };
-
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: AUTH_CLIENT, useValue: mockAuth },
-        { provide: API_CLIENT, useValue: mockApi }
-      ]
-    });
-
-    const router = TestBed.inject(Router);
-    vi.spyOn(router, 'createUrlTree').mockReturnValue({} as any);
-
-    const result = await TestBed.runInInjectionContext(async () => {
-      return await adminGuard({} as any, {} as any);
-    });
-
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/no-access']);
+    expect(where(await run({ tenant }))).toBe('/no-access');
   });
 
-  it('should redirect unregistered user to /no-access', async () => {
-    const mockAuth = {
-      getAccount: () => ({ oid: 'user-123' }),
-      getError: () => null
-    };
-
-    const mockApi = {
-      get: vi.fn().mockResolvedValue({
-        registered: false,
-        tenants: []
-      } as MyTenantsResponse)
-    };
-
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: AUTH_CLIENT, useValue: mockAuth },
-        { provide: API_CLIENT, useValue: mockApi }
-      ]
-    });
-
-    const router = TestBed.inject(Router);
-    vi.spyOn(router, 'createUrlTree').mockReturnValue({} as any);
-
-    const result = await TestBed.runInInjectionContext(async () => {
-      return await adminGuard({} as any, {} as any);
-    });
-
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/no-access']);
-  });
-
-  it('should handle API errors and redirect to /error', async () => {
-    const mockAuth = {
-      getAccount: () => ({ oid: 'user-123' }),
-      getError: () => null
-    };
-
-    const mockApi = {
-      get: vi.fn().mockRejectedValue(new Error('API Error'))
-    };
-
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: AUTH_CLIENT, useValue: mockAuth },
-        { provide: API_CLIENT, useValue: mockApi }
-      ]
-    });
-
-    const router = TestBed.inject(Router);
-    vi.spyOn(router, 'createUrlTree').mockReturnValue({} as any);
+  it('sends a lookup failure to the error page, not to /no-access', async () => {
+    const failure = Object.assign(new Error('API error 500'), { status: 500 });
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { session: tenant } = session(failure);
 
-    const result = await TestBed.runInInjectionContext(async () => {
-      return await adminGuard({} as any, {} as any);
+    const url = where(await run({ tenant }));
+
+    expect(url).toBe('/error?message=The%20management%20API%20returned%20HTTP%20500.');
+  });
+
+  it('asks an anonymous visitor to sign in instead of looking anything up', async () => {
+    const auth = { getAccount: () => null, getError: () => null, signIn: vi.fn() };
+    const { session: tenant, get } = session(registered(['admin']));
+
+    const { result } = await run({ tenant, auth });
+
+    expect(result).toBe(false);
+    expect(auth.signIn).toHaveBeenCalled();
+    expect(get).not.toHaveBeenCalled();
+  });
+
+  it('shows a failed sign-in instead of retrying it', async () => {
+    const auth = { getAccount: () => null, getError: () => 'AADSTS500011', signIn: vi.fn() };
+    const { session: tenant } = session(registered(['admin']));
+
+    const result = await run({ tenant, auth });
+
+    expect(where(result)).toBe('/no-access');
+    expect(auth.signIn).not.toHaveBeenCalled();
+  });
+
+  it('denies access when tenancy or auth is not configured', async () => {
+    expect(where(await run({ tenant: null }))).toBe('/no-access');
+  });
+
+  it('does not look the tenants up again for a second navigation', async () => {
+    const { session: tenant, get } = session(registered(['admin']));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: AUTH_CLIENT, useValue: { getAccount: () => ({ username: 'p' }), getError: () => null } },
+        { provide: TENANT_SESSION, useValue: tenant },
+      ],
     });
 
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/error'], { queryParams: { message: 'API Error' } });
-    expect(console.error).toHaveBeenCalledWith('Admin guard error:', expect.any(Error));
+    await TestBed.runInInjectionContext(() => adminGuard({} as any, {} as any));
+    await TestBed.runInInjectionContext(() => adminGuard({} as any, {} as any));
+
+    expect(get).toHaveBeenCalledTimes(1);
   });
 });

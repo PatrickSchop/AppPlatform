@@ -10,3 +10,5 @@ export {
 } from './hooks';
 export type { UseApiQueryOptions, UseApiQueryResult } from './hooks';
 export { TaskProgress } from './task-progress';
+export { TenantProvider, TenantGate, TenantPicker, TenantSwitcher, useTenant } from './tenancy';
+export type { UseTenant } from './tenancy';

@@ -3,11 +3,12 @@ import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/rou
 import { CommonModule } from '@angular/common';
 import { AUTH_CLIENT } from '@PS/app-client-angular';
 import type { AuthClient } from '@PS/app-client';
+import { TenantSwitcherComponent } from '@PS/app-client-angular';
 import { ToastComponent } from './shared/toast.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, ToastComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, ToastComponent, TenantSwitcherComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

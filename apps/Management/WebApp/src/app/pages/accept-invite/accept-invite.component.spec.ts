@@ -102,7 +102,6 @@ describe('AcceptInviteComponent', () => {
   it('should preview the invitation for a signed-in user who is not registered yet', async () => {
     // An invitee is unregistered by definition; being unregistered must not send them back to sign-in.
     signedIn();
-    const registeredCheck = vi.spyOn(adminService, 'getMyTenants');
     vi.spyOn(adminService, 'previewInvitation').mockResolvedValue({
       displayName: 'Q',
       applications: ['management'],
@@ -112,7 +111,6 @@ describe('AcceptInviteComponent', () => {
     await component.ngOnInit();
 
     expect(mockAuthClient.signIn).not.toHaveBeenCalled();
-    expect(registeredCheck).not.toHaveBeenCalled();
     expect(component.previewApps()).toEqual(['management']);
   });
 

@@ -75,6 +75,14 @@ export class TenantSession extends EventTarget {
     return this.loading;
   }
 
+  /**
+   * Resolves when no load is in flight, with the current state. Unlike load() it never starts a
+   * request, so guards can wait for the startup load without fetching the tenants a second time.
+   */
+  ready(): Promise<TenantState> {
+    return this.loading ?? Promise.resolve(this._state);
+  }
+
   /** Chooses one of the loaded tenants and remembers it. Throws when it is not one of them. */
   select(tenantId: string): void {
     const tenant = this.tenants.find(t => t.tenantId === tenantId);

@@ -5,7 +5,7 @@ import {
   ApplicationSummary, ApplicationDetail, TenantSummary, TeamSummary,
   UserSummary, UserDetail, MemberSummary, InvitationCreatedResponse,
   InvitationSummary, InvitationPreviewResponse, InvitationAcceptedResponse,
-  MyTenantsResponse, PatchApplicationRequest, PatchTenantRequest, PatchUserRequest,
+  PatchApplicationRequest, PatchTenantRequest, PatchUserRequest,
   CreateUserRequest, CreateUserResponse
 } from './models';
 
@@ -118,10 +118,5 @@ export class AdminService {
 
   acceptInvitation(token: string): Promise<InvitationAcceptedResponse> {
     return this.api.post(`invitations/${token}/accept`, {});
-  }
-
-  // My tenants (admin gate)
-  getMyTenants(): Promise<MyTenantsResponse> {
-    return this.api.get('me/tenants');
   }
 }

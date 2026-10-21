@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { createPlatformClient } from '@PS/app-client';
 import { PlatformContext } from './context';
+import { TenantProvider } from './tenancy';
 
 type PlatformClient = Awaited<ReturnType<typeof createPlatformClient>>;
 
@@ -60,7 +61,7 @@ export function PlatformProvider({
 
   return (
     <PlatformContext.Provider value={client}>
-      {children}
+      <TenantProvider session={client.tenant}>{children}</TenantProvider>
     </PlatformContext.Provider>
   );
 }

@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { createPlatformClient } from '@PS/app-client';
-import { APP_CONFIG, API_CLIENT, AUTH_CLIENT } from './injection-tokens';
+import { APP_CONFIG, API_CLIENT, AUTH_CLIENT, TENANT_SESSION } from './injection-tokens';
 import { platformAuthInterceptor } from './auth-interceptor';
 import { BackgroundTaskService } from './background-task.service';
 
@@ -19,12 +19,27 @@ type PlatformClient = Awaited<ReturnType<typeof createPlatformClient>>;
 
 let clientPromise: Promise<PlatformClient> | null = null;
 let client: PlatformClient | null = null;
+let announceReady!: (client: PlatformClient) => void;
+let ready = new Promise<PlatformClient>(resolve => (announceReady = resolve));
+
+/** Resolves with the platform client once provideAppPlatform() has created it, whatever the order of initializers. */
+export function whenPlatformClientReady(): Promise<PlatformClient> {
+  return ready;
+}
+
+/** For tests: forget the client so the next provideAppPlatform() creates a fresh one. */
+export function resetPlatformClientForTests(): void {
+  clientPromise = null;
+  client = null;
+  ready = new Promise<PlatformClient>(resolve => (announceReady = resolve));
+}
 
 // Resolved by APP_INITIALIZER before bootstrap completes, so the providers below can
 // hand out the client itself. An async useFactory would inject a Promise instead.
 const initializeClient = async (configUrl?: string) => {
   clientPromise ??= createPlatformClient({ configUrl });
   client = await clientPromise;
+  announceReady(client);
   return client;
 };
 
@@ -55,6 +70,10 @@ export function provideAppPlatform(config?: AppPlatformConfig): EnvironmentProvi
     {
       provide: AUTH_CLIENT,
       useFactory: () => requireClient().auth,
+    },
+    {
+      provide: TENANT_SESSION,
+      useFactory: () => requireClient().tenant,
     },
     {
       provide: 'TASK_POLLER',

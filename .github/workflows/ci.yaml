@@ -94,6 +94,16 @@ jobs:
         working-directory: clients/app-client
         run: npx vitest run
 
+      - name: Test the Angular client library
+        working-directory: clients/app-client-angular
+        run: npm test
+
+      - name: Build and test the React client library
+        working-directory: clients/app-client-react
+        run: |
+          npm run build
+          npm test
+
       - name: Install the Management WebApp
         working-directory: apps/Management/WebApp
         run: npm ci

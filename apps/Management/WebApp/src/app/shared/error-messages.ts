@@ -13,6 +13,16 @@ const errorCodeMap: Record<string, string> = {
   default_team: 'The Default team cannot be deleted or renamed'
 };
 
+/** A short, user-facing description of a failed lookup, for the error page. */
+export function describeFailure(error: unknown): string {
+  const err = error as any;
+  const detail = typeof err?.body?.error === 'string' ? ` (${err.body.error})` : '';
+  if (err?.status) {
+    return `The management API returned HTTP ${err.status}${detail}.`;
+  }
+  return err?.message || 'The management API could not be reached.';
+}
+
 export function getErrorMessage(error: unknown): string {
   if (!error) return 'An error occurred';
 

@@ -100,19 +100,6 @@ export interface InvitationAcceptedResponse {
   displayName: string;
 }
 
-// Admin gate (GET api/me/tenants)
-export interface MyTenantResponse {
-  tenantId: string;
-  name: string;
-  roles: string[];
-}
-
-export interface MyTenantsResponse {
-  registered: boolean;
-  displayName?: string | null;
-  tenants: MyTenantResponse[];
-}
-
 // Request types
 export interface CreateUserRequest {
   displayName: string;

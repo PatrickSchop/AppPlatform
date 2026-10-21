@@ -101,6 +101,20 @@ describe('TenantSession.load', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('ready() waits for a load in flight and never starts one', async () => {
+    const { tenant, fetchMock } = session(registered(A, B));
+
+    expect(await tenant.ready()).toEqual({ status: 'idle' });
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    const loading = tenant.load();
+    const ready = tenant.ready();
+    await loading;
+
+    expect((await ready).status).toBe('selecting');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('asks for me/tenants relative to the API root', async () => {
     const { tenant, fetchMock } = session(registered(A));
 
