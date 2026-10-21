@@ -286,4 +286,18 @@ describe('TaskPoller', () => {
 
     poller.stop();
   });
+  it('calls the global fetch without binding it to the client', async () => {
+    const original = global.fetch;
+    // Like the browser's fetch, throws when invoked with any receiver other than the global.
+    global.fetch = function (this: unknown) {
+      if (this !== undefined && this !== globalThis) throw new TypeError('Illegal invocation');
+      return Promise.resolve(new Response('{}', { status: 200 }));
+    } as any;
+    try {
+      const api = new ApiClient({ baseUrl: '/api' });
+      await expect(api.get('x')).resolves.toEqual({});
+    } finally {
+      global.fetch = original;
+    }
+  });
 });

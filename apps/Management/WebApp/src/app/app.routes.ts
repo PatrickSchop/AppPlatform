@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './guards/admin.guard';
 import { NoAccessComponent } from './pages/no-access/no-access.component';
+import { ErrorComponent } from './pages/error/error.component';
 import { ApplicationListComponent } from './pages/applications/applications.component';
 import { ApplicationDetailComponent } from './pages/applications/application-detail.component';
 import { TenantDetailComponent } from './pages/tenants/tenant-detail.component';
@@ -12,6 +13,7 @@ import { UserDetailComponent } from './pages/users/user-detail.component';
 export const routes: Routes = [
   { path: '', redirectTo: 'applications', pathMatch: 'full' },
   { path: 'no-access', component: NoAccessComponent },
+  { path: 'error', component: ErrorComponent },
   { path: 'invite/:token', component: AcceptInviteComponent },
   {
     path: '',

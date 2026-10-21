@@ -39,8 +39,12 @@ export const adminGuard: CanActivateFn = async (route, state) => {
 
     // Redirect to no-access
     return router.createUrlTree(['/no-access']);
-  } catch (error) {
+  } catch (error: any) {
+    // Not "no access": the lookup itself failed, so say so instead of blaming the user.
     console.error('Admin guard error:', error);
-    return router.createUrlTree(['/no-access']);
+    const message = error?.status
+      ? `The management API returned HTTP ${error.status}.`
+      : error?.message || 'The management API could not be reached.';
+    return router.createUrlTree(['/error'], { queryParams: { message } });
   }
 };

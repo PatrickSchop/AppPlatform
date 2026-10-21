@@ -25,7 +25,7 @@ export class ApiClient {
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl;
     this.getAccessToken = options.getAccessToken ?? (() => Promise.resolve(null));
-    this.fetchImpl = options.fetch ?? globalThis.fetch;
+    this.fetchImpl = options.fetch ?? ((input, init) => globalThis.fetch(input, init));  // not a bare reference: fetch throws 'Illegal invocation' when called as a method of this
     this.onUnauthorized = options.onUnauthorized ?? (() => {});
   }
 

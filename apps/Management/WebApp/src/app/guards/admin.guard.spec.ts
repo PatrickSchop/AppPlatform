@@ -6,6 +6,24 @@ import { API_CLIENT, AUTH_CLIENT } from '@PS/app-client-angular';
 import type { MyTenantsResponse } from '../services/models';
 
 describe('adminGuard', () => {
+  it('should send API failures to /error, not /no-access', async () => {
+    const mockAuth = { getAccount: () => ({ oid: 'user-123' }), getError: () => null };
+    const mockApi = { get: vi.fn().mockRejectedValue({ status: 500 }) };
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AUTH_CLIENT, useValue: mockAuth },
+        { provide: API_CLIENT, useValue: mockApi }
+      ]
+    });
+
+    const result: any = await TestBed.runInInjectionContext(async () => {
+      return await adminGuard({} as any, {} as any);
+    });
+
+    expect(TestBed.inject(Router).serializeUrl(result)).toContain('/error?message=');
+  });
+
   it('should show a failed sign-in instead of retrying it', async () => {
     const mockAuth = {
       getAccount: () => null,
@@ -116,7 +134,7 @@ describe('adminGuard', () => {
     expect(router.createUrlTree).toHaveBeenCalledWith(['/no-access']);
   });
 
-  it('should handle API errors and redirect to /no-access', async () => {
+  it('should handle API errors and redirect to /error', async () => {
     const mockAuth = {
       getAccount: () => ({ oid: 'user-123' }),
       getError: () => null
@@ -141,7 +159,7 @@ describe('adminGuard', () => {
       return await adminGuard({} as any, {} as any);
     });
 
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/no-access']);
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/error'], { queryParams: { message: 'API Error' } });
     expect(console.error).toHaveBeenCalledWith('Admin guard error:', expect.any(Error));
   });
 });
