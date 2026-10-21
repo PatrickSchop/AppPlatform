@@ -93,8 +93,7 @@ public sealed class CachingTenantDirectory : ITenantDirectory
             {
                 try
                 {
-                    var inner = GetInnerDirectory();
-                    var fresh = await inner.GetMembershipsAsync(identity, ct);
+                    var fresh = await FetchAsync(identity, ct);
                     // Success; update cache
                     entry.Value = fresh;
                     entry.FetchedAt = now;
@@ -112,8 +111,7 @@ public sealed class CachingTenantDirectory : ITenantDirectory
                 // Beyond stale-if-error; try fresh and fail if unavailable
                 try
                 {
-                    var inner = GetInnerDirectory();
-                    var fresh = await inner.GetMembershipsAsync(identity, ct);
+                    var fresh = await FetchAsync(identity, ct);
                     entry.Value = fresh;
                     entry.FetchedAt = now;
                     entry.IsNull = fresh is null;
@@ -134,8 +132,7 @@ public sealed class CachingTenantDirectory : ITenantDirectory
             {
                 try
                 {
-                    var inner = GetInnerDirectory();
-                    var result = await inner.GetMembershipsAsync(identity, ct);
+                    var result = await FetchAsync(identity, ct);
                     // Update cache with result
                     if (_cache.TryGetValue(key, out var e) && e != null)
                     {
@@ -179,22 +176,18 @@ public sealed class CachingTenantDirectory : ITenantDirectory
         _cache.TryRemove(cacheKey, out _);
     }
 
-    private ITenantDirectory GetInnerDirectory()
+    // The inner directory can hold scoped services (a DbContext), so the lookup has to finish
+    // before its scope is disposed.
+    private async Task<UserMemberships?> FetchAsync(IdentityKey identity, CancellationToken ct)
     {
         if (_inner != null)
-            return _inner;
+            return await _inner.GetMembershipsAsync(identity, ct);
 
         if (_scopeFactory == null || _innerDirectoryType == null)
             throw new InvalidOperationException("CachingTenantDirectory not properly initialized");
 
-        var scope = _scopeFactory.CreateScope();
-        try
-        {
-            return (ITenantDirectory)scope.ServiceProvider.GetRequiredService(_innerDirectoryType);
-        }
-        finally
-        {
-            scope.Dispose();
-        }
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var directory = (ITenantDirectory)scope.ServiceProvider.GetRequiredService(_innerDirectoryType);
+        return await directory.GetMembershipsAsync(identity, ct);
     }
 }
