@@ -33,7 +33,8 @@ CREATE DATABASE [TinyApp];
 ### 2. Run migrations
 
 ```powershell
-dotnet run -- --migrate
+dotnet build
+dotnet exec bin/Debug/net10.0/TinyApp.dll --migrate
 ```
 
 This creates the schema versioning tables and any custom migration scripts in `Database/Scripts/`.
@@ -89,7 +90,8 @@ END
 Run migrations again:
 
 ```powershell
-dotnet run -- --migrate
+dotnet build
+dotnet exec bin/Debug/net10.0/TinyApp.dll --migrate
 ```
 
 ### 5. Add an endpoint
@@ -198,9 +200,36 @@ git push
 ```
 
 The workflow does not run database migrations yet (see the `TODO (Step 21)` note in
-`deploy.yaml`) — run `dotnet run -- --migrate` against the deployed database manually after
+`deploy.yaml`) — run `dotnet exec <TinyApp.dll> --migrate` against the deployed database manually after
 each schema change until that lands.
 
+<!--#if (TenancyEnabled)-->
+## Tenancy
+
+This app was generated with `--tenancy TENANCY-MODE-PLACEHOLDER`, so every request is checked against the
+registry in the management app: who the user is, which tenant they work in and which roles they
+hold there.
+
+What the option added:
+
+- `Manifest.cs`: the app's key, its tenancy mode and its roles (`editor`, `viewer`). It is sent to
+  the management app on every deploy.
+- `Data/Item.cs`, `Database/Scripts/110_CreateItems.sql` and `Api/Items*.cs`: a small example of
+  tenant-owned data. `GET /api/items` is open to any registered user; `POST` needs `editor`. Delete
+  them when you have your own entities.
+- `PlatformTenancy` in the `.csproj` and `AddPlatformTenancy` in `Program.cs`.
+- A `tenancy` section in `appsettings.json`, and in `appsettings.development.json` a local user
+  directory so you can run without the management app.
+- `register: true` in `.github/workflows/deploy.yaml`.
+
+**Local development:** in `appsettings.development.json`, replace the zero `oid` and `tid` of the
+example user with yours (sign in once and read them from the "No access" page, or from your token).
+
+**Once per environment:** the management app must trust this app's deploy principal, and the SPA
+registration needs this app's origin as a redirect URI. See [docs/deployment.md](docs/deployment.md)
+and `docs/multi-tenancy.md` in the platform repository.
+
+<!--#endif-->
 ## Project layout
 
 ```

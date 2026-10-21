@@ -44,6 +44,27 @@ This creates the managed identity database user that the app needs.
 
 The workflow uses `${{ secrets.GITHUB_TOKEN }}` to restore platform NuGet packages from GitHub Packages. This is automatically available — no setup needed.
 
+<!--#if (TenancyEnabled)-->
+## Tenancy: registering with the management app
+
+Every deploy runs `--register`, which sends this app's `Manifest` (key, tenancy mode, roles) to the
+management app **before** the new code goes live. It needs three things:
+
+1. `management_url` and `management_audience` in `.github/workflows/deploy.yaml`. If you did not
+   pass `--management-url` and `--management-audience` when generating the app, fill them in now:
+   the URL of the management app and `api://<client id of PS Apps API>`. The deploy stops early
+   with a message when they are empty.
+2. The same two values as the `managementUrl` and `managementAudience` parameters of
+   `infra/app.bicep`, so the running app can ask the registry for its users.
+3. **Trust for the deploy principal.** Add the object id of the principal that deploys this app to
+   `registry__trustedDeployers__<n>` on the management Function App. Without it the deploy fails
+   with "Access denied (403) ... is not in the registry:trustedDeployers role", and nothing is
+   published.
+
+After the first successful deploy the app is listed in the management app, with its roles. Create
+users there (Users, Create user), choose the team and roles, and send them the invitation link.
+
+<!--#endif-->
 ## Workflow Inputs
 
 The reusable workflows accept these parameters (see `.github/workflows/deploy.yaml`):

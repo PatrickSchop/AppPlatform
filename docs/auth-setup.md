@@ -2,6 +2,10 @@
 
 This runbook sets up authentication for TinyApp platform apps using a shared app registration model with per-app roles.
 
+> Apps that need registered users, tenants and per-tenant roles use the registry in the management
+> app instead of Entra App Roles; see [multi-tenancy.md](multi-tenancy.md). The app registrations
+> below are shared by both kinds of app.
+
 ## Overview
 
 - **One shared setup:** An API app registration and SPA app registration created once by a tenant admin

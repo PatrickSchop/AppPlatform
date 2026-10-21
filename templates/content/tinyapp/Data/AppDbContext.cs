@@ -8,6 +8,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, PlatformAssemb
     : PlatformDbContext(options, assemblies)
 {
     // Add your entity DbSets here.
+//#if (TenancyEnabled)
+    public DbSet<Item> Items { get; set; } = null!;
+//#endif
     // Example: public DbSet<YourEntity> YourEntities { get; set; } = null!;
 }
 

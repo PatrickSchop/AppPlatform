@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "http://json.schemastore.org/dotnetcli.host.schema.json",
   "symbolInfo": {
     "PlatformVersion": {
@@ -20,7 +20,21 @@
       "longName": "frontend",
       "shortName": "fe",
       "description": "Frontend starter to include: none, angular, or react"
+    },
+    "Tenancy": {
+      "longName": "tenancy",
+      "shortName": "tn",
+      "description": "Tenancy model: none (authentication only), single (registered users and roles, one tenant) or multi (several tenants with tenant selection). single and multi need the management app."
+    },
+    "ManagementUrl": {
+      "longName": "management-url",
+      "shortName": "mu",
+      "description": "Base URL of the management app (single/multi only)"
+    },
+    "ManagementAudience": {
+      "longName": "management-audience",
+      "shortName": "ma",
+      "description": "api://<client id> audience of the management app's API (single/multi only)"
     }
   }
 }
-

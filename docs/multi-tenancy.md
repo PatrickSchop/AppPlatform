@@ -1,5 +1,61 @@
 ﻿# Multi-tenancy
 
+An app can know who its users are, which **tenant** each belongs to and what each may do there,
+instead of letting every authenticated person in. This page is the one reference for app authors
+and for the operator.
+
+1. [Concepts](#concepts)
+2. [Quick start](#quick-start)
+3. [Tenant resolution](#tenant-resolution) and [roles](#roles-come-from-the-registry-only)
+4. [Opting in](#opting-in-addplatformtenancy-and-platformtenancy)
+5. [Tenant-aware data](#tenant-aware-data), the [factory table](#which-factory-to-use-when) and
+   [anonymous endpoints](#anonymous-endpoints)
+6. [The login flow](#the-login-flow)
+7. [Registration](#registration)
+8. [Operator runbook](#operator-runbook)
+9. [Caching and consistency](#caching-and-consistency)
+
+## Concepts
+
+The **management app** (`apps/Management`) holds the registry: **Application → Tenant → Team →
+User → Role**.
+
+- An **application** is one deployed app, identified by its `Key`. It declares its roles in code
+  (`Manifest`) and registers them on every deploy.
+- A **tenant** is a customer or organisation inside an application. Data belongs to a tenant.
+- A **team** groups users inside a tenant. Roles are assigned to a user's membership of a team;
+  a user's roles in a tenant are the union across their teams.
+- A **user** is a person, created by an administrator and **bound** to a sign-in identity the first
+  time they accept an invitation. Email addresses are never matched to identities.
+
+An app runs in one of three modes, set by `tenancy:mode` and declared by its manifest:
+
+| Mode | Registry | Tenants | Use |
+|---|---|---|---|
+| `None` | no | – | authentication only (the original behaviour) |
+| `Single` | yes | exactly one, always selected | registered users and roles, no tenant choice |
+| `Multi` | yes | several; the user chooses | a SaaS-style app |
+
+## Quick start
+
+```powershell
+dotnet new install PS.AppPlatform.Templates
+dotnet new tinyapp -n Recipes --tenancy multi --azure-app-name recipes `
+    --management-url https://<management app>.azurewebsites.net `
+    --management-audience api://<client id of PS Apps API>
+```
+
+(`--tenancy` is `none`, `single` or `multi`; `none` is the default and generates the same app as
+before.) The generated app has a `Manifest`, a tenant-owned `Item` entity with its migration
+script, `GET`/`POST /api/items`, the tenancy wiring in `Program.cs` and `.csproj`, and a deploy
+workflow that registers it.
+
+Local development needs no management app. `appsettings.development.json` selects the **config
+directory** (`tenancy:directory = config`) and lists one tenant and one user. Replace the zero
+`oid` and `tid` with yours, then `dotnet build`, `dotnet exec bin/Debug/net10.0/Recipes.dll --migrate`
+and `func start`. In production the directory is the management app (`tenancy:directory =
+management`).
+
 ## Tenant resolution
 
 In `Single` and `Multi` mode, every protected HTTP call goes through
@@ -22,6 +78,7 @@ Errors are JSON bodies, `{"error":"<code>"}`:
 | `not_registered` | 403 | The user is not in the registry, or the token has no `oid`/`tid` |
 | `tenant_forbidden` | 403 | The header names a tenant the user isn't a member of, or isn't a GUID |
 | `tenant_required` | 409 | The user has more than one tenant and sent no header |
+| `registry_unavailable` | 503 | The management app could not be reached and nothing usable is cached; `Retry-After: 5` |
 | `unauthorized` | 401 | No valid token (unchanged) |
 | `forbidden` | 403 | Authorization failed (unchanged) |
 
@@ -70,13 +127,16 @@ tenancy shims (`endpoints/tenancy/*.cs`, currently `GET /api/me/tenants`) alongs
 platform shims. Nothing can read the MSBuild property at runtime, so `AddPlatformTenancy` cannot
 detect a missing `<PlatformTenancy>` (the shim just isn't compiled in) and the property cannot
 detect a missing `AddPlatformTenancy` call (the shim compiles but fails DI resolution the first
-time it runs). The MT-15 template sets both from the same `--Tenancy` symbol so generated apps
-cannot drift.
+time it runs). The template sets both from the same `--tenancy` option so generated apps cannot
+drift. The order of `AddPlatformTenancy` and `AddPlatformData` does not matter: the tenancy call
+replaces the default mode that the data call registers.
 
 ### `GET /api/me/tenants`
 
-The endpoint the login flow (MT-13) is built on. `[Authorize] [TenantOptional]`, so it runs for
-any authenticated caller, registered or not, with no tenant selected.
+The endpoint the login flow is built on. `[TenantOptional]` with
+`[Authorize(Policy = PlatformPolicies.AuthenticatedOnly)]`, so it answers any authenticated caller,
+registered or not, with no tenant selected, and ignores `requiredRole`. A user who holds no role
+must still be told that they are not registered, instead of getting a 403.
 
 ```json
 {
@@ -157,6 +217,25 @@ Choose your context factory based on whether code runs in an HTTP request contex
 | **Reporting / cross-tenant query** | `IUnscopedDbContextFactory<TContext>` | No filtering; you see all tenants. Guard this code in review. |
 | **Platform internals** (seeding, admin operations) | `IUnscopedDbContextFactory<TContext>` | Unfiltered. Explicitly set `TenantId` on inserts. |
 
+### Anonymous endpoints
+
+A function marked `[AllowAnonymous]` skips tenant resolution, so it has no tenant of its own. It
+resolves the tenant itself from something it can trust (a slug in the URL, a public alias) and
+then writes into that tenant explicitly. It never trusts a tenant the caller claims.
+`MultiTenantSample`'s feedback endpoint is the pattern:
+
+```csharp
+// 1. look the tenant up without a tenant filter
+await using var unscoped = await unscopedFactory.CreateDbContextAsync(ct);
+var alias = await unscoped.TenantAliases.FirstOrDefaultAsync(a => a.Slug == slug, ct);
+if (alias is null) return new NotFoundResult();
+
+// 2. write into exactly that tenant
+await using var db = scopedFactory.CreateForTenant(alias.TenantId);
+db.Feedback.Add(new Feedback { Text = request.Text });
+await db.SaveChangesAsync(ct);
+```
+
 ### Navigation property caveat
 
 An application-wide entity must **not** have a *required* navigation to a `TenantEntity`. The query filter would hide the principal (the tenant entity), causing EF warnings (`10622`) and silent query failures.
@@ -234,3 +313,123 @@ The filter is added to every `TenantEntity` in the finished EF model, however it
 (assembly discovery, a `DbSet`, or `modelBuilder.Entity<T>()` in your `OnModelCreating`). A
 query filter you add yourself is combined with it, never replaced. If your context overrides
 `ConfigureConventions`, it must call `base.ConfigureConventions(...)`.
+
+
+## The login flow
+
+After sign-in an app has to find the user's tenants, select one (automatically, or by asking),
+remember the choice, send it on every request and recover when the server rejects it. The
+framework-free `TenantSession` in `@PS/app-client` does all of that; the Angular and React
+packages only render its state.
+
+| State | Meaning | What the UI shows |
+|---|---|---|
+| `idle` / `loading` | not loaded yet | nothing |
+| `not-registered` | the user is not in the registry, or has no tenants | "ask an administrator" page |
+| `selecting` | several tenants, none chosen | the tenant picker |
+| `selected` | a tenant is chosen | the app |
+| `error` | the lookup failed | an error with a retry |
+
+- `load()` calls `GET me/tenants`. One tenant is selected automatically. A remembered choice is
+  reused if the user still belongs to that tenant; a stale one is forgotten.
+- The choice is remembered per app **and per account** in `localStorage`, so switching account never
+  reuses another account's tenant.
+- Every request carries the tenant in `X-Tenant-Id` (`tenancy.header` in `/configuration.json`).
+- The server's answer is the truth: `tenant_required` and `tenant_forbidden` send the user back to
+  the picker, `not_registered` reloads the session. The request that got the error still fails.
+- Background task polling starts only once a tenant is selected, and follows tenant changes.
+
+Angular (`@PS/app-client-angular`):
+
+```ts
+providers: [provideAppPlatform(), provideTenancy()]        // provideTenancy waits for the lookup before the first render
+
+{ path: '', canActivate: [authGuard, tenantGuard], children: [...] }   // your auth guard first
+{ path: 'select-tenant', component: TenantPickerComponent }
+{ path: 'not-registered', component: NotRegisteredComponent }
+```
+```html
+<ps-tenant-switcher />   <!-- header; renders nothing unless the user has more than one tenant -->
+```
+
+`TenantService` exposes `state`, `current`, `tenants` as signals and `select`, `reset`, `hasRole`.
+After a switch the page reloads by default, so nothing from the previous tenant stays on screen;
+provide `TENANT_SWITCHED` to reload only your data.
+
+React (`@PS/app-client-react`): `PlatformProvider` supplies the session; wrap the authenticated tree
+in `<TenantGate>` (picker, not-registered and loading content are replaceable) and put
+`<TenantSwitcher />` in the header. `useTenant()` gives the same state and actions.
+
+The components carry `ps-*` class names and no styling of their own, so they take on the app's
+design system.
+
+## Registration
+
+An app tells the management app who it is on **every deploy**, before the new code goes live
+(`--register`, run by `app-deploy.yaml` when `register: true`):
+
+1. the runner is already signed in as the **deploy principal**;
+2. `dotnet <App>.dll --register --principal-id <the app's managed identity>` reads the `Manifest`
+   and `PUT`s it to `<management url>/api/registry/v1/applications/<key>`;
+3. the management app accepts the call only from a principal in `registry:trustedDeployers`, in
+   the tenant `registry:trustedTenantId`.
+
+The upsert rules:
+
+- A new key creates the application with a `Default` tenant and a `Default` team.
+- Display name and tenancy mode are updated. **Multi → Single is refused while more than one
+  tenant is enabled.**
+- Roles are matched by name. A new role is added. A role missing from the manifest is
+  **deprecated**, not deleted: existing assignments stay, but it cannot be assigned any more. A
+  deprecated role that comes back is reactivated.
+- Registration is idempotent: deploying the same manifest twice changes nothing.
+
+If registration fails (the deployer is not trusted, the management app is down) the deploy stops
+before the new code is published. The deploy also stops up front when `register` is true and
+`management_url` or `management_audience` is empty.
+
+## Operator runbook
+
+Once, for the management app (`apps/Management`, deployed by `management-deploy.yaml`): the
+bootstrap administrator is created during deployment from the repository variables
+`BOOTSTRAP_ADMIN_OID`, `BOOTSTRAP_ADMIN_TID` and `BOOTSTRAP_ADMIN_NAME`. For a personal Microsoft
+account use the `oid` and `tid` the app shows on its "No access" page, not the ones `az` reports.
+
+For each app that uses the registry:
+
+1. **Provision** it with `infra/app.bicep`, passing `managementUrl` and `managementAudience`
+   (`api://<client id of PS Apps API>`); they become the `tenancy__management__url` and
+   `tenancy__management__audience` app settings.
+2. **Trust its deployer.** Add the object id of the principal that deploys the app to
+   `registry__trustedDeployers__<n>` on the management Function App. The same principal can deploy
+   several apps, so this is usually done once.
+3. **Allow its origin.** Add the app's origin to the SPA registration's redirect URIs
+   (`docs/auth-setup.md`, Part 2.3).
+4. **Deploy.** The deploy registers the app. It then appears in the management app under
+   Applications, with its roles.
+5. **Invite users.** In the management app, Users → Create user: pick the tenant and team, tick the
+   roles, and copy the invitation link (it is shown once). The user opens it, signs in and accepts.
+   If the link is lost or has expired, create a new one from the user's page; the old one stops
+   working.
+
+A user from a different Entra tenant can only sign in once an administrator of *that* tenant has
+consented to the app (the error is `AADSTS500011`). Personal Microsoft accounts and accounts of the
+tenant that owns the app registrations need no consent.
+
+## Caching and consistency
+
+An app asks the management app for a user's memberships and keeps the answer in memory, **per
+running instance**:
+
+| Answer | Kept for |
+|---|---|
+| user found | 5 minutes |
+| user not registered | 1 minute |
+| management app unreachable | the last answer is reused for up to 1 hour (stale-if-error); with none, the request fails with `registry_unavailable` |
+
+So a change in the management app reaches a running app within about five minutes: a newly invited
+user may see "not registered" for up to a minute after accepting, and **revoking a role or a user
+takes up to five minutes to take effect**, longer if the management app is down. The management
+UI says so after every change. Settings: `tenancy:cacheDuration` (the 5 minutes; the "not
+registered" time is the smaller of that and one minute, and is not configurable on its own) and
+`tenancy:staleIfError`.

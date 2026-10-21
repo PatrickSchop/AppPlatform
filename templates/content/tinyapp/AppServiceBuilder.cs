@@ -2,6 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using PS.AppPlatform.Hosting;
 using PS.AppPlatform.Tasks;
+//#if (TenancyEnabled)
+using TinyApp.Api;
+//#endif
 
 namespace TinyApp;
 
@@ -10,6 +13,9 @@ public sealed class AppServiceBuilder : ServiceBuilder
     public override void BuildServices(IServiceCollection services, IConfiguration configuration)
     {
         // Register your domain endpoints here.
+//#if (TenancyEnabled)
+        services.AddScoped<ItemsEndpoints>();
+//#endif
         // Example: services.AddScoped<YourEndpoints>();
     }
 

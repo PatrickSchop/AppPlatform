@@ -115,3 +115,18 @@ jobs:
       - name: Build the Management WebApp
         working-directory: apps/Management/WebApp
         run: npm run build
+
+  template:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Generates the app once per --tenancy choice from this checkout, builds each against packages
+      # packed from it, and checks which files and functions each variant has.
+      - name: Test the tinyapp template
+        run: bash templates/test-template.sh

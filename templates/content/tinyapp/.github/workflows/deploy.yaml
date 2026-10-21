@@ -18,3 +18,9 @@ jobs:
       app_name: AZURE-APP-NAME-PLACEHOLDER
       resource_group: TinyApp
       assembly_name: TinyApp
+#if (TenancyEnabled)
+      # Registers the app and its roles with the management app before the new code goes live.
+      register: true
+      management_url: MANAGEMENT-URL-PLACEHOLDER
+      management_audience: MANAGEMENT-AUDIENCE-PLACEHOLDER
+#endif

@@ -22,6 +22,24 @@ param customDomain string = ''
 @description('Azure OpenAI account resource id. Empty skips the role assignment.')
 param openAiAccountId string = ''
 
+@description('Base URL of the management app, e.g. https://psmanagement-api.azurewebsites.net. Set for apps that use the registry (tenancy single/multi); empty adds no setting. The management app itself passes neither.')
+param managementUrl string = ''
+
+@description('Audience of the management app API, api://<client id of PS Apps API>. Set together with managementUrl.')
+param managementAudience string = ''
+
+// Where an app that uses the registry finds it (tenancy:directory = management).
+var tenancySettings = empty(managementUrl) ? [] : [
+  {
+    name: 'tenancy__management__url'
+    value: managementUrl
+  }
+  {
+    name: 'tenancy__management__audience'
+    value: managementAudience
+  }
+]
+
 // User-assigned managed identity for the app
 resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'id-${appName}'
@@ -91,7 +109,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {
       minTlsVersion: '1.2'
       functionAppScaleLimit: 200
-      appSettings: [
+      appSettings: concat([
         {
           // Required for Azure to run this as a .NET isolated Functions app at all.
           // Without these two, the platform is silently never invoked: the Function App
@@ -142,7 +160,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'backgroundTasks__checkSchedule'
           value: '0 */5 * * * *'
         }
-      ]
+      ], tenancySettings)
     }
   }
 }

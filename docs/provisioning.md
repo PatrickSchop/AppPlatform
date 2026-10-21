@@ -36,6 +36,10 @@ az deployment group show `
   --query properties.outputs
 ```
 
+An app that uses the registry (`--tenancy single|multi`) also passes the management app's URL and
+audience, which become its `tenancy__management__*` app settings:
+`--parameters appName=<app> managementUrl=https://<management app>.azurewebsites.net managementAudience=api://<PS Apps API client id>`.
+
 The deployment creates, all inside `<AppName>`:
 - User-assigned managed identity (`id-<app>`)
 - Storage account (`<app>storage`) with a blob container (`web-<app>`) for SPA static

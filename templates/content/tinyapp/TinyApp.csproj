@@ -6,6 +6,9 @@
     <RootNamespace>TinyApp</RootNamespace>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!--#if (TenancyEnabled)-->
+    <PlatformTenancy>true</PlatformTenancy>
+    <!--#endif-->
   </PropertyGroup>
 
   <ItemGroup>

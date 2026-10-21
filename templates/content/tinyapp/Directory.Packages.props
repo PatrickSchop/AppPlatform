@@ -31,6 +31,9 @@
   <ItemGroup Label="Auth">
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
     <PackageVersion Include="Microsoft.Identity.Web" Version="4.2.0" />
+    <!-- Transitive dependency of the auth packages. 10.0.0 has known vulnerabilities (NU1902/NU1903),
+         and warnings are errors in this template. Pinned through central transitive pinning. -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup Label="Packaging">

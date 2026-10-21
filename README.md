@@ -33,4 +33,11 @@ Each app deployed via `infra/app.bicep` provisions and depends on:
 | Storage Account blob container | Serves the SPA static content; shared account (`stockinfostorage`), per-app container |
 | Azure OpenAI account (optional) | Only if the app uses `PS.AppPlatform.Llm` |
 
+### Users, tenants and roles
+
+An app can run with a registry of users, tenants and roles instead of authentication alone:
+`dotnet new tinyapp --tenancy single|multi`. The registry lives in the management app
+(`apps/Management`). See [docs/multi-tenancy.md](docs/multi-tenancy.md) for the concepts, the login
+flow, registration on deploy and the operator runbook.
+
 App Service **Easy Auth must stay disabled** (the bicep asserts this) — the platform authenticates in-process. See [docs/provisioning.md](docs/provisioning.md) for the full provisioning runbook.

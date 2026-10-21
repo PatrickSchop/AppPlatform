@@ -52,6 +52,21 @@ on:
         type: string
         default: ''
         description: 'Extra command run after --migrate, e.g. "--bootstrap-admin --oid … --tid … --name …"'
+      register:
+        required: false
+        type: boolean
+        default: false
+        description: 'Register the app and its roles with the management app (tenancy single/multi)'
+      management_url:
+        required: false
+        type: string
+        default: ''
+        description: 'Base URL of the management app, e.g. https://psmanagement-api.azurewebsites.net'
+      management_audience:
+        required: false
+        type: string
+        default: ''
+        description: 'Audience of the management app API, api://<client id>'
     secrets:
       AZURE_CLIENT_ID:
         required: false
@@ -87,6 +102,18 @@ jobs:
         with:
           name: app
           path: app-output
+
+      - name: Check the registration settings
+        if: ${{ inputs.register }}
+        env:
+          MANAGEMENT_URL: ${{ inputs.management_url }}
+          MANAGEMENT_AUDIENCE: ${{ inputs.management_audience }}
+        run: |
+          if [ -z "$MANAGEMENT_URL" ] || [ -z "$MANAGEMENT_AUDIENCE" ]; then
+            echo "register is true, so both management_url and management_audience are required." >&2
+            echo "Set them in the deploy workflow; see docs/multi-tenancy.md (operator runbook)." >&2
+            exit 1
+          fi
 
       - name: Get runner IP
         id: runner-ip
@@ -153,6 +180,22 @@ jobs:
             --resource-group ApplicationsShared \
             --server ${{ inputs.sql_server_name }} \
             --name gh-${{ github.run_id }}
+
+      # Before the new code goes live: a registration that fails (unknown deployer, management app
+      # down) must stop the deploy, because the new code may rely on roles registered here.
+      - name: Register with management app
+        if: ${{ inputs.register }}
+        env:
+          tenancy__management__url: ${{ inputs.management_url }}
+          tenancy__management__audience: ${{ inputs.management_audience }}
+          # The host is built the same way as for --migrate, so it needs the same settings.
+          database__connectionString: Server=tcp:${{ inputs.sql_server_name }}.database.windows.net,1433;Database=${{ inputs.app_name }};Encrypt=True;
+          database__useManagedIdentity: 'true'
+          azureIdentity__type: azureCli
+        run: |
+          PRINCIPAL_ID=$(az identity show --resource-group "${{ inputs.resource_group }}" --name "id-${{ inputs.app_name }}" --query principalId --output tsv)
+          cd app-output
+          dotnet "${{ inputs.assembly_name }}.dll" --register --principal-id "$PRINCIPAL_ID"
 
       - name: Clean dev settings
         run: |
