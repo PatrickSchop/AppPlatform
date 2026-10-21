@@ -73,3 +73,35 @@ jobs:
           path: artifacts/*
           retention-days: 14
 
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # The Management WebApp depends on the client libraries by file: path, and their dist/
+      # is not committed, so they are built first.
+      - name: Build the client libraries
+        run: |
+          npm ci --prefix clients
+          npm run build --prefix clients --workspace @PS/app-client --workspace @PS/app-client-angular
+
+      - name: Test the platform client
+        working-directory: clients/app-client
+        run: npx vitest run
+
+      - name: Install the Management WebApp
+        working-directory: apps/Management/WebApp
+        run: npm ci
+
+      - name: Test the Management WebApp
+        working-directory: apps/Management/WebApp
+        run: npm test
+
+      - name: Build the Management WebApp
+        working-directory: apps/Management/WebApp
+        run: npm run build
