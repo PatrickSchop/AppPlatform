@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PS.AppPlatform.Auth;
 using PS.Management.Api.Contracts;
 using PS.Management.Registry;
@@ -12,6 +13,7 @@ namespace PS.Management.Api;
 public sealed class AdminEndpoints(
     RegistryService registryService,
     RegistryDbContext db,
+    IOptions<RegistryOptions> registryOptions,
     ILogger<AdminEndpoints> logger)
 {
     // Applications
@@ -325,23 +327,37 @@ public sealed class AdminEndpoints(
         if (!Guid.TryParse(appId, out var id))
             return new BadRequestObjectResult(new { error = "invalid_app_id" });
 
-        var oid = req.HttpContext.User.GetIdentityKey()?.ObjectId;
-        if (oid == null)
+        var identity = req.HttpContext.User.GetIdentityKey();
+        if (identity == null)
             return new UnauthorizedResult();
 
         var body = await DeserializeAsync<CreateUserRequest>(req, ct);
-        if (body == null || string.IsNullOrEmpty(body.DisplayName))
+        if (body == null || string.IsNullOrWhiteSpace(body.DisplayName))
             return new BadRequestObjectResult(new { error = "invalid_body" });
+
+        var actor = await registryService.FindUserAsync(identity, ct);
+        if (actor == null)
+            return new ObjectResult(new { error = "actor_not_registered" }) { StatusCode = 403 };
 
         try
         {
-            await registryService.CreateUserAsync(body.DisplayName, body.Email, ct);
-            logger.LogInformation("Admin {Actor} created user {DisplayName} in app {AppId}", oid, body.DisplayName, id);
-            return new CreatedResult("", null);
+            var created = await registryService.CreateInvitedUserAsync(
+                id, body.TeamId, body.RoleIds ?? [], body.DisplayName.Trim(), body.Email, actor.Id, registryOptions.Value, ct);
+            logger.LogInformation("Admin {Actor} created user {UserId} in app {AppId} and invited them", identity.ObjectId, created.User.Id, id);
+
+            var url = $"{registryOptions.Value.PublicBaseUrl.TrimEnd('/')}/invite/{created.Token}";
+            return new ObjectResult(new CreateUserResponse(
+                created.User.Id, created.User.DisplayName,
+                new InvitationCreatedResponse(created.InvitationId, url, created.ExpiresUtc)))
+            { StatusCode = 201 };
         }
         catch (RegistryNotFoundException)
         {
             return new NotFoundObjectResult(new { error = "not_found" });
+        }
+        catch (RegistryValidationException ex)
+        {
+            return new BadRequestObjectResult(new { error = ex.Message, field = ex.Field });
         }
     }
 

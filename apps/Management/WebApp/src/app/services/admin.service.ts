@@ -5,7 +5,8 @@ import {
   ApplicationSummary, ApplicationDetail, TenantSummary, TeamSummary,
   UserSummary, UserDetail, MemberSummary, InvitationCreatedResponse,
   InvitationSummary, InvitationPreviewResponse, InvitationAcceptedResponse,
-  MyTenantsResponse, PatchApplicationRequest, PatchTenantRequest, PatchUserRequest
+  MyTenantsResponse, PatchApplicationRequest, PatchTenantRequest, PatchUserRequest,
+  CreateUserRequest, CreateUserResponse
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -68,8 +69,9 @@ export class AdminService {
     return this.api.get(`admin/applications/${appId}/users`);
   }
 
-  createUser(appId: string, displayName: string, email?: string): Promise<void> {
-    return this.api.post(`admin/applications/${appId}/users`, { displayName, email });
+  /** Creates the user, places them in a team with roles and returns their first invitation link. */
+  createUser(appId: string, request: CreateUserRequest): Promise<CreateUserResponse> {
+    return this.api.post(`admin/applications/${appId}/users`, request);
   }
 
   getUser(appId: string, userId: string): Promise<UserDetail> {

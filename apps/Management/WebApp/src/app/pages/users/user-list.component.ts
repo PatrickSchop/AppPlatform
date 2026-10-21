@@ -5,12 +5,13 @@ import { RouterModule, Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { ToastService } from '../../shared/toast.service';
 import { getErrorMessage } from '../../shared/error-messages';
-import { ApplicationSummary, UserSummary } from '../../services/models';
+import { ApplicationSummary, RoleSummary, TeamSummary, TenantSummary, UserSummary } from '../../services/models';
+import { InviteDialogComponent } from './invite-dialog.component';
 
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, InviteDialogComponent],
   template: `
     <h2>Users</h2>
 
@@ -48,13 +49,57 @@ import { ApplicationSummary, UserSummary } from '../../services/models';
       }
     </div>
 
+    @if (showInviteDialog()) {
+      <app-invite-dialog
+        [url]="inviteUrl()"
+        [expiresUtc]="inviteExpires()"
+        (close)="showInviteDialog.set(false)" />
+    }
+
     @if (selectedAppId()) {
       <div class="create-user-form">
         <h3>Create User</h3>
+        <p class="form-help">Creating a user adds them to the team below and gives you their invitation link.</p>
         <div class="form-row">
           <input [(ngModel)]="newUserDisplayName" placeholder="Display Name" required />
           <input [(ngModel)]="newUserEmail" placeholder="Email (optional)" />
-          <button (click)="createUser()" [disabled]="!newUserDisplayName()" class="btn-primary">Create</button>
+        </div>
+        @if (tenants().length > 1) {
+          <div class="form-row">
+            <label>Tenant</label>
+            <select [ngModel]="selectedTenantId()" (ngModelChange)="onTenantChange($event)">
+              @for (tenant of tenants(); track tenant.id) {
+                <option [value]="tenant.id">{{ tenant.name }}</option>
+              }
+            </select>
+          </div>
+        }
+        @if (teams().length > 1) {
+          <div class="form-row">
+            <label>Team</label>
+            <select [(ngModel)]="selectedTeamId">
+              @for (team of teams(); track team.id) {
+                <option [value]="team.id">{{ team.name }}{{ team.isDefault ? ' (default)' : '' }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div class="form-row roles-row">
+          <label>Roles</label>
+          @for (role of roles(); track role.id) {
+            <label class="role-option">
+              <input type="checkbox" [checked]="selectedRoleIds().includes(role.id)" (change)="toggleRole(role.id, $event)" />
+              {{ role.displayName || role.name }}
+            </label>
+          }
+          @if (roles().length === 0) {
+            <span class="form-help">This application defines no roles.</span>
+          }
+        </div>
+        <div class="form-row">
+          <button (click)="createUser()" [disabled]="!newUserDisplayName() || !selectedTeamId() || creating()" class="btn-primary">
+            Create and get invitation link
+          </button>
         </div>
       </div>
 
@@ -189,6 +234,22 @@ import { ApplicationSummary, UserSummary } from '../../services/models';
       color: #166534;
     }
 
+    .form-help {
+      color: #6b7280;
+      font-size: 14px;
+      margin: 4px 0 12px;
+    }
+
+    .roles-row {
+      align-items: center;
+    }
+
+    .role-option {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+
     .btn-primary {
       padding: 8px 16px;
       background-color: #2563eb;
@@ -218,6 +279,19 @@ export class UserListComponent implements OnInit {
   newUserDisplayName = signal<string>('');
   newUserEmail = signal<string>('');
 
+  // Where a new user goes: the application's tenant, team and roles.
+  tenants = signal<TenantSummary[]>([]);
+  teams = signal<TeamSummary[]>([]);
+  roles = signal<RoleSummary[]>([]);
+  selectedTenantId = signal<string>('');
+  selectedTeamId = signal<string>('');
+  selectedRoleIds = signal<string[]>([]);
+  creating = signal<boolean>(false);
+
+  showInviteDialog = signal<boolean>(false);
+  inviteUrl = signal<string>('');
+  inviteExpires = signal<string>('');
+
   filteredUsers = computed(() => {
     const term = this.searchTerm().toLowerCase();
     const status = this.statusFilter();
@@ -233,7 +307,7 @@ export class UserListComponent implements OnInit {
       this.applications.set(apps);
       if (apps.length > 0) {
         this.selectedAppId.set(apps[0].id);
-        await this.loadUsers();
+        await Promise.all([this.loadUsers(), this.loadCreateContext()]);
       }
     } catch (error) {
       this.toastService.show(getErrorMessage(error), 'error');
@@ -242,8 +316,42 @@ export class UserListComponent implements OnInit {
 
   async onAppChange(): Promise<void> {
     if (this.selectedAppId()) {
-      await this.loadUsers();
+      await Promise.all([this.loadUsers(), this.loadCreateContext()]);
     }
+  }
+
+  /** Loads the roles, tenants and teams a new user can be placed in. */
+  private async loadCreateContext(): Promise<void> {
+    try {
+      const app = await this.adminService.getApplication(this.selectedAppId());
+      this.roles.set(app.roles.filter(r => !r.isDeprecated));
+      this.selectedRoleIds.set([]);
+      const tenants = app.tenants.filter(t => !t.isDisabled);
+      this.tenants.set(tenants);
+      await this.onTenantChange(tenants[0]?.id ?? '');
+    } catch (error) {
+      this.toastService.show(getErrorMessage(error), 'error');
+    }
+  }
+
+  async onTenantChange(tenantId: string): Promise<void> {
+    this.selectedTenantId.set(tenantId);
+    this.teams.set([]);
+    this.selectedTeamId.set('');
+    if (!tenantId) return;
+    try {
+      const teams = await this.adminService.getTeams(this.selectedAppId(), tenantId);
+      this.teams.set(teams);
+      this.selectedTeamId.set((teams.find(t => t.isDefault) ?? teams[0])?.id ?? '');
+    } catch (error) {
+      this.toastService.show(getErrorMessage(error), 'error');
+    }
+  }
+
+  toggleRole(roleId: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.selectedRoleIds.update(ids =>
+      checked ? [...ids, roleId] : ids.filter(id => id !== roleId));
   }
 
   private async loadUsers(): Promise<void> {
@@ -257,16 +365,24 @@ export class UserListComponent implements OnInit {
 
   async createUser(): Promise<void> {
     try {
-      const displayName = this.newUserDisplayName();
-      const email = this.newUserEmail() || undefined;
-
-      await this.adminService.createUser(this.selectedAppId(), displayName, email);
+      this.creating.set(true);
+      const created = await this.adminService.createUser(this.selectedAppId(), {
+        displayName: this.newUserDisplayName(),
+        email: this.newUserEmail() || undefined,
+        teamId: this.selectedTeamId(),
+        roleIds: this.selectedRoleIds()
+      });
       this.newUserDisplayName.set('');
       this.newUserEmail.set('');
-      this.toastService.show('User created successfully', 'info');
+      this.selectedRoleIds.set([]);
+      this.inviteUrl.set(created.invitation.url);
+      this.inviteExpires.set(new Date(created.invitation.expiresUtc).toLocaleString());
+      this.showInviteDialog.set(true);
       await this.loadUsers();
     } catch (error) {
       this.toastService.show(getErrorMessage(error), 'error');
+    } finally {
+      this.creating.set(false);
     }
   }
 

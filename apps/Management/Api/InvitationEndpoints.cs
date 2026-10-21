@@ -23,9 +23,10 @@ public sealed class InvitationEndpoints(
             if (actorIdentity == null)
                 return new UnauthorizedResult();
 
-            var actor = await db.Users.FindAsync(new object[] { new Guid(actorIdentity.ObjectId) }, cancellationToken: ct);
+            // The registry user of the acting admin: its id is not the Entra oid.
+            var actor = await registryService.FindUserAsync(actorIdentity, ct);
             if (actor == null)
-                return new UnauthorizedResult();
+                return new ObjectResult(new { error = "actor_not_registered" }) { StatusCode = 403 };
 
             var (invitationId, token, expiresUtc) = await registryService.CreateInvitationAsync(
                 userId, actor.Id, options.Value, ct);

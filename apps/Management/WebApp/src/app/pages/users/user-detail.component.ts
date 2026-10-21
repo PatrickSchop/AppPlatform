@@ -67,7 +67,15 @@ import { InviteDialogComponent } from './invite-dialog.component';
 
     @if (activeTab() === 'invitations') {
       <div class="tab-content">
-        <button (click)="createInvite()" class="btn-primary">Create Invite Link</button>
+        @if (user()?.status === 'invited') {
+          <p class="form-help">
+            This user has not accepted their invitation yet. If the link was lost or has expired, create a new one.
+            The previous link stops working.
+          </p>
+          <button (click)="createInvite()" class="btn-primary">Create new invite link</button>
+        } @else {
+          <p class="form-help">This user has accepted their invitation.</p>
+        }
 
         @if (!invitations() || invitations().length === 0) {
           <p style="margin-top: 20px;">No invitations.</p>

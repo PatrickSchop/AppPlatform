@@ -114,6 +114,19 @@ export interface MyTenantsResponse {
 }
 
 // Request types
+export interface CreateUserRequest {
+  displayName: string;
+  email?: string;
+  teamId?: string;
+  roleIds: string[];
+}
+
+export interface CreateUserResponse {
+  userId: string;
+  displayName: string;
+  invitation: InvitationCreatedResponse;
+}
+
 export interface PatchApplicationRequest {
   displayName?: string;
   isDisabled?: boolean;

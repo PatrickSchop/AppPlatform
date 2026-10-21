@@ -8,12 +8,13 @@ public record CreateTenantRequest(string Name);
 public record PatchTenantRequest(string? Name, bool? IsDisabled);
 public record CreateTeamRequest(string Name);
 public record PatchTeamRequest(string? Name);
-public record CreateUserRequest(string DisplayName, string? Email);
+public record CreateUserRequest(string DisplayName, string? Email, Guid? TeamId = null, List<Guid>? RoleIds = null);
 public record PatchUserRequest(string? DisplayName, string? Email, bool? IsDisabled);
 public record AddMemberRequest(Guid UserId, List<Guid> RoleIds);
 public record SetRolesRequest(List<Guid> RoleIds);
 
 // Responses
+public record CreateUserResponse(Guid UserId, string DisplayName, InvitationCreatedResponse Invitation);
 public record ApplicationSummary(Guid Id, string Key, string DisplayName, [property: JsonConverter(typeof(JsonStringEnumConverter))] PS.AppPlatform.Tenancy.TenancyMode Tenancy, int TenantCount, int UserCount, bool IsDisabled);
 public record ApplicationDetail(Guid Id, string Key, string DisplayName, [property: JsonConverter(typeof(JsonStringEnumConverter))] PS.AppPlatform.Tenancy.TenancyMode Tenancy, bool IsDisabled, List<RoleSummary> Roles, List<TenantSummary> Tenants);
 public record RoleSummary(Guid Id, string Name, string DisplayName, bool IsDeprecated, int AssignmentCount);

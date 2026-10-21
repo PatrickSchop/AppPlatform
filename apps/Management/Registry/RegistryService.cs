@@ -548,6 +548,57 @@ public sealed class RegistryService(RegistryDbContext db)
         });
     }
 
+    /// <summary>The registry user for an authenticated identity, or null when it is not registered.</summary>
+    public Task<User?> FindUserAsync(PS.AppPlatform.Tenancy.IdentityKey identity, CancellationToken ct) =>
+        db.Users.FirstOrDefaultAsync(
+            u => u.ObjectId == identity.ObjectId && u.IssuerTenantId == identity.IssuerTenantId, ct);
+
+    /// <summary>
+    /// Creates a user, places them in a team with the given roles and issues their first invitation.
+    /// Everything that can be rejected is checked before anything is written, so a bad team or role
+    /// never leaves a half-created user behind. The team may be omitted when the application has exactly
+    /// one tenant: the default team of that tenant is used.
+    /// </summary>
+    public async Task<(User User, Guid InvitationId, string Token, DateTime ExpiresUtc)> CreateInvitedUserAsync(
+        Guid applicationId, Guid? teamId, List<Guid> roleIds, string displayName, string? email,
+        Guid actorUserId, RegistryOptions options, CancellationToken ct)
+    {
+        _ = await db.Applications.FirstOrDefaultAsync(a => a.Id == applicationId, ct)
+            ?? throw new RegistryNotFoundException();
+
+        Team team;
+        if (teamId.HasValue)
+        {
+            team = await db.Teams.FirstOrDefaultAsync(t => t.Id == teamId.Value, ct)
+                ?? throw new RegistryValidationException("teamId", "team_not_found");
+            var inApplication = await db.Tenants.AnyAsync(
+                t => t.Id == team.TenantId && t.ApplicationId == applicationId && !t.IsDisabled, ct);
+            if (!inApplication)
+                throw new RegistryValidationException("teamId", "team_not_in_application");
+        }
+        else
+        {
+            var tenantIds = await db.Tenants
+                .Where(t => t.ApplicationId == applicationId && !t.IsDisabled)
+                .Select(t => t.Id)
+                .ToListAsync(ct);
+            if (tenantIds.Count != 1)
+                throw new RegistryValidationException("teamId", "team_required");
+            team = await db.Teams.FirstOrDefaultAsync(t => t.TenantId == tenantIds[0] && t.IsDefault, ct)
+                ?? throw new RegistryNotFoundException();
+        }
+
+        var distinctRoleIds = roleIds.Distinct().ToList();
+        var roles = await db.Roles.Where(r => distinctRoleIds.Contains(r.Id)).ToListAsync(ct);
+        if (roles.Count != distinctRoleIds.Count || roles.Any(r => r.ApplicationId != applicationId || r.IsDeprecated))
+            throw new RegistryValidationException("roleIds", "invalid_roles");
+
+        var user = await CreateUserAsync(displayName, email, ct);
+        await AddMemberAsync(team.Id, user.Id, distinctRoleIds, ct);
+        var (invitationId, token, expiresUtc) = await CreateInvitationAsync(user.Id, actorUserId, options, ct);
+        return (user, invitationId, token, expiresUtc);
+    }
+
     public async Task UpdateUserAsync(Guid userId, string? displayName, string? email, bool? isDisabled, CancellationToken ct)
     {
         var strategy = db.Database.CreateExecutionStrategy();

@@ -27,7 +27,7 @@ import { getErrorMessage } from '../../shared/error-messages';
           }
         </select>
         @if (availableUsers().length === 0) {
-          <p class="hint">Everyone is already a member of this team. To add someone else, <a routerLink="/users">create a user</a> first.</p>
+          <p class="hint">Everyone who has a place in this application is already in this team. New people are added from <a routerLink="/users">Users</a> (create a user), which also gives you their invitation link.</p>
         }
       </div>
       <div class="roles-checkboxes">
