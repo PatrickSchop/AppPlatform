@@ -10,6 +10,11 @@ on:
       - '.github/workflows/app-deploy.yaml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+
 jobs:
   build:
     uses: ./.github/workflows/app-build.yaml
