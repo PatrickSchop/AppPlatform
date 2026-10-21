@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -45,6 +45,12 @@ public class StaticContentHandler
         if (file is null && !Path.HasExtension(path))
         {
             file = await _filesProvider.GetFileAsync("index.html", ct);
+            if (file is not null)
+            {
+                // The response is index.html, whatever URL asked for it: it must be typed as HTML
+                // (not a download) and must not be cached as an immutable, hashed asset.
+                path = "index.html";
+            }
         }
 
         // Still null â†’ NotFound
