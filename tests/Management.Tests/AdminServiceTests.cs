@@ -127,6 +127,70 @@ public class AdminServiceTests
         Assert.Equal("last_admin", ex3.Code);
     }
 
+    private static async Task<(RegistryService Svc, RegistryDbContext Db, Guid P, Guid Q, Guid PMember, Guid QMember)> TwoAdmins()
+    {
+        var db = CreateContext();
+        var svc = new RegistryService(db);
+        await svc.UpsertApplicationAsync(Reg("management", TenancyMode.Single, "admin"), default);
+        var p = await svc.EnsureAdminAsync(new IdentityKey("oid-p", "tid"), "P", default);
+        var q = await svc.EnsureAdminAsync(new IdentityKey("oid-q", "tid"), "Q", default);
+        return (svc, db, p, q,
+            (await db.TeamMembers.FirstAsync(m => m.UserId == p)).Id,
+            (await db.TeamMembers.FirstAsync(m => m.UserId == q)).Id);
+    }
+
+    [Fact]
+    public async Task LastAdminGuard_WithTwoAdmins_AllowsRemovingTheFirst_RefusesTheSecond()
+    {
+        // Gate E check 10: remove P's admin, then Q's.
+        var (svc, db, _, _, pMember, qMember) = await TwoAdmins();
+        await using var _ = db;
+
+        await svc.SetMemberRolesAsync(pMember, [], default);
+
+        var ex = await Assert.ThrowsAsync<RegistryConflictException>(
+            () => svc.SetMemberRolesAsync(qMember, [], default));
+        Assert.Equal("last_admin", ex.Code);
+        Assert.Single(await db.RoleAssignments.Where(a => a.TeamMemberId == qMember).ToListAsync());
+    }
+
+    [Fact]
+    public async Task LastAdminGuard_WithTwoAdmins_AllowsRemovingAMembershipAndDisablingAUser()
+    {
+        var (svc, db, _, q, pMember, _) = await TwoAdmins();
+        await using var _ = db;
+
+        await svc.UpdateUserAsync(q, null, null, true, default);          // disable Q: P remains
+        await Assert.ThrowsAsync<RegistryConflictException>(
+            () => svc.RemoveMemberAsync(pMember, default));                // P is now the only one
+    }
+
+    [Fact]
+    public async Task LastAdminGuard_DoesNotCountAnInvitedAdmin_ButDoesNotBlockDemotingThem()
+    {
+        // An invited admin has not accepted yet and cannot sign in. They must not count as the
+        // administrator who keeps the portal reachable, and demoting them is not "the last admin".
+        await using var db = CreateContext();
+        var svc = new RegistryService(db);
+        await svc.UpsertApplicationAsync(Reg("management", TenancyMode.Single, "admin"), default);
+        var p = await svc.EnsureAdminAsync(new IdentityKey("oid-p", "tid"), "P", default);
+        var app = await db.Applications.FirstAsync(a => a.Key == "management");
+        var adminRole = await db.Roles.FirstAsync(r => r.ApplicationId == app.Id && r.Name == "admin");
+        var created = await svc.CreateInvitedUserAsync(app.Id, null, [adminRole.Id], "Invited", null, p,
+            new RegistryOptions { PublicBaseUrl = "https://x.test" }, default);
+        var invitedMember = await db.TeamMembers.FirstAsync(m => m.UserId == created.User.Id);
+        var pMember = await db.TeamMembers.FirstAsync(m => m.UserId == p);
+
+        // P is the only admin who can act: P cannot be demoted just because an invited admin exists.
+        var ex = await Assert.ThrowsAsync<RegistryConflictException>(
+            () => svc.SetMemberRolesAsync(pMember.Id, [], default));
+        Assert.Equal("last_admin", ex.Code);
+
+        // The invited admin can be demoted: P remains.
+        await svc.SetMemberRolesAsync(invitedMember.Id, [], default);
+        Assert.Empty(await db.RoleAssignments.Where(a => a.TeamMemberId == invitedMember.Id).ToListAsync());
+    }
+
     [Fact]
     public async Task DefaultTeam_CannotBeRenamedOrDeleted_LastTenant_CannotBeDeleted()
     {

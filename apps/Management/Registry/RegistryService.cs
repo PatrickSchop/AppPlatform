@@ -976,17 +976,21 @@ public sealed class RegistryService(RegistryDbContext db)
             r => r.ApplicationId == managementApp.Id && r.Name == "admin", ct)
             ?? throw new RegistryNotFoundException();
 
-        var enabledAdminCount = await db.RoleAssignments
+        // Would anyone else still be able to administer? Count the enabled, accepted admins other than
+        // the user being demoted, removed or disabled. Counting that user too would refuse demoting an
+        // invited admin who cannot sign in yet, and would allow removing the last real one.
+        var otherEnabledAdmins = await db.RoleAssignments
             .Join(db.TeamMembers, ra => ra.TeamMemberId, tm => tm.Id, (ra, tm) => new { ra, tm })
             .Join(db.Users, x => x.tm.UserId, u => u.Id, (x, u) => new { x.ra, x.tm, u })
             .Where(x =>
                 x.tm.TeamId == defaultTeam.Id &&
                 x.ra.RoleId == adminRole.Id &&
+                x.u.Id != userId &&
                 x.u.BoundUtc.HasValue &&
                 !x.u.IsDisabled)
             .CountAsync(ct);
 
-        if (enabledAdminCount <= 1)
+        if (otherEnabledAdmins == 0)
         {
             throw new RegistryConflictException("last_admin");
         }
