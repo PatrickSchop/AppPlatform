@@ -73,11 +73,13 @@ export class ApiClient {
         this.onUnauthorized();
       }
 
-      let body: unknown;
+      // A body can be read once: take the text, then try to interpret it as JSON.
+      const text = await response.text().catch(() => '');
+      let body: unknown = text;
       try {
-        body = await response.json();
+        body = JSON.parse(text);
       } catch {
-        body = await response.text();
+        // not JSON; keep the raw text
       }
 
       throw new ApiError(response.status, body);

@@ -71,11 +71,7 @@ describe('ApiClient', () => {
 
   it('calls onUnauthorized and throws ApiError on 401', async () => {
     const onUnauthorized = vi.fn();
-    const mockFetch = vi.fn(async () => ({
-      ok: false,
-      status: 401,
-      json: async () => ({ error: 'unauthorized' }),
-    }));
+    const mockFetch = vi.fn(async () => new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 }));
 
     const client = new ApiClient({
       baseUrl: 'http://api.test',
@@ -309,5 +305,16 @@ describe('TaskPoller', () => {
     const api = new ApiClient({ baseUrl, fetch: mockFetch as any });
     await api.get(path);
     expect(mockFetch.mock.calls[0][0]).toBe('/api/me/tenants');
+  });
+  it('reports the status and body of a failed response', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(new Response('{"error":"boom"}', { status: 500 }));
+    const api = new ApiClient({ baseUrl: '/api', fetch: mockFetch as any });
+    await expect(api.get('x')).rejects.toMatchObject({ status: 500, body: { error: 'boom' } });
+  });
+
+  it('keeps a non-JSON error body as text', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(new Response('<html>bad gateway</html>', { status: 502 }));
+    const api = new ApiClient({ baseUrl: '/api', fetch: mockFetch as any });
+    await expect(api.get('x')).rejects.toMatchObject({ status: 502, body: '<html>bad gateway</html>' });
   });
 });
