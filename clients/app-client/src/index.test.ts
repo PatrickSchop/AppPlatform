@@ -147,11 +147,12 @@ describe('TaskPoller', () => {
     poller.stop();
   });
 
-  it('createTask POSTs to /api/tasks', async () => {
+  it('createTask POSTs to tasks under the API root', async () => {
     const mockFetch = vi.fn(async () => json(({ id: 'task-123' })));
 
+    // api.root in configuration.json is '/api', and paths are relative to it.
     const api = new ApiClient({
-      baseUrl: 'http://api.test',
+      baseUrl: 'http://api.test/api',
       fetch: mockFetch as any,
     });
 
@@ -308,5 +309,27 @@ describe('TaskPoller', () => {
     const mockFetch = vi.fn().mockResolvedValue(new Response('', { status: 200 }));
     const api = new ApiClient({ baseUrl: '/api', fetch: mockFetch as any });
     await expect(api.patch('admin/x', { a: 1 })).resolves.toBeUndefined();
+  });
+  it('stays quiet when the tab becomes visible if it was never started', async () => {
+    const mockFetch = vi.fn(async () => json([] as BackgroundTask[]));
+    const api = new ApiClient({ baseUrl: 'http://api.test/api', fetch: mockFetch as any });
+    const poller = new TaskPoller({ api, autoStart: false });
+
+    document.dispatchEvent(new Event('visibilitychange'));
+    await Promise.resolve();
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    poller.stop();
+  });
+
+  it('requests tasks relative to the API root', async () => {
+    const mockFetch = vi.fn(async () => json([] as BackgroundTask[]));
+    const api = new ApiClient({ baseUrl: '/api', fetch: mockFetch as any });
+    const poller = new TaskPoller({ api, autoStart: false });
+
+    await poller.refresh();
+
+    expect(mockFetch.mock.calls[0][0]).toBe('/api/tasks');
+    poller.stop();
   });
 });

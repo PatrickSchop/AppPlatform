@@ -102,7 +102,7 @@ export interface InvitationAcceptedResponse {
 
 // Admin gate (GET api/me/tenants)
 export interface MyTenantResponse {
-  id: string;
+  tenantId: string;
   name: string;
   roles: string[];
 }

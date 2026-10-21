@@ -3,6 +3,13 @@ export interface ApiClientOptions {
   getAccessToken?: () => Promise<string | null>;
   fetch?: typeof fetch;
   onUnauthorized?: () => void;
+  /** Extra headers merged into every request, for example the selected tenant. */
+  getHeaders?: () => Record<string, string>;
+  /**
+   * Called with the status and the `error` code of a non-2xx JSON response, before the
+   * ApiError is thrown. The request that got the error still throws; recovery happens in the UI.
+   */
+  onErrorCode?: (status: number, code: string) => void;
 }
 
 export class ApiError extends Error {
@@ -21,12 +28,16 @@ export class ApiClient {
   private getAccessToken: () => Promise<string | null>;
   private fetchImpl: typeof fetch;
   private onUnauthorized: () => void;
+  private getHeaders: () => Record<string, string>;
+  private onErrorCode: (status: number, code: string) => void;
 
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl;
     this.getAccessToken = options.getAccessToken ?? (() => Promise.resolve(null));
     this.fetchImpl = options.fetch ?? ((input, init) => globalThis.fetch(input, init));  // not a bare reference: fetch throws 'Illegal invocation' when called as a method of this
     this.onUnauthorized = options.onUnauthorized ?? (() => {});
+    this.getHeaders = options.getHeaders ?? (() => ({}));
+    this.onErrorCode = options.onErrorCode ?? (() => {});
   }
 
   async get<T>(path: string, init?: RequestInit): Promise<T> {
@@ -62,6 +73,9 @@ export class ApiClient {
       headers.set('Authorization', `Bearer ${token}`);
     }
     headers.set('Content-Type', 'application/json');
+    for (const [name, value] of Object.entries(this.getHeaders())) {
+      headers.set(name, value);
+    }
 
     const response = await this.fetchImpl(this.url(path), {
       ...init,
@@ -84,6 +98,11 @@ export class ApiClient {
         body = JSON.parse(text);
       } catch {
         // not JSON; keep the raw text
+      }
+
+      const code = (body as { error?: unknown } | null)?.error;
+      if (typeof code === 'string') {
+        this.onErrorCode(response.status, code);
       }
 
       throw new ApiError(response.status, body);

@@ -1,6 +1,8 @@
 export interface AppConfig {
   api?: { root?: string };
   auth?: { tenantId?: string; clientId?: string; scopes?: string[] };
+  /** Present when the app runs in Single or Multi tenancy mode. */
+  tenancy?: { mode: 'None' | 'Single' | 'Multi'; header: string };
   [key: string]: unknown;
 }
 

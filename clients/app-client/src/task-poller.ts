@@ -34,6 +34,7 @@ export class TaskPoller extends EventTarget {
   private currentIntervalMs: number;
   private expectTaskStartTimer: ReturnType<typeof setTimeout> | null = null;
   private isVisible = true;
+  private running = false;
 
   readonly tasks!: readonly BackgroundTask[];
 
@@ -58,11 +59,13 @@ export class TaskPoller extends EventTarget {
   }
 
   start(): void {
+    this.running = true;
     if (this.pollTimer !== null) return;
     this.schedulePoll();
   }
 
   stop(): void {
+    this.running = false;
     if (this.pollTimer !== null) {
       clearTimeout(this.pollTimer);
       this.pollTimer = null;
@@ -94,7 +97,7 @@ export class TaskPoller extends EventTarget {
     description = '',
     requiresNotification = false
   ): Promise<string> {
-    const response = await this.api.post<{ id: string }>('/api/tasks', {
+    const response = await this.api.post<{ id: string }>('tasks', {
       taskType,
       taskData,
       description,
@@ -119,7 +122,7 @@ export class TaskPoller extends EventTarget {
     this.pollInFlight = true;
 
     try {
-      const tasks = await this.api.get<BackgroundTask[]>('/api/tasks');
+      const tasks = await this.api.get<BackgroundTask[]>('tasks');
       this._tasks = tasks.sort((a, b) =>
         new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
       );
@@ -154,7 +157,8 @@ export class TaskPoller extends EventTarget {
 
   private handleVisibilityChange(): void {
     this.isVisible = !document.hidden;
-    if (this.isVisible) {
+    // A poller that was never started, or was stopped, must stay quiet when the tab comes back.
+    if (this.isVisible && this.running) {
       this.poll().finally(() => {
         if (this.pollTimer === null && this.isVisible) {
           this.schedulePoll();

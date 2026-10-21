@@ -14,7 +14,7 @@
     "dist"
   ],
   "peerDependencies": {
-    "@PS/app-client": "^0.1.0",
+    "@PS/app-client": "^0.2.0",
     "react": ">=18.0.0"
   },
   "devDependencies": {

@@ -8,6 +8,8 @@ export interface AuthClientOptions {
 export interface AccountInfo {
   username: string;
   name?: string;
+  /** Stable id of the account at the identity provider; keys per-account browser state. */
+  homeAccountId?: string;
 }
 
 export class AuthClient {
@@ -25,6 +27,7 @@ export class AuthClient {
       this.account = {
         username: account.username,
         name: account.name,
+        homeAccountId: account.homeAccountId,
       };
     }
   }

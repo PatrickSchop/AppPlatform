@@ -5,7 +5,7 @@
   "peerDependencies": {
     "@angular/common": ">=19.0.0",
     "@angular/core": ">=19.0.0",
-    "@PS/app-client": "^0.1.0"
+    "@PS/app-client": "^0.2.0"
   },
   "devDependencies": {
     "@angular/common": "^21.0.0",
