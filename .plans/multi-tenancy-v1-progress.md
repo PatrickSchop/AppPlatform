@@ -43,7 +43,7 @@ All of Phases 0–2, including MT-11, can run without waiting for v1 Steps 26–
 | MT-12 | **Gate E** — management deployed | ✅ | ✅ Management 49, platform 196, client 19, WebApp 43; CI `build` + new `frontend` job green | ✅ 72f0b2e … ba36aea (25 commits since 496603e; record in ba36aea; deploys succeeded on every push) |
 | MT-13 | `TenantSession` | ✅ | ✅ client 51 (new: 31); Angular lib, React and Management WebApp rebuilt and green | ✅ (CI + deploy passed) |
 | MT-14 | Angular/React tenancy components | ✅ (no starters, see note) | ✅ client 52, Angular lib 38 (new runner), React 19, Management WebApp 46; CI runs all | ✅ (CI + deploy passed) |
-| MT-15 | Template `--tenancy`, deploy registration, `0.2.0` | ✅ released 0.2.0 | ✅ platform 196, Management 49, client 52, Angular 38, React 19, WebApp 46, template script (3 variants build); CI green incl. actionlint | ✅ f..01bfaee (CI passed); 0.2.0 published from 01bfaee |
+| MT-15 | Template `--tenancy`, deploy registration, `0.2.0` | ✅ released 0.2.0 | ✅ platform 196, Management 49, client 52, Angular 38, React 19, WebApp 46, template script (3 variants build); CI green incl. actionlint | ✅ 01bfaee (CI passed); 0.2.0 published from 01bfaee |
 | MT-16 | **Gate F** — template app end to end | ⏳ | | |
 
 ## Gates
