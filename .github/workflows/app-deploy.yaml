@@ -140,8 +140,7 @@ jobs:
           az sql server firewall-rule delete \
             --resource-group ApplicationsShared \
             --server ${{ inputs.sql_server_name }} \
-            --name gh-${{ github.run_id }} \
-            --yes
+            --name gh-${{ github.run_id }}
 
       - name: Clean dev settings
         run: |
