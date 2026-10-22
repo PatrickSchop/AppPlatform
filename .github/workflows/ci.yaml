@@ -116,6 +116,18 @@ jobs:
         working-directory: apps/Management/WebApp
         run: npm run build
 
+      - name: Install the Angular starter
+        working-directory: starters/angular
+        run: npm ci
+
+      - name: Test the Angular starter
+        working-directory: starters/angular
+        run: npm test
+
+      - name: Build the Angular starter
+        working-directory: starters/angular
+        run: npm run build
+
   template:
     runs-on: ubuntu-latest
     timeout-minutes: 20

@@ -180,6 +180,12 @@ No build issues. Adapter follows Single Responsibility and is compatible with An
 
 All three client libraries (core, Angular, React) complete and interoperable.
 
+## Step 26 completion
+
+**starters/angular** completed 2026-10-22: shell, guards, task popover, 403 page, example page, tenancy wiring (picker, switcher, `tenantGuard`), modelled on `apps/Management/WebApp` (same semantic-token styling and patterns) instead of porting the StockAnalysis bootstrap partials. Builds clean, 7 tests pass, deep-link fallback verified through SampleApp. Wired into the template as `Frontend=angular` via `starters/sync-to-template.sh`.
+
+Not verified: interactive browser checks (needs real Entra ids), and the template's deploy of `WebApp/` (npm packages are not published; the copy has no lockfile).
+
 ## Next
 
-Start **Step 26** — Angular starter with design system and one complete workflow.
+Step 27 — React starter.

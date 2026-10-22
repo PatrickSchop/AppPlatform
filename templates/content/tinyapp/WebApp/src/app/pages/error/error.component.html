@@ -1,0 +1,14 @@
+<div class="error-container">
+  <div class="error-content">
+    <h1>Something went wrong</h1>
+
+    <div class="message">
+      <p>The app could not complete your request.</p>
+      @if (message) {
+        <p class="detail">{{ message }}</p>
+      }
+    </div>
+
+    <button class="retry-btn" (click)="retry()">Try again</button>
+  </div>
+</div>

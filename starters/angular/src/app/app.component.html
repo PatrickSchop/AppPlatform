@@ -1,0 +1,38 @@
+<app-toast></app-toast>
+
+<div class="app-container">
+  <!-- Top bar -->
+  <header class="top-bar">
+    <div class="top-bar-content">
+      <h1>{{ title }}</h1>
+      <div class="top-bar-right">
+        <app-task-status />
+        <ps-tenant-switcher />
+        @if (authEnabled) {
+          @if (accountName()) {
+            <span class="account-name">{{ accountName() }}</span>
+            <button class="sign-out-btn" (click)="signOut()">Sign Out</button>
+          } @else {
+            <button class="sign-out-btn" (click)="signIn()">Sign In</button>
+          }
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- Main layout -->
+  <div class="main-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="nav-menu">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">Home</a>
+        <a routerLink="/example" routerLinkActive="active" class="nav-link">Example</a>
+      </nav>
+    </aside>
+
+    <!-- Content area -->
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

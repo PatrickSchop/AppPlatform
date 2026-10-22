@@ -1,0 +1,41 @@
+{
+  "name": "web-app",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "vitest run"
+  },
+  "private": true,
+  "packageManager": "npm@11.6.1",
+  "dependencies": {
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "@azure/msal-browser": "^3.30.0",
+    "@PS/app-client": "^0.2.0",
+    "@PS/app-client-angular": "^0.2.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@analogjs/vite-plugin-angular": "^2.7.5",
+    "@angular/build": "^21.2.24",
+    "@angular/cli": "^21.2.24",
+    "@angular/compiler-cli": "^21.2.0",
+    "@angular/platform-browser-dynamic": "^21.2.25",
+    "@emnapi/core": "^1.11.3",
+    "@emnapi/runtime": "^1.11.3",
+    "@vitest/ui": "^4.1.11",
+    "jsdom": "^24.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.11",
+    "zone.js": "^0.16.3"
+  }
+}
