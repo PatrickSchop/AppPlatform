@@ -1,1 +1,96 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Brand color scheme.
+ *
+ * Semantic tokens only: components use these, never raw hex values.
+ * The theme follows the OS setting; set data-theme="light" or "dark" on <html> to force one.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Brand (same in both themes) */
+  --color-primary: #ec9d1e;
+  --color-on-primary: #000000; /* white on #ec9d1e is only 2.2:1; black is 9.4:1 */
+}
+
+/* Light: white background, black text */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --color-bg: #ffffff;
+  --color-surface: #f6f6f6;
+  --color-text: #000000;
+  --color-text-muted: #5c5c5c;
+  --color-border: #e0e0e0;
+
+  --color-primary-hover: #d68a0f;
+  --color-primary-text: #9a5b00; /* primary as text/link on white, 5.4:1 */
+}
+
+/* Dark: black background, white text */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --color-bg: #000000;
+    --color-surface: #141414;
+    --color-text: #ffffff;
+    --color-text-muted: #a3a3a3;
+    --color-border: #2e2e2e;
+
+    --color-primary-hover: #f5b04a;
+    --color-primary-text: #ec9d1e; /* 9.4:1 on black */
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #000000;
+  --color-surface: #141414;
+  --color-text: #ffffff;
+  --color-text-muted: #a3a3a3;
+  --color-border: #2e2e2e;
+
+  --color-primary-hover: #f5b04a;
+  --color-primary-text: #ec9d1e;
+}
+
+:root {
+  --font-main: 'Open Sans', system-ui, sans-serif;
+  --font-heading: 'Fira Sans Condensed', 'Arial Narrow', sans-serif;
+  --font-size-base: 16px;
+  --font-weight-base: 300;
+}
+
+html {
+  font-size: var(--font-size-base);
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  font-size: 1rem;
+  font-weight: var(--font-weight-base);
+}
+
+/* Form controls don't inherit font settings by default */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}

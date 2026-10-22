@@ -1,11 +1,11 @@
 :host {
-  --primary-color: #2563eb;
-  --primary-dark: #1e40af;
-  --border-color: #e5e7eb;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-  --bg-light: #f9fafb;
-  --bg-white: #ffffff;
+  --primary-color: var(--color-primary);
+  --primary-dark: var(--color-primary-hover);
+  --border-color: var(--color-border);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-muted);
+  --bg-light: var(--color-surface);
+  --bg-white: var(--color-bg);
 }
 
 .app-container {
@@ -51,7 +51,7 @@
 
   .sign-out-btn {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--color-on-primary);
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
@@ -100,7 +100,7 @@
 
     &.active {
       background-color: var(--primary-color);
-      color: white;
+      color: var(--color-on-primary);
     }
   }
 }
