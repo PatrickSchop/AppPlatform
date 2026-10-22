@@ -16,7 +16,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/PatrickSchop/AppPlatform</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <VersionPrefix>0.2.0</VersionPrefix>
+    <VersionPrefix>0.2.1</VersionPrefix>
   </PropertyGroup>
 
   <PropertyGroup>
