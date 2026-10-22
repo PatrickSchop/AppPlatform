@@ -1,5 +1,5 @@
 {
-  "name": "@PS/app-client-react",
+  "name": "@patrickschop/app-client-react",
   "version": "0.2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,11 +14,11 @@
     "dist"
   ],
   "peerDependencies": {
-    "@PS/app-client": "^0.2.0",
+    "@patrickschop/app-client": "^0.2.0",
     "react": ">=18.0.0"
   },
   "devDependencies": {
-    "@PS/app-client": "file:../app-client",
+    "@patrickschop/app-client": "file:../app-client",
     "@testing-library/react": "^15.0.0",
     "@testing-library/user-event": "^14.5.0",
     "@types/react": "^18.3.31",
@@ -34,5 +34,13 @@
     "build": "tsup src/index.ts --format esm --dts",
     "test": "vitest run",
     "lint": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PatrickSchop/AppPlatform.git",
+    "directory": "clients/app-client-react"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }

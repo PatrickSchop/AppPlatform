@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { createPlatformClient } from '@PS/app-client';
+import { createPlatformClient } from '@patrickschop/app-client';
 
 type PlatformClient = Awaited<ReturnType<typeof createPlatformClient>>;
 

@@ -88,7 +88,7 @@ jobs:
       - name: Build the client libraries
         run: |
           npm ci --prefix clients
-          npm run build --prefix clients --workspace @PS/app-client --workspace @PS/app-client-angular
+          npm run build --prefix clients --workspace @patrickschop/app-client --workspace @patrickschop/app-client-angular
 
       - name: Test the platform client
         working-directory: clients/app-client

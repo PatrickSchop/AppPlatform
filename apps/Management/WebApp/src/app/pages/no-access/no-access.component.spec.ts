@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NoAccessComponent } from './no-access.component';
-import { AUTH_CLIENT } from '@PS/app-client-angular';
+import { AUTH_CLIENT } from '@patrickschop/app-client-angular';
 
 describe('NoAccessComponent', () => {
   let fixture: ComponentFixture<NoAccessComponent>;

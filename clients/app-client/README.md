@@ -1,11 +1,11 @@
-# @PS/app-client
+# @patrickschop/app-client
 
 Zero-dependency TypeScript SDK for the PS App Platform. Provides configuration loading, authenticated API client, and background task polling.
 
 ## Installation
 
 ```bash
-npm install @PS/app-client @azure/msal-browser
+npm install @patrickschop/app-client @azure/msal-browser
 ```
 
 Note: `@azure/msal-browser` is an optional peer dependency. Include it if you need authentication, or omit it for public APIs.
@@ -15,7 +15,7 @@ Note: `@azure/msal-browser` is an optional peer dependency. Include it if you ne
 ### Basic setup
 
 ```typescript
-import { createPlatformClient } from '@PS/app-client';
+import { createPlatformClient } from '@patrickschop/app-client';
 
 const { config, auth, api, tasks } = await createPlatformClient();
 
@@ -77,7 +77,7 @@ import {
   TaskPoller,          // Background task polling with adaptive intervals
   AuthClient,          // MSAL wrapper
   createPlatformClient, // Convenience function to wire everything
-} from '@PS/app-client';
+} from '@patrickschop/app-client';
 ```
 
 ## Runtime dependencies

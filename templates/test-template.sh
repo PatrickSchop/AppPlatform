@@ -111,10 +111,13 @@ app="$work/angular"
 dotnet new tinyapp -n "TTangular" -o "$(native "$app")" --frontend angular --azure-app-name ttangular   --platform-version "$platform" --skipRestore true --debug:custom-hive "$hive" >/dev/null
 exists "$app/WebApp/package.json"; exists "$app/WebApp/src/app/app.config.ts"; exists "$app/WebApp/public/configuration.json"
 has "$app/WebApp/public/configuration.json" "TTangular"
-has "$app/WebApp/package.json" "\"@PS/app-client-angular\": \"^"
+has "$app/WebApp/package.json" "\"@patrickschop/app-client-angular\": \"^"
 lacks "$app/WebApp/package.json" "file:"
 lacks "$app/WebApp/package.json" signalr
 absent "$work/none/WebApp"
+has "$app/.github/workflows/deploy.yaml" "frontend_path: WebApp"
+has "$app/.github/workflows/deploy.yaml" "deploy_frontend: true"
+lacks "$work/none/.github/workflows/deploy.yaml" "frontend_path"
 echo "ok"
 
 echo "All tenancy variants and the Angular front-end are as expected."

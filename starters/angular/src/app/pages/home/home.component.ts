@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AUTH_CLIENT, ConfigService, TenantService } from '@PS/app-client-angular';
+import { AUTH_CLIENT, ConfigService, TenantService } from '@patrickschop/app-client-angular';
 
 @Component({
   selector: 'app-home',

@@ -126,6 +126,30 @@ While the packages were private this needed a PAT from the publishing account, b
 token is scoped to its own repository and got a 403 across repositories. That no longer
 applies, and a PAT is now only useful for local development.
 
+## npm packages
+
+The front-end libraries `@patrickschop/app-client`, `@patrickschop/app-client-angular` and
+`@patrickschop/app-client-react` are published to GitHub Packages' npm registry. (The scope is the
+GitHub account name, which GitHub requires; the NuGet packages keep their `PS.AppPlatform` names.)
+Like NuGet, reading needs a token even though the packages are public.
+
+Once per machine, add to your user `~/.npmrc` (`%USERPROFILE%\.npmrc` on Windows) a classic PAT with
+`read:packages`:
+
+```
+//npm.pkg.github.com/:_authToken=<token>
+```
+
+The project's own `.npmrc` (generated apps have one) maps the scope to the registry:
+
+```
+@patrickschop:registry=https://npm.pkg.github.com
+```
+
+Then `npm install` works. In a workflow, `actions/setup-node` with
+`registry-url: https://npm.pkg.github.com` and `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`
+is enough, with `packages: read` on the job. The platform's `app-build.yaml` does this for you.
+
 ## Troubleshooting
 
 **"401 Unauthorized" on restore:**

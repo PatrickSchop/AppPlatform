@@ -25,7 +25,7 @@ jobs:
       frontend_path: apps/Management/WebApp
       frontend_dist_path: dist/WebApp/browser
       # The WebApp depends on file:../../../clients/app-client-angular, whose dist/ is not committed.
-      frontend_prebuild_command: npm ci --prefix clients && npm run build --prefix clients --workspace @PS/app-client --workspace @PS/app-client-angular
+      frontend_prebuild_command: npm ci --prefix clients && npm run build --prefix clients --workspace @patrickschop/app-client --workspace @patrickschop/app-client-angular
 
   deploy:
     needs: build

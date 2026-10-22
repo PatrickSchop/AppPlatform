@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { API_CLIENT } from '@PS/app-client-angular';
-import type { ApiClient } from '@PS/app-client';
+import { API_CLIENT } from '@patrickschop/app-client-angular';
+import type { ApiClient } from '@patrickschop/app-client';
 import {
   ApplicationSummary, ApplicationDetail, TenantSummary, TeamSummary,
   UserSummary, UserDetail, MemberSummary, InvitationCreatedResponse,

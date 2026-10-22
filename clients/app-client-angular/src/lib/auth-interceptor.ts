@@ -1,6 +1,6 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import type { AuthClient } from '@PS/app-client';
+import type { AuthClient } from '@patrickschop/app-client';
 import { from } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { AUTH_CLIENT, API_CLIENT, APP_CONFIG } from './injection-tokens';

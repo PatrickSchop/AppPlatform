@@ -319,7 +319,7 @@ query filter you add yourself is combined with it, never replaced. If your conte
 
 After sign-in an app has to find the user's tenants, select one (automatically, or by asking),
 remember the choice, send it on every request and recover when the server rejects it. The
-framework-free `TenantSession` in `@PS/app-client` does all of that; the Angular and React
+framework-free `TenantSession` in `@patrickschop/app-client` does all of that; the Angular and React
 packages only render its state.
 
 | State | Meaning | What the UI shows |
@@ -339,7 +339,7 @@ packages only render its state.
   the picker, `not_registered` reloads the session. The request that got the error still fails.
 - Background task polling starts only once a tenant is selected, and follows tenant changes.
 
-Angular (`@PS/app-client-angular`):
+Angular (`@patrickschop/app-client-angular`):
 
 ```ts
 providers: [provideAppPlatform(), provideTenancy()]        // provideTenancy waits for the lookup before the first render
@@ -356,7 +356,7 @@ providers: [provideAppPlatform(), provideTenancy()]        // provideTenancy wai
 After a switch the page reloads by default, so nothing from the previous tenant stays on screen;
 provide `TENANT_SWITCHED` to reload only your data.
 
-React (`@PS/app-client-react`): `PlatformProvider` supplies the session; wrap the authenticated tree
+React (`@patrickschop/app-client-react`): `PlatformProvider` supplies the session; wrap the authenticated tree
 in `<TenantGate>` (picker, not-registered and loading content are replaceable) and put
 `<TenantSwitcher />` in the header. `useTenant()` gives the same state and actions.
 

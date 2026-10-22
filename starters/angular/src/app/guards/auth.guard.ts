@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
-import { AUTH_CLIENT } from '@PS/app-client-angular';
+import { AUTH_CLIENT } from '@patrickschop/app-client-angular';
 
 /**
  * Protects a route: a signed-out user is sent to the identity provider and brought back here.

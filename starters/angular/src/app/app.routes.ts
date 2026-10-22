@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { NotRegisteredComponent, TenantPickerComponent, tenantGuard } from '@PS/app-client-angular';
+import { NotRegisteredComponent, TenantPickerComponent, tenantGuard } from '@patrickschop/app-client-angular';
 import { authGuard } from './guards/auth.guard';
 import { HomeComponent } from './pages/home/home.component';
 import { ExampleComponent } from './pages/example/example.component';

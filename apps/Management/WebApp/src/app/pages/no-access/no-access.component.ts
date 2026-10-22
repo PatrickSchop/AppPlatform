@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AUTH_CLIENT } from '@PS/app-client-angular';
-import type { AuthClient } from '@PS/app-client';
+import { AUTH_CLIENT } from '@patrickschop/app-client-angular';
+import type { AuthClient } from '@patrickschop/app-client';
 
 @Component({
   selector: 'app-no-access',

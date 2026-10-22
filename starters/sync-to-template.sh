@@ -20,5 +20,5 @@ tar -C "$src" --exclude=node_modules --exclude=dist --exclude=.angular --exclude
 sed -i -E "s#\"file:[^\"]*app-client\"#\"^$version\"#; s#\"file:[^\"]*app-client-angular/dist\"#\"^$version\"#" "$dest/package.json"
 sed -i "s/Angular Starter/TinyApp/" "$dest/public/configuration.json" "$dest/src/index.html"
 sed -i "s/const EXAMPLE_PATH = 'notes'/const EXAMPLE_PATH = 'items'/" "$dest/src/app/services/example.service.ts"
-printf '@PS:registry=https://npm.pkg.github.com\n' > "$dest/.npmrc"
+printf '@patrickschop:registry=https://npm.pkg.github.com\n' > "$dest/.npmrc"
 echo "Synced $dest (platform packages ^$version)"

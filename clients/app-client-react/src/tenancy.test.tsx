@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { TenantSession, type MyTenantsResponse } from '@PS/app-client';
+import { TenantSession, type MyTenantsResponse } from '@patrickschop/app-client';
 import { TenantProvider, TenantGate, TenantPicker, TenantSwitcher, useTenant } from './tenancy';
 
 const A = { tenantId: 'aaaaaaaa-0000-0000-0000-000000000001', name: 'Acme', roles: ['editor'] };

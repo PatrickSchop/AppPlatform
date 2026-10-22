@@ -1,7 +1,7 @@
 import { ApplicationInitStatus } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { resetConfigCache, TenantSession } from '@PS/app-client';
+import { resetConfigCache, TenantSession } from '@patrickschop/app-client';
 import { provideAppPlatform, resetPlatformClientForTests } from './provide-app-platform';
 import { API_CLIENT, APP_CONFIG, AUTH_CLIENT, TENANT_SESSION } from './injection-tokens';
 import { registered, TENANT_A } from './testing';

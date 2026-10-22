@@ -1,11 +1,11 @@
 {
-  "name": "@PS/app-client-angular",
+  "name": "@patrickschop/app-client-angular",
   "version": "0.2.0",
   "type": "module",
   "peerDependencies": {
     "@angular/common": ">=19.0.0",
     "@angular/core": ">=19.0.0",
-    "@PS/app-client": "^0.2.0",
+    "@patrickschop/app-client": "^0.2.0",
     "@angular/router": ">=19.0.0"
   },
   "devDependencies": {
@@ -18,7 +18,7 @@
     "@angular/platform-browser": "^21.2.25",
     "@angular/platform-browser-dynamic": "^21.2.25",
     "@angular/router": "^21.2.25",
-    "@PS/app-client": "file:../app-client",
+    "@patrickschop/app-client": "file:../app-client",
     "jsdom": "^24.1.3",
     "ng-packagr": "^21.2.7",
     "rxjs": "^7.8.2",
@@ -31,5 +31,13 @@
     "build": "ng-packagr -p ng-package.json",
     "lint": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PatrickSchop/AppPlatform.git",
+    "directory": "clients/app-client-angular"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }

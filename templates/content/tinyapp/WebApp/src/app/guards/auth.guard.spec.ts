@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { describe, it, expect, vi } from 'vitest';
-import { AUTH_CLIENT } from '@PS/app-client-angular';
+import { AUTH_CLIENT } from '@patrickschop/app-client-angular';
 import { authGuard } from './auth.guard';
 
 function run(auth: unknown) {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { API_CLIENT } from '@PS/app-client-angular';
-import type { ApiClient } from '@PS/app-client';
+import { API_CLIENT } from '@patrickschop/app-client-angular';
+import type { ApiClient } from '@patrickschop/app-client';
 
 /** One row of the example list. SampleApp's notes have a title, the template's items a name. */
 export interface ExampleItem {

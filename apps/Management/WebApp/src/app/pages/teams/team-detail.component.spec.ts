@@ -4,7 +4,7 @@ import { TeamDetailComponent } from './team-detail.component';
 import { AdminService } from '../../services/admin.service';
 import { ToastService } from '../../shared/toast.service';
 import { ActivatedRoute } from '@angular/router';
-import { API_CLIENT } from '@PS/app-client-angular';
+import { API_CLIENT } from '@patrickschop/app-client-angular';
 import type { MemberSummary, RoleSummary } from '../../services/models';
 
 describe('TeamDetailComponent', () => {

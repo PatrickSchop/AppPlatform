@@ -47,3 +47,30 @@ jobs:
             --api-key ${{ secrets.GITHUB_TOKEN }} \
             --skip-duplicate
 
+
+      # The front-end libraries go to the same GitHub Packages, as @patrickschop/* (the scope of an
+      # npm package on GitHub Packages must be the owning account). They are versioned in lockstep
+      # with the NuGet packages.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://npm.pkg.github.com
+          scope: '@patrickschop'
+
+      - name: Build and publish the npm packages
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V="${{ steps.v.outputs.version }}"
+          npm ci --prefix clients
+          for p in app-client app-client-angular app-client-react; do
+            npm pkg set version="$V" --prefix "clients/$p"
+          done
+          npm run build --prefix clients --workspace @patrickschop/app-client --workspace @patrickschop/app-client-angular --workspace @patrickschop/app-client-react
+          # The Angular package is published from its ng-packagr output, the others from their folder.
+          npm pkg set version="$V" "peerDependencies.@patrickschop/app-client=^$V" --prefix clients/app-client-angular/dist
+          npm pkg set "peerDependencies.@patrickschop/app-client=^$V" --prefix clients/app-client-react
+          npm publish clients/app-client
+          npm publish clients/app-client-angular/dist
+          npm publish clients/app-client-react

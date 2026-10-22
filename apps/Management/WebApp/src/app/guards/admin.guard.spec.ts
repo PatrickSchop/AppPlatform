@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { describe, it, expect, vi } from 'vitest';
-import { TenantSession, type MyTenantsResponse } from '@PS/app-client';
-import { AUTH_CLIENT, TENANT_SESSION } from '@PS/app-client-angular';
+import { TenantSession, type MyTenantsResponse } from '@patrickschop/app-client';
+import { AUTH_CLIENT, TENANT_SESSION } from '@patrickschop/app-client-angular';
 import { adminGuard } from './admin.guard';
 
 const TENANT = { tenantId: 'tenant-1', name: 'Default', roles: [] as string[] };

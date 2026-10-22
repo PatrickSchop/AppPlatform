@@ -1,9 +1,9 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AUTH_CLIENT } from '@PS/app-client-angular';
-import type { AuthClient } from '@PS/app-client';
-import { TenantSwitcherComponent } from '@PS/app-client-angular';
+import { AUTH_CLIENT } from '@patrickschop/app-client-angular';
+import type { AuthClient } from '@patrickschop/app-client';
+import { TenantSwitcherComponent } from '@patrickschop/app-client-angular';
 import { ToastComponent } from './shared/toast.component';
 
 @Component({

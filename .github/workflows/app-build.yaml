@@ -77,6 +77,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node_version }}
+          # @patrickschop/* (the platform's front-end libraries) come from GitHub Packages.
+          registry-url: https://npm.pkg.github.com
+          scope: '@patrickschop'
 
       - name: Pre-build command
         if: ${{ inputs.frontend_prebuild_command != '' }}
@@ -84,7 +87,10 @@ jobs:
 
       - name: Install dependencies
         working-directory: ${{ inputs.frontend_path }}
-        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # A generated app has no lockfile until you commit one; npm ci would refuse to run.
+        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       - name: Build
         working-directory: ${{ inputs.frontend_path }}

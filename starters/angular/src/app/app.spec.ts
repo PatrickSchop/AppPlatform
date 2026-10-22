@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { describe, it, expect, vi } from 'vitest';
 import { AppComponent } from './app';
-import { APP_CONFIG, AUTH_CLIENT, BackgroundTaskService } from '@PS/app-client-angular';
+import { APP_CONFIG, AUTH_CLIENT, BackgroundTaskService } from '@patrickschop/app-client-angular';
 import { signal } from '@angular/core';
 
 function setup(auth: unknown) {

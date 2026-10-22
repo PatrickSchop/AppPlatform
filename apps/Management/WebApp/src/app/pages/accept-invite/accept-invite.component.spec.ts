@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AcceptInviteComponent } from './accept-invite.component';
 import { AdminService } from '../../services/admin.service';
 import { ToastService } from '../../shared/toast.service';
-import { AUTH_CLIENT, API_CLIENT } from '@PS/app-client-angular';
+import { AUTH_CLIENT, API_CLIENT } from '@patrickschop/app-client-angular';
 
 describe('AcceptInviteComponent', () => {
   let component: AcceptInviteComponent;

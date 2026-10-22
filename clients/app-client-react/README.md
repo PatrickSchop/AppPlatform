@@ -1,11 +1,11 @@
-# @PS/app-client-react
+# @patrickschop/app-client-react
 
 React 18+ adapter for the PS App Platform. Provides hooks, a provider, and components for accessing platform services.
 
 ## Installation
 
 ```bash
-npm install @PS/app-client @PS/app-client-react
+npm install @patrickschop/app-client @patrickschop/app-client-react
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @PS/app-client @PS/app-client-react
 Wrap your app with `<PlatformProvider>`:
 
 ```tsx
-import { PlatformProvider } from '@PS/app-client-react';
+import { PlatformProvider } from '@patrickschop/app-client-react';
 
 function App() {
   return (
@@ -137,4 +137,4 @@ Style with CSS classes:
 - **StrictMode safe**: The provider guards against double-initialization in React 18+ strict mode
 - **Proper cleanup**: The poller is stopped on unmount to prevent background polling
 - **useSyncExternalStore**: Background tasks use React's external store hook for proper integration with concurrent rendering
-- **Zero dependencies** at runtime (peers only: React and @PS/app-client)
+- **Zero dependencies** at runtime (peers only: React and @patrickschop/app-client)

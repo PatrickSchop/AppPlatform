@@ -7,7 +7,7 @@ import {
   useSyncExternalStore,
   JSX,
 } from 'react';
-import type { TenantInfo, TenantSession, TenantState } from '@PS/app-client';
+import type { TenantInfo, TenantSession, TenantState } from '@patrickschop/app-client';
 
 const TenantContext = createContext<TenantSession | null>(null);
 

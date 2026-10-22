@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import type { TenantInfo, TenantState } from '@PS/app-client';
+import type { TenantInfo, TenantState } from '@patrickschop/app-client';
 import { TENANT_SESSION } from './injection-tokens';
 
 /**

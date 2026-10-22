@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AUTH_CLIENT, ConfigService, TenantSwitcherComponent } from '@PS/app-client-angular';
+import { AUTH_CLIENT, ConfigService, TenantSwitcherComponent } from '@patrickschop/app-client-angular';
 import { ToastComponent } from './shared/toast.component';
 import { TaskStatusComponent } from './components/task-status/task-status.component';
 

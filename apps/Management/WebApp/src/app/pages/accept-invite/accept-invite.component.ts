@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { ToastService } from '../../shared/toast.service';
 import { getErrorMessage } from '../../shared/error-messages';
-import { AUTH_CLIENT } from '@PS/app-client-angular';
+import { AUTH_CLIENT } from '@patrickschop/app-client-angular';
 import { InvitationPreviewResponse } from '../../services/models';
 
 @Component({

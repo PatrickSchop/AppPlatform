@@ -5,7 +5,7 @@ import {
   useRef,
   JSX,
 } from 'react';
-import { createPlatformClient } from '@PS/app-client';
+import { createPlatformClient } from '@patrickschop/app-client';
 import { PlatformContext } from './context';
 import { TenantProvider } from './tenancy';
 

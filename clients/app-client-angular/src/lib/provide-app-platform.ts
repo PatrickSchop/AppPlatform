@@ -5,7 +5,7 @@ import {
   inject,
 } from '@angular/core';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { createPlatformClient } from '@PS/app-client';
+import { createPlatformClient } from '@patrickschop/app-client';
 import { APP_CONFIG, API_CLIENT, AUTH_CLIENT, TENANT_SESSION } from './injection-tokens';
 import { platformAuthInterceptor } from './auth-interceptor';
 import { BackgroundTaskService } from './background-task.service';

@@ -1,5 +1,5 @@
 {
-  "name": "@PS/clients",
+  "name": "@patrickschop/clients",
   "private": true,
   "workspaces": [
     "app-client",

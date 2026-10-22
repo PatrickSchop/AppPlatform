@@ -3,7 +3,7 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UserDetailComponent } from './user-detail.component';
 import { AdminService } from '../../services/admin.service';
-import { API_CLIENT } from '@PS/app-client-angular';
+import { API_CLIENT } from '@patrickschop/app-client-angular';
 import type { UserDetail } from '../../services/models';
 
 describe('UserDetailComponent: invitations tab', () => {

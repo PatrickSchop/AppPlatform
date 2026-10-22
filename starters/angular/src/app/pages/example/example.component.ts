@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { BackgroundTaskService } from '@PS/app-client-angular';
+import { BackgroundTaskService } from '@patrickschop/app-client-angular';
 import { ExampleItem, ExampleService, EXAMPLE_TASK_TYPE } from '../../services/example.service';
 import { ToastService } from '../../shared/toast.service';
 import { getErrorMessage } from '../../shared/error-messages';

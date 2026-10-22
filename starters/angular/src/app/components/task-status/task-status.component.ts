@@ -1,5 +1,5 @@
 import { Component, ElementRef, HostListener, inject, signal } from '@angular/core';
-import { BackgroundTaskService, TaskProgressComponent } from '@PS/app-client-angular';
+import { BackgroundTaskService, TaskProgressComponent } from '@patrickschop/app-client-angular';
 
 /**
  * A top-bar indicator for background tasks. Hidden while there are none; a click expands the

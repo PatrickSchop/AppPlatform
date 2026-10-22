@@ -1,5 +1,5 @@
 import { useSyncExternalStore, useCallback, useEffect, useState } from 'react';
-import type { AppConfig, ApiClient, AuthClient, BackgroundTask } from '@PS/app-client';
+import type { AppConfig, ApiClient, AuthClient, BackgroundTask } from '@patrickschop/app-client';
 import { usePlatformContext } from './context';
 
 export function usePlatform() {

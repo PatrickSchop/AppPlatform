@@ -1,5 +1,5 @@
 import { JSX } from 'react';
-import type { BackgroundTask } from '@PS/app-client';
+import type { BackgroundTask } from '@patrickschop/app-client';
 import { useBackgroundTasks } from './hooks';
 
 export function TaskProgress(): JSX.Element {

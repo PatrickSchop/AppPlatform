@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { InjectionToken, inject } from '@angular/core';
-import type { AppConfig, ApiClient, AuthClient, TenantSession } from '@PS/app-client';
+import type { AppConfig, ApiClient, AuthClient, TenantSession } from '@patrickschop/app-client';
 
 export const APP_CONFIG = new InjectionToken<AppConfig>('APP_CONFIG');
 export const API_CLIENT = new InjectionToken<ApiClient>('API_CLIENT');

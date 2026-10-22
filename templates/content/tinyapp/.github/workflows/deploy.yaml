@@ -9,6 +9,11 @@ jobs:
   build:
     uses: PatrickSchop/AppPlatform/.github/workflows/app-build.yaml@main
     secrets: inherit
+#if (Frontend == 'angular')
+    with:
+      frontend_path: WebApp
+      frontend_dist_path: dist/WebApp/browser
+#endif
 
   deploy:
     needs: build
@@ -17,6 +22,9 @@ jobs:
     with:
       app_name: AZURE-APP-NAME-PLACEHOLDER
       resource_group: TinyApp
+#if (Frontend == 'angular')
+      deploy_frontend: true
+#endif
       assembly_name: TinyApp
 #if (TenancyEnabled)
       # Registers the app and its roles with the management app before the new code goes live.

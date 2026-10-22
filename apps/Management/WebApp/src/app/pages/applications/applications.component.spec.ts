@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ApplicationListComponent } from './applications.component';
 import { AdminService } from '../../services/admin.service';
-import { API_CLIENT } from '@PS/app-client-angular';
+import { API_CLIENT } from '@patrickschop/app-client-angular';
 import type { ApplicationSummary } from '../../services/models';
 
 describe('ApplicationListComponent', () => {

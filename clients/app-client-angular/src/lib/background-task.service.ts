@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy, signal, computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import type { BackgroundTask, TaskPoller } from '@PS/app-client';
+import type { BackgroundTask, TaskPoller } from '@patrickschop/app-client';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })

@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
-import { AUTH_CLIENT, TenantService } from '@PS/app-client-angular';
+import { AUTH_CLIENT, TenantService } from '@patrickschop/app-client-angular';
 import { describeFailure } from '../shared/error-messages';
 
 /**

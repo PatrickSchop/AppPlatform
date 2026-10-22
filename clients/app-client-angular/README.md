@@ -1,11 +1,11 @@
-# @PS/app-client-angular
+# @patrickschop/app-client-angular
 
 Angular 19+ adapter for the PS App Platform. Provides DI configuration, signals-based task service, HTTP interceptor, and unstyled task progress component.
 
 ## Installation
 
 ```bash
-npm install @PS/app-client @PS/app-client-angular
+npm install @patrickschop/app-client @patrickschop/app-client-angular
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @PS/app-client @PS/app-client-angular
 In your Angular app's bootstrap or component providers:
 
 ```typescript
-import { provideAppPlatform } from '@PS/app-client-angular';
+import { provideAppPlatform } from '@patrickschop/app-client-angular';
 
 bootstrapApplication(AppComponent, {
   providers: [

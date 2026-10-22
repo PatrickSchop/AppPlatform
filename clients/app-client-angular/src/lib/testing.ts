@@ -1,4 +1,4 @@
-import { TenantSession, type MyTenantsResponse } from '@PS/app-client';
+import { TenantSession, type MyTenantsResponse } from '@patrickschop/app-client';
 import { vi } from 'vitest';
 
 export const TENANT_A = { tenantId: 'aaaaaaaa-0000-0000-0000-000000000001', name: 'Acme', roles: ['editor'] };

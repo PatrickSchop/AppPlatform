@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UserListComponent } from './user-list.component';
 import { AdminService } from '../../services/admin.service';
-import { API_CLIENT } from '@PS/app-client-angular';
+import { API_CLIENT } from '@patrickschop/app-client-angular';
 import type { ApplicationDetail, ApplicationSummary, RoleSummary, TeamSummary } from '../../services/models';
 
 describe('UserListComponent: creating a user', () => {

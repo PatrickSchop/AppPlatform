@@ -6,6 +6,13 @@ Extracted from the domain-free half of [StockAnalysis](https://github.com/Patric
 
 See [.plans/tiny-app-platform-v1.md](.plans/tiny-app-platform-v1.md) for the full execution plan.
 
+## Creating an app
+
+To build a new app on the platform (Azure Functions back-end, Angular front-end, sign-in and
+multi-tenancy), follow [docs/creating-an-app.md](docs/creating-an-app.md). Related docs:
+[multi-tenancy](docs/multi-tenancy.md), [Entra auth setup](docs/auth-setup.md),
+[provisioning](docs/provisioning.md), [consuming the packages](docs/consuming-packages.md).
+
 ## Prerequisites
 
 ### Local development
