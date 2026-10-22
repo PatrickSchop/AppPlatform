@@ -165,7 +165,7 @@ Each step links to its document in [multi-tenancy-v1/](multi-tenancy-v1/).
 | **3 Front-end & template** | [MT-13](multi-tenancy-v1/step-MT-13-tenant-session.md) | `TenantSession` in `@PS/app-client` + tests |
 | | [MT-14](multi-tenancy-v1/step-MT-14-tenancy-components.md) | Angular + React tenancy components; starters get the picker route |
 | | [MT-15](multi-tenancy-v1/step-MT-15-template-and-deploy.md) | Template `--Tenancy` option, deploy workflow `--register` step, `docs/multi-tenancy.md` |
-| | [MT-16](multi-tenancy-v1/step-MT-16-gate-f.md) | **Gate F:** `dotnet new tinyapp --Tenancy multi`, deploy, auto-register, admin assigns user to 2 tenants, picker appears, data isolated per tenant, anonymous endpoint writes via `CreateForTenant` |
+| | [MT-16](multi-tenancy-v1/step-MT-16-gate-f.md) | **Obsolete (2026-10-22), superseded by the operator's real app.** Was Gate F: `dotnet new tinyapp --Tenancy multi`, deploy, auto-register, admin assigns user to 2 tenants, picker appears, data isolated per tenant, anonymous endpoint writes via `CreateForTenant` |
 
 ## Requirement traceability
 

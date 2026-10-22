@@ -1,5 +1,11 @@
 # Step MT-16 — Gate F: a multi-tenant app from the template, end to end
 
+> **OBSOLETE (2026-10-22).** Superseded by the operator's own real app, which is built from the
+> published template and acts as the end-to-end verification. This step is not executed. The
+> checklist below stays as a reference for what that app should exercise: template path, deploy
+> and `--register`, cross-tenant roles, role deprecation, membership removal, stale-if-error and
+> cold start. No row of the requirement traceability table depends on MT-16 alone.
+
 **Phase:** 3 — Front-end and template (final gate)
 **Depends on:** MT-15
 **Working directory:** a new repository, `PatrickSchop/TenantScratch` (like v1's ScratchApp)

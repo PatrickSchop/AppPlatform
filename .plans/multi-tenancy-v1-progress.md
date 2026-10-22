@@ -1,6 +1,6 @@
 # Multi-tenancy v1 — Progress
 
-**Updated:** 2026-10-21 · **MT-01–MT-15 done (0.2.0 published) · next action: MT-16 (Gate F), needs operator set-up**
+**Updated:** 2026-10-22 · **MT-01–MT-15 done (0.2.0 published) · MT-16 (Gate F) obsolete, superseded by the operator's real app**
 
 Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](multi-tenancy-v1/)
 
@@ -11,9 +11,9 @@ Plan: [multi-tenancy-v1.md](multi-tenancy-v1.md) · Steps: [multi-tenancy-v1/](m
 | Phase 0 — Prerequisites | MT-01 | ✅ complete |
 | Phase 1 — Core tenancy | MT-02 – MT-07 | ✅ complete · **Gate D passed** |
 | Phase 2 — Management app | MT-08 – MT-12 | ✅ complete · **Gate E passed** (2026-10-21) |
-| Phase 3 — Front-end and template | MT-13 – MT-16 | 🔄 MT-13 ✅ · MT-14 ✅ · MT-15 ✅ · **Gate F** next |
+| Phase 3 — Front-end and template | MT-13 – MT-16 | 🔄 MT-13 ✅ · MT-14 ✅ · MT-15 ✅ · MT-16 (Gate F) obsolete |
 
-**15 of 16 steps complete** (MT-01–MT-15).
+**15 of 15 active steps complete** (MT-01–MT-15); MT-16 is obsolete.
 
 ## Dependencies on the v1 plan
 
@@ -44,7 +44,7 @@ All of Phases 0–2, including MT-11, can run without waiting for v1 Steps 26–
 | MT-13 | `TenantSession` | ✅ | ✅ client 51 (new: 31); Angular lib, React and Management WebApp rebuilt and green | ✅ (CI + deploy passed) |
 | MT-14 | Angular/React tenancy components | ✅ (no starters, see note) | ✅ client 52, Angular lib 38 (new runner), React 19, Management WebApp 46; CI runs all | ✅ (CI + deploy passed) |
 | MT-15 | Template `--tenancy`, deploy registration, `0.2.0` | ✅ released 0.2.0 | ✅ platform 196, Management 49, client 52, Angular 38, React 19, WebApp 46, template script (3 variants build); CI green incl. actionlint | ✅ 01bfaee (CI passed); 0.2.0 published from 01bfaee |
-| MT-16 | **Gate F** — template app end to end | ⏳ | | |
+| MT-16 | **Gate F** — template app end to end | ⛔ obsolete (2026-10-22): superseded by the operator's real app | | |
 
 ## Gates
 
@@ -164,7 +164,10 @@ committed. `appsettings.development.json` (committed) has the tenant metadata on
 account, Q = a member of the operator's own tenant). Full results, deviations, the defects fixed on
 the way and the open points are in the section **MT-12 / GATE E: PASSED** at the end of this file.
 
-**Gate F (MT-16) — outstanding.** 15 checks and the scaffold-to-deploy time; results go here.
+**Gate F (MT-16) — obsolete (2026-10-22).** Not executed. The operator builds a small useful app
+from the published template instead, and that app is the end-to-end verification. The Gate F
+checklist in the step file remains as a reference for what it should exercise. No row of the
+requirement traceability table depended on MT-16 alone.
 
 ## Decisions taken while planning
 
@@ -193,12 +196,15 @@ the way and the open points are in the section **MT-12 / GATE E: PASSED** at the
   settings, SPA redirect URI, `BOOTSTRAP_ADMIN_*` repository variables, deploy principal
   `appplatform-deploy` (OIDC, roles, `db_owner`), second identity from the operator's own tenant.
   See the Gate E section for what differed from the step.
-- MT-16: create `PatrickSchop/TenantScratch`; add its origin to the SPA redirect URIs.
+- MT-16: obsolete. Nothing to do for `TenantScratch`. The real app needs the same set-up (repo,
+  SPA redirect URI, trusted deployer).
 
 ## Next
 
-**MT-16 — Gate F.** 0.2.0 is published, so a generated app can restore it. Gate F needs the
-operator: create `PatrickSchop/TenantScratch`; run `gh auth refresh -h github.com -s read:packages`
+**MT-16 is obsolete (2026-10-22); there is no further planned step except the final code review
+below.** The operator builds a real app from the template as verification. Notes from the former
+Gate F, which apply equally to that app: 0.2.0 is published, so a generated app can restore it. It needs the
+operator: create the repository; run `gh auth refresh -h github.com -s read:packages`
 (so the template can be installed from GitHub Packages locally); approve the Azure actions for the
 `tenantscratch` app (resource group, `infra/app.bicep` with `managementUrl`/`managementAudience`,
 the database user); trust its deploy principal on the management app (`registry__trustedDeployers__n`;

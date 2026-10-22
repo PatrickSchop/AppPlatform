@@ -71,6 +71,6 @@ jobs:
           # The Angular package is published from its ng-packagr output, the others from their folder.
           npm pkg set version="$V" "peerDependencies.@patrickschop/app-client=^$V" --prefix clients/app-client-angular/dist
           npm pkg set "peerDependencies.@patrickschop/app-client=^$V" --prefix clients/app-client-react
-          npm publish clients/app-client
-          npm publish clients/app-client-angular/dist
-          npm publish clients/app-client-react
+          npm publish ./clients/app-client
+          npm publish ./clients/app-client-angular/dist
+          npm publish ./clients/app-client-react
